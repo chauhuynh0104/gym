@@ -29,8 +29,12 @@
     .reset-btn {background:#dc3545;} .reset-btn:active{transform:scale(0.98);}
     .reset-workout-btn {background:#fd7e14;} .reset-workout-btn:active{transform:scale(0.98);}
     
-    .exercise {background:white; padding:12px; margin:12px 0; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.1);}
-    .exercise strong {display:block; margin-bottom:8px; font-size:1.05em;}
+    .exercise {background:white; padding:12px; margin:12px 0; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.1); position: relative;}
+.exercise strong {
+    display: inline-block;
+    margin-bottom: 8px;
+    font-size: 1.05em;
+}
     .set {margin:6px 0; display:flex; justify-content:space-between; align-items:center;}
     .set button {
         background:#28a745; color:white; border:none; border-radius:5px; padding:6px 10px; font-size:0.9em;
@@ -47,6 +51,29 @@
     .progress-bar {height:100%; width:0%; background:#28a745; text-align:center; color:white; font-size:0.8em; line-height:20px; transition:width 0.3s ease;}
     .gym-date-box {background:#fff; padding:10px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.05); margin-bottom:15px; font-size:0.95em;}
     .gym-date-box input {width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; margin-top:5px;}
+
+
+
+.exercise-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+.exercise-title {
+    flex-grow: 1;
+    font-size: 1.05em;
+}
+.exercise-actions {
+    display: flex;
+    gap: 5px;
+}   .exercise-actions button {
+        background: none; border: none; cursor: pointer; font-size: 0.9em;
+        margin-left: 5px; color: #6c757d; padding: 2px 5px;
+    }
+    .exercise-actions button:hover {color: #007BFF;}
+    .add-exercise {margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 8px;}
+    .add-exercise input {width: calc(100% - 90px); padding: 8px; border: 1px solid #ccc; border-radius: 5px;}
+    .add-exercise button {width: 80px; padding: 8px; margin-left: 10px; background: #007BFF; color: white; border: none; border-radius: 5px;}
 footer {
     text-align: center;
     padding: 15px;
@@ -55,7 +82,6 @@ footer {
     font-size: 0.9em;
     margin-top: auto;
 }
-
 </style>
 </head>
 <body>
@@ -78,7 +104,8 @@ footer {
 <footer>Design by Dr.Châu</footer>
 <script>
 // ==================== DATA ====================
-const data = {
+// Load data from localStorage or use default
+let data = JSON.parse(localStorage.getItem('workoutData')) || {
     chestA: ["Incline Smith Bench Press – 4 sets × 6-10 reps","Iso-Lateral Chest Press (Incline Angle) – 3 sets × 10-12 reps","Flat Bench Press Machine – 3 sets × 10-12 reps","Cable Crossover (High to Low) – 3 sets × 12-15 reps","Fly Chest Machine – 3 sets × 12-15 reps"],
     backA: ["Pull-up – 4 sets × max","Lat Pulldown Machine (wide grip) – 3 sets × 10-12 reps","Iso-Lateral Pulldown – 3 sets × 8-10 reps","Seated Cable Row Machine (neutral grip) – 3 sets × 10-12 reps","Cable Straight Arm Pulldown – 3 sets × 12-15 reps"],
     shoulder: ["Shoulder Press Smith Machine – 4 sets × 6-10 reps","Shoulder Press Machine – 3 sets × 10-12 reps","Dumbbell Lateral Raise – 3 sets × 12-15 reps","Rear Delt on Fly Machine – 3 sets × 12-15 reps","Dumbbell Shrugs – 3 sets × 12-15 reps"],
@@ -86,6 +113,11 @@ const data = {
     chestB: ["Flat Barbell Bench Press – 4 sets × 6-10 reps","Flat Bench Press Machine – 3 sets × 10-12 reps","Iso-Lateral Chest Press (neutral/flat) – 3 sets × 10-12 reps","Cable Crossover (Low to High) – 3 sets × 12-15 reps","Fly Chest Machine – 3 sets × 12-15 reps"],
     backC: ["Pull-up (rộng) – 3 sets × max","Lat Pulldown Machine (reverse grip) – 3 sets × 10 reps","Iso-Lateral Pulldown (từng tay) – 3 sets × 8 reps mỗi bên","Seated Cable Row (drop set) – 3 sets (10-10-10 reps, giảm tạ)","Dumbbell Shrug hoặc Cable Shrug – 3 sets × 15 reps"]
 };
+
+function saveWorkoutData() {
+    localStorage.setItem('workoutData', JSON.stringify(data));
+}
+
 let totalSets=0, completedSets=0, currentDay=null;
 
 // ==================== GYM DATE ====================
@@ -129,19 +161,62 @@ function showWorkout(day){
                          <button class="reset-workout-btn" onclick="resetCurrentWorkout()">🔄 Reset bài tập hôm nay</button>
                          <h2>Bài tập hôm nay</h2>
                          <div class="progress-container"><div class="progress-bar" id="progress-bar">0%</div></div>`;
+    
+    // Hiển thị các bài tập
     data[day].forEach((ex,i)=>{
         const sets = ex.match(/\d+\s*sets/)?.[0] || "3 sets";
         totalSets += parseInt(sets);
         const keyTime=`${day}-time-${i}`;
         const savedTime=localStorage.getItem(keyTime) || 120;
-        workout.innerHTML += `<div class="exercise fade-in">
-                <strong>${i+1}. ${ex}</strong>
-                <label>Nghỉ (s): <input type="number" class="time-input" value="${savedTime}" oninput="saveTime('${keyTime}',this.value)"></label>
-                <div class="sets">${generateSets(day,i,sets)}</div>
-            </div>`;
+   workout.innerHTML += `<div class="exercise fade-in">
+    <div class="exercise-header">
+        <span class="exercise-title"><b>${i+1}. ${ex}</b></span>
+        <div class="exercise-actions">
+            <button onclick="editExercise('${day}', ${i})">✏️</button>
+            <button onclick="deleteExercise('${day}', ${i})">🗑️</button>
+        </div>
+    </div>
+    <label>Nghỉ (s): <input type="number" class="time-input" value="${savedTime}" oninput="saveTime('${keyTime}',this.value)"></label>
+    <div class="sets">${generateSets(day,i,sets)}</div>
+</div>`;
     });
+    
+    // Thêm nút thêm bài tập
+    workout.innerHTML += `<div class="add-exercise">
+        <input type="text" id="new-exercise" placeholder="Thêm bài tập mới (VD: Dumbbell Press – 3 sets × 10 reps)">
+        <button onclick="addExercise('${day}')">Thêm</button>
+    </div>`;
+    
     lockAllExceptFirst();
     updateProgress();
+}
+
+function editExercise(day, index) {
+    const newExercise = prompt("Sửa bài tập:", data[day][index]);
+    if (newExercise !== null) {
+        data[day][index] = newExercise;
+        saveWorkoutData();
+        showWorkout(day);
+    }
+}
+
+function deleteExercise(day, index) {
+    if (confirm("Bạn có chắc muốn xóa bài tập này?")) {
+        data[day].splice(index, 1);
+        saveWorkoutData();
+        showWorkout(day);
+    }
+}
+
+function addExercise(day) {
+    const input = document.getElementById('new-exercise');
+    if (input.value.trim()) {
+        data[day].push(input.value.trim());
+        saveWorkoutData();
+        showWorkout(day);
+    } else {
+        alert("Vui lòng nhập tên bài tập!");
+    }
 }
 
 function checkAndResetDailyWorkout(day) {
@@ -241,12 +316,25 @@ function playBeep(){
     beep(); setTimeout(beep,200);
 }
 function backToMenu(){document.getElementById('menu').style.display='block';document.getElementById('workout').style.display='none';checkGymDate();}
-function resetProgress(){if(confirm("Xóa toàn bộ tiến trình đã lưu (bao gồm cả ngày đóng tiền gym)?")){localStorage.clear();alert("Đã xóa toàn bộ tiến trình!");checkGymDate();}}
+function resetProgress(){
+    if(confirm("Xóa toàn bộ tiến trình đã lưu (bao gồm cả ngày đóng tiền gym và bài tập)?")){
+        localStorage.clear();
+        // Reset data về mặc định
+        data = {
+            chestA: ["Incline Smith Bench Press – 4 sets × 6-10 reps","Iso-Lateral Chest Press (Incline Angle) – 3 sets × 10-12 reps","Flat Bench Press Machine – 3 sets × 10-12 reps","Cable Crossover (High to Low) – 3 sets × 12-15 reps","Fly Chest Machine – 3 sets × 12-15 reps"],
+            backA: ["Pull-up – 4 sets × max","Lat Pulldown Machine (wide grip) – 3 sets × 10-12 reps","Iso-Lateral Pulldown – 3 sets × 8-10 reps","Seated Cable Row Machine (neutral grip) – 3 sets × 10-12 reps","Cable Straight Arm Pulldown – 3 sets × 12-15 reps"],
+            shoulder: ["Shoulder Press Smith Machine – 4 sets × 6-10 reps","Shoulder Press Machine – 3 sets × 10-12 reps","Dumbbell Lateral Raise – 3 sets × 12-15 reps","Rear Delt on Fly Machine – 3 sets × 12-15 reps","Dumbbell Shrugs – 3 sets × 12-15 reps"],
+            backB: ["Pull-up (nắm ngửa) – 3 sets × max","Iso-Lateral Row – 3 sets × 8-10 reps","Seated Cable Row (wide grip hoặc V-bar) – 3 sets × 10-12 reps","Cable Shrug – 3 sets × 15 reps"],
+            chestB: ["Flat Barbell Bench Press – 4 sets × 6-10 reps","Flat Bench Press Machine – 3 sets × 10-12 reps","Iso-Lateral Chest Press (neutral/flat) – 3 sets × 10-12 reps","Cable Crossover (Low to High) – 3 sets × 12-15 reps","Fly Chest Machine – 3 sets × 12-15 reps"],
+            backC: ["Pull-up (rộng) – 3 sets × max","Lat Pulldown Machine (reverse grip) – 3 sets × 10 reps","Iso-Lateral Pulldown (từng tay) – 3 sets × 8 reps mỗi bên","Seated Cable Row (drop set) – 3 sets (10-10-10 reps, giảm tạ)","Dumbbell Shrug hoặc Cable Shrug – 3 sets × 15 reps"]
+        };
+        saveWorkoutData();
+        alert("Đã xóa toàn bộ tiến trình!");
+        checkGymDate();
+    }
+}
 
 checkGymDate();
 </script>
-
-
-
 </body>
 </html>
