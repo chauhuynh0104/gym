@@ -189,6 +189,9 @@ function showWorkout(day){
     
     lockAllExceptFirst();
     updateProgress();
+    
+    setTimeout(() => checkActiveTimers(day), 500);
+    
 }
 
 function editExercise(day, index) {
@@ -271,24 +274,84 @@ function lockAllExceptFirst(){
     const firstUnlocked=document.querySelector('.set:not(.completed):not(.locked) button');
     if(firstUnlocked) firstUnlocked.classList.add("highlight");
 }
-function startRest(btn,key){
-    if(btn.closest('.set').classList.contains("locked")){alert("Phải tập theo thứ tự từ trên xuống!");return;}
-    if(localStorage.getItem(key)==="1"){alert("Set này đã hoàn thành trước đó!");return;}
+function startRest(btn, key) {
+    if (btn.closest('.set').classList.contains("locked")) {
+        alert("Phải tập theo thứ tự từ trên xuống!");
+        return;
+    }
+    if (localStorage.getItem(key) === "1") {
+        alert("Set này đã hoàn thành trước đó!");
+        return;
+    }
+
     const restTimer = btn.parentNode.querySelector('.rest-timer');
     const timeInput = btn.closest('.exercise').querySelector('.time-input');
-    let time = parseInt(timeInput.value) || 120;
-    btn.disabled = true; restTimer.style.display = "inline";
-    restTimer.querySelector('.countdown').textContent=time;
-    const interval = setInterval(()=>{
-        time--; restTimer.querySelector('.countdown').textContent = time;
-        if(time<=0){
-            clearInterval(interval);
-            restTimer.style.display="none"; btn.disabled=false;
-            btn.textContent="Đã xong"; btn.parentNode.classList.add("completed");
-            localStorage.setItem(key,"1"); completedSets++;
-            updateProgress(); playBeep(); autoNext(btn);
-        }
-    },1000);
+    let totalTime = parseInt(timeInput.value) || 120;
+    
+    // Lưu thời gian kết thúc vào localStorage
+    const endTime = Date.now() + totalTime * 1000;
+    localStorage.setItem(key + "-timer", endTime.toString());
+    
+    btn.disabled = true;
+    restTimer.style.display = "inline";
+    
+    // Bắt đầu đếm ngược
+    updateTimer(btn, key, restTimer, endTime);
+}
+
+function updateTimer(btn, key, restTimer, endTime) {
+    const now = Date.now();
+    const remaining = Math.max(0, Math.floor((endTime - now) / 1000));
+    
+    restTimer.querySelector('.countdown').textContent = remaining;
+    
+    if (remaining > 0) {
+        // Nếu còn thời gian, tiếp tục đếm
+        setTimeout(() => updateTimer(btn, key, restTimer, endTime), 1000);
+    } else {
+        // Khi hết giờ
+        restTimer.style.display = "none";
+        btn.disabled = false;
+        btn.textContent = "Đã xong";
+        btn.parentNode.classList.add("completed");
+        localStorage.setItem(key, "1");
+        localStorage.removeItem(key + "-timer"); // Xóa timer đã hoàn thành
+        completedSets++;
+        updateProgress();
+        playBeep();
+        autoNext(btn);
+    }
+}
+
+// Thêm hàm này để kiểm tra và tiếp tục timer khi tải trang
+function checkActiveTimers(day) {
+    const exercises = document.querySelectorAll('.exercise');
+    exercises.forEach((ex, exIndex) => {
+        const sets = ex.querySelectorAll('.set');
+        sets.forEach((set, setIndex) => {
+            const key = `${day}-${exIndex}-${setIndex + 1}`;
+            const timerEnd = localStorage.getItem(key + "-timer");
+            
+            if (timerEnd) {
+                const endTime = parseInt(timerEnd);
+                const now = Date.now();
+                
+                if (now < endTime) {
+                    // Timer vẫn đang chạy
+                    const btn = set.querySelector('button');
+                    const restTimer = set.querySelector('.rest-timer');
+                    
+                    btn.disabled = true;
+                    restTimer.style.display = "inline";
+                    updateTimer(btn, key, restTimer, endTime);
+                } else {
+                    // Timer đã hết nhưng chưa được xử lý
+                    localStorage.removeItem(key + "-timer");
+                    localStorage.setItem(key, "1");
+                }
+            }
+        });
+    });
 }
 function updateProgress(){
     const percent = ((completedSets/totalSets)*100).toFixed(0);
