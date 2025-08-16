@@ -873,7 +873,7 @@ body.dark-mode #loadingPopup #progressBar {
   transition: background-color 0.2s ease;
 }
 
-.top-button-group {
+.top-button-group .btn:hover {
   background-color: #2980b9;
 }
 .btn:hover {
@@ -883,6 +883,8 @@ body.dark-mode #loadingPopup #progressBar {
   cursor:  url('https://cdn.custom-cursor.com/db/23493/32/materials-purple-fluorite-pointer.png'), pointer;
   transition: background-color 0.3s ease;
 }
+
+
 
 
 
