@@ -877,12 +877,12 @@ body.dark-mode #loadingPopup #progressBar {
   background-color: #2980b9;
 }
 .btn:hover {
-  background-color: #FF0000 !important; 
-  border-color: #218838 !important;    
+  background-color: #FF0000 !important;  
   color: #fff !important;               
   cursor:  url('https://cdn.custom-cursor.com/db/23493/32/materials-purple-fluorite-pointer.png'), pointer;
   transition: background-color 0.3s ease;
 }
+
 
 
 
