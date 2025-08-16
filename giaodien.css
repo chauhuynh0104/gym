@@ -884,6 +884,28 @@ body.dark-mode #loadingPopup #progressBar {
   transition: background-color 0.3s ease;
 }
 
+/* Con trỏ cho checkbox */
+input[type="checkbox"],
+label[for],
+label {
+  cursor:  url('https://cdn.custom-cursor.com/db/23494/32/materials-purple-fluorite-cursor.png'), auto;
+}
+
+input[type="checkbox"]:hover,
+label:hover {
+  cursor: url('https://cdn.custom-cursor.com/db/23493/32/materials-purple-fluorite-pointer.png'), pointer;
+}
+
+/* Radio + chữ cạnh radio */
+input[type="radio"] {
+  cursor: url('https://cdn.custom-cursor.com/db/23494/32/materials-purple-fluorite-cursor.png'), auto;
+}
+
+input[type="radio"]:hover,
+label:hover {
+ cursor: url('https://cdn.custom-cursor.com/db/23493/32/materials-purple-fluorite-pointer.png'), pointer;
+
+}
 
 
 
