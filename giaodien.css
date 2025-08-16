@@ -10,7 +10,14 @@
             background: white;
             display: flex;
             flex-direction: column;
+			  cursor:url('https://cdn.custom-cursor.com/db/23494/32/materials-purple-fluorite-cursor.png'), auto;
         }
+.btn:hover {
+  background-color: #FF0000 !important; 
+  border-color: #218838 !important;    
+  color: #fff !important;               
+  cursor:  url('https://cdn.custom-cursor.com/db/23493/32/materials-purple-fluorite-pointer.png'), pointer;
+  transition: background-color 0.3s ease;
         h1, h2 {
             color: #2c3e50;
         }
@@ -875,5 +882,6 @@ body.dark-mode #loadingPopup #progressBar {
 .top-button-group .btn:hover {
   background-color: #2980b9;
 }
+
 
 
