@@ -908,6 +908,60 @@ label:hover {
 }
 
 
+/* ===== Dark mode cho popup TÓM TẮT LỖI ===== */
+#summaryModal [role="dialog"]{
+  background:#ffffff !important;
+  color:#0f172a !important;
+  border:1px solid #e5e7eb !important;
+  border-radius:16px !important;
+  box-shadow: 0 24px 60px rgba(2,6,23,.12) !important;
+  padding: 0 !important;
+}
+
+/* header (tiêu đề + nút) */
+#summaryModal [role="dialog"] > div:first-child{
+  padding:14px 18px !important;
+  border-bottom:1px solid #e5e7eb !important;
+}
+
+/* vỏ nội dung */
+.summary-wrap{ padding:18px; }
+
+/* lưới KPI */
+.kpi-grid{
+  display:grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap:14px;
+  margin-bottom:16px;
+}
+.kpi-card{
+  border-radius:14px;
+  padding:16px;
+  color:#0b1220;
+  background:linear-gradient(180deg,#fff, #f8fafc);
+  border:1px solid #eef2f7;
+  box-shadow: 0 6px 20px rgba(2,6,23,.06);
+}
+.kpi-card .kpi-title{ font-size:13px; opacity:.75; display:flex; align-items:center; gap:8px; }
+.kpi-card .kpi-value{ font-size:28px; font-weight:700; line-height:1; margin-top:6px; }
+.kpi-blue  { background:linear-gradient(180deg,#e9f2ff,#f6f9ff); border-color:#dce9ff; }
+.kpi-amber { background:linear-gradient(180deg,#fff3e0,#fff8ed); border-color:#ffe2bd; }
+.kpi-red   { background:linear-gradient(180deg,#ffe8e8,#fff3f3); border-color:#ffd2d2; }
+
+/* responsive */
+@media (max-width: 840px){
+  .kpi-grid{ grid-template-columns:1fr; }
+}
+
+/* ===== DARK MODE cho phần mới ===== */
+body.dark-mode #summaryModal [role="dialog"]{
+  background:#0b1220 !important; color:#e2e8f0 !important; border-color:#334155 !important;
+  box-shadow:0 24px 60px rgba(0,0,0,.6) !important;
+}
+body.dark-mode .kpi-card{ background:linear-gradient(180deg,#0f172a,#0b1220); border-color:#233042; color:#e2e8f0; }
+body.dark-mode .kpi-blue  { background:linear-gradient(180deg,#0e1a2c,#0b1220); }
+body.dark-mode .kpi-amber { background:linear-gradient(180deg,#2b1f0e,#0b1220); }
+body.dark-mode .kpi-red   { background:linear-gradient(180deg,#2b0f12,#0b1220); }
 
 
 
