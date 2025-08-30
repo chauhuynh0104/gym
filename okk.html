@@ -1,0 +1,3382 @@
+<!-- 
+////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////
+//////////////Code được viết bởi Chauhuynh0104////////////////
+/////////////http://fb.com/chauhuynh0104/////////////////////
+//////////////////////079.567.9350//////////////////////////
+////////////Vui lòng tôn trọng bản quyền tác giả///////////
+//////////////////Không xoá dòng này /////////////////////
+/////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////
+!-->
+<!DOCTYPE html>
+
+<html lang="vi">
+<head>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Kiểm Tra Thủ Thuật</title>
+<link rel="stylesheet" href="https://chauhuynh0104.github.io/gym/giaodien.css">
+<script>
+    async function checkAccess() {
+        const jsonUrl = 'https://raw.githubusercontent.com/chauhuynh0104/chauhuynh0104.txt/refs/heads/main/drchau.json';
+        try {
+            const res = await fetch(jsonUrl);
+            if (!res.ok) throw new Error('Không thể tải file JSON');
+            const config = await res.json();
+
+            if (!config.ACCESS_ALLOWED) {
+                document.body.innerHTML = `<div style="padding:50px;text-align:center;color:red;font-size:20px">
+                    <h2>BẢO TRÌ HỆ THỐNG</h2>
+                    <p>${config.MESSAGE}</p>
+                    ${config.REDIRECT_URL ? `<p>Sẽ chuyển hướng sau <span id='countdown'>5</span> giây...</p>` : ''}
+                </div>`;
+                if (config.REDIRECT_URL) {
+                    let seconds = 5;
+                    const timer = setInterval(() => {
+                        seconds--;
+                        document.getElementById('countdown').innerText = seconds;
+                        if (seconds <= 0) {
+                            clearInterval(timer);
+                            window.location.href = config.REDIRECT_URL;
+                        }
+                    }, 1000);
+                }
+                return false;
+            }
+            return true;
+        } catch (err) {
+            document.body.innerHTML = `<div style='padding:50px;text-align:center;color:red'>
+                <h2>KHÔNG TẢI ĐƯỢC CẤU HÌNH</h2><p>Lỗi truy cập khi kết nối mạng.<br/> Vui lòng kiểm tra lại đường truyền internet.</p>
+            </div>`;
+            return false;
+        }
+    }
+
+    async function loadAccountsFromTXT() {
+        const txtUrl = 'https://raw.githubusercontent.com/chauhuynh0104/chauhuynh0104.txt/refs/heads/main/tkk.txt';
+        const res = await fetch(txtUrl);
+        const text = await res.text();
+        const accounts = {};
+        text.split('\n').forEach(line => {
+            const [u, p] = line.trim().split(':');
+            if (u && p) accounts[u] = p;
+        });
+        return accounts;
+    }
+
+    async function enableLogin(accounts) {
+        const btn = document.getElementById('loginBtn');
+        const userInput = document.getElementById('usernameInput');
+        const passInput = document.getElementById('passwordInput');
+        const errorDiv = document.getElementById('loginError');
+
+        btn.addEventListener('click', () => {
+            const user = userInput.value.trim();
+            const pass = passInput.value.trim();
+            if (accounts[user] && accounts[user] === pass) {
+                sessionStorage.setItem('medUser', user);
+                document.body.classList.remove('login-page');
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+                errorDiv.style.display = 'none';
+            } else {
+                errorDiv.style.display = 'block';
+            }
+        });
+    }
+document.addEventListener('DOMContentLoaded', function() {
+document.getElementById('showMoreSuggestionsCheckbox').addEventListener('change', function() {
+    if (allProcedures.length > 0) {
+        generateTimeSuggestions(allProcedures);
+        filterByOperator();
+    }
+});
+});
+
+ window.addEventListener('DOMContentLoaded', async () => {
+  const allow = await checkAccess();
+  if (!allow) return;
+  // Chỉ kiểm tra đăng nhập đã lưu; KHÔNG tải rule/procedures ở đây
+  checkSavedLogin();
+});
+
+</script>
+
+
+
+
+</head>
+<body>
+<!-- THEME PICKER -->
+<div id="themePicker" class="theme-picker" title="Chọn màu chủ đề giao diện">
+ 
+ 
+  <button type="button" class="theme-swatch" data-theme="default" style="--swatch:#3498db" aria-label="Mặc định (Xanh dương)"></button>
+  <button type="button" class="theme-swatch" data-theme="orange"  style="--swatch:#FF6600" aria-label="Màu cam"></button>
+  <button type="button" class="theme-swatch" data-theme="red"     style="--swatch:#FF0000" aria-label="Màu đỏ"></button>
+  <button type="button" class="theme-swatch" data-theme="green"   style="--swatch:#00AA00" aria-label="Màu xanh lá"></button>
+   <button type="button" id="darkToggle" class="theme-dark-toggle" onclick="toggleDarkMode()" aria-label="Bật/Tắt chế độ tối">
+    <span id="darkIcon"><small>🌙</small></span> <span id="darkText">Tối</span>
+  </button>
+  
+</div>
+
+
+
+
+<script>
+      function toggleDarkMode() {
+        const body = document.body;
+        const icon = document.getElementById("darkIcon");
+        const text = document.getElementById("darkText");
+        body.classList.toggle("dark-mode");
+        const isDark = body.classList.contains("dark-mode");
+        icon.textContent = isDark ? "☀️" : "🌙";
+        text.textContent = isDark ? "Sáng" : "Tối";
+      }
+    </script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+// Lấy các phần tử
+            const triggerButton = document.getElementById('triggerButton');
+            const fileInput = document.getElementById('fileInput');
+
+            // Kiểm tra xem phần tử có tồn tại không
+            if (!triggerButton || !fileInput) {
+                console.error('Lỗi: Không tìm thấy triggerButton hoặc fileInput');
+                return;
+            }
+
+            // Thêm sự kiện click cho button
+            triggerButton.addEventListener('click', () => {
+                fileInput.click(); // Kích hoạt input file
+            });
+
+        });
+
+</script>
+
+<div class="container">
+<div class="login-section" id="loginSection">
+<h2 class="login-title">ĐĂNG NHẬP HỆ THỐNG</h2>
+<input class="login-input" id="usernameInput" placeholder="Tên đăng nhập" type="text"/>
+<input class="login-input" id="passwordInput" placeholder="Mật khẩu" type="password"/>
+<br/><button class="btn" id="loginBtn">Đăng nhập</button>
+<div class="login-error" id="loginError">Tên đăng nhập hoặc mật khẩu không đúng</div>
+</div>
+<div class="main-content" id="mainContent">
+<div class="top-button-group">
+<button onclick="openCreateProcedure()" class="btn">Tạo Giờ Thủ Thuật</button>
+  <button onclick="openCustomizePanel()" class="btn">Tuỳ biến</button>
+
+
+<button onclick="showDropboxPanel()" class="btn">Panel</button>
+
+  <button onclick="window.location.reload();" class="btn">Xoá Cache</button>
+  <button class="btn"id="logoutBtn">Đăng xuất</button>
+</div>
+
+
+<h1> <a href="https://fb.com/chauhuynh0104" style="all: unset; cursor: pointer;" target="_blank">Kiểm Tra Thủ Thuật</a></h1>
+<div class="list1" style="display: flex; align-items: center; gap: 8px;">
+<i class="fa fa-bullhorn"></i>
+<b><font color="red">Thông báo:</font></b>
+<div class="scrolling-text" style="flex: 1; overflow: hidden;">
+<div class="scrolling-content" id="noidung">
+
+</div>
+</div>
+</div>
+<script>
+
+
+fetch('https://raw.githubusercontent.com/chauhuynh0104/chauhuynh0104.txt/refs/heads/main/thongbao.txt')
+  .then(response => response.text())
+  .then(data => {
+    const el = document.getElementById('noidung');
+    el.innerHTML = data;
+
+    // Tăng độ dài nội dung để đảm bảo cuộn
+    el.style.display = 'inline-block';
+    el.style.minWidth = '100%';
+
+    // Reset animation to force reflow
+    el.style.animation = 'none';
+    void el.offsetWidth;
+    el.style.animation = 'scroll-left 10s linear infinite';
+  })
+  .catch(error => {
+    document.getElementById('noidung').textContent = 'Không thể tải nội dung.';
+    console.error(error);
+  });
+
+
+</script>
+<div class="upload-section"><div class="mainblok">
+
+<input accept=".xlsx, .xls, .csv" id="fileInput" style="display:none" type="file"/>
+<button class="btn" id="triggerButton"><i class="fas fa-file-upload"></i> Chọn file thủ công</button>
+<br/><br/>
+<input directory="" id="folderInput" multiple="" style="display:none" type="file" webkitdirectory=""/>
+<button class="btn" id="folderBtn"><i class="fas fa-folder-open"></i> Chọn thư mục (Tự động tìm file)</button>
+<div id="scanStatus" style="margin-top:10px;color:#3498db;font-weight:bold"></div>
+
+
+<label>
+<input name="timeOption" type="radio" value="7:00"/> 
+                        Gợi ý từ 07:00
+                    </label>
+<label>
+<input checked="" name="timeOption" type="radio" value="7:30"/> 
+                        Gợi ý từ 07:30
+                    </label>
+<br/><br/>
+
+  <label style="margin-right: 10px;">
+<input checked="1" id="ignoreAdjacentCheckbox" type="checkbox"/>
+<span class="chu-thich">Bỏ qua thủ thuật liền kề<span class="noi-dung">VD: 8h00-8h30 xoa bóp. 08h30-08h50 điện châm. liên tiếp mà ko cách 1 phút </span></span>
+</label>
+
+  <label style="margin-right: 10px;">
+<input id="showMoreSuggestionsCheckbox" type="checkbox"/> 
+        Hiển thị 6 khung giờ gợi ý         
+    </label>
+
+<label>
+<input id="showDoctorCheckbox" type="checkbox"/> 
+        Hiển thị Bác sĩ chỉ định
+    </label>
+<br/><br/>
+<button class="btn" id="analyzeBtn">Kiểm Tra</button>
+
+
+
+
+
+
+
+
+
+<script>
+document.getElementById('fileInput').addEventListener('change', function () {
+    const file = this.files[0];
+    if (file) {
+        const status = document.getElementById('scanStatus');
+        status.innerHTML = `<i class="fas fa-file"></i>Đã chọn file: <b>${file.name}</b>`;
+        status.style.display = 'block';
+        status.style.color = '#2c3e50';
+    }
+});
+
+</script>
+<div id="scanStatus" style="margin-top:10px; color:#2c3e50; font-weight:bold; display: none;"></div>
+<br/>
+<span style="font-size: 12px;"><i>Phần mềm đôi khi có thể mắc lỗi. Xin hãy kiểm tra các thông tin quan trọng.</i></span>
+<div id="fileRequirements"></div>
+</div></div>
+
+
+<!-- BẮT ĐẦU: BẢNG GIỜ TRỐNG TỪNG NGƯỜI -->
+  <button id="herbToggleBtn" class="btn" onclick="toggleHerbList()"style="display:none">Sắc thuốc thang</button>
+  <button class="btn" onclick="toggleAvailability()" style="display:none">Giờ trống</button>
+<button class="btn" id="errorSummaryBtn" onclick="openErrorSummary()" style="display:none">
+  Tóm Tắt Lỗi
+</button>
+<div id="availabilityTable" style="display: none; margin-bottom: 20px;">
+ <div class="mainblok" style="margin-bottom: 10px; display:none;" id="availabilityFilterBlock">
+  <label for="filterOperator">Người thực hiện:</label>
+  <select id="filterOperator" class="login-input" style="width:auto;margin-right:20px;"></select>
+
+  <label for="filterDate">Ngày:</label>
+  <select id="filterDate" class="login-input" style="width:auto;"></select>
+</div>
+
+  <table class="error-table herb-table">
+    <thead>
+      <tr>
+        <th>Người thực hiện</th>
+        <th>Ngày</th>
+        
+        <th>Khung giờ trống buổi sáng</th>
+        <th>Khung giờ trống buổi chiều</th>
+      </tr>
+    </thead>
+    <tbody id="availabilityBody"></tbody>
+  </table>
+</div>
+<!-- KẾT THÚC: BẢNG GIỜ TRỐNG TỪNG NGƯỜI -->
+
+
+
+
+<!-- NÚT HIỂN THỊ THỦ THUẬT SẮC THUỐC -->
+
+
+  
+<!-- BẢNG THỦ THUẬT SẮC THUỐC THANG -->
+<div id="herbProcedureTable" style="display: none; margin-top: 20px;">
+  <div class="mainblok"style="margin-bottom: 10px;">
+    <div>
+    <select id="herbDoctorFilter" class="login-input" style="width:auto; margin-left: 20px;">
+      <option value="all">Tất cả bác sĩ</option>
+    </select>
+    <select id="herbDateFilter" class="login-input" style="width:auto;"></select>
+  </div></div>
+
+<!-- TÓM TẮT OUTLIER -->
+<div id="herbOutlierSummary" style="display:none;margin:8px 20px;font-size:14px">
+  <!-- nội dung sẽ được JS cập nhật -->
+</div>
+  <table class="error-table">
+    <thead>
+      <tr>
+        <th>Họ tên bệnh nhân</th>
+        <th>Thủ thuật</th>
+        <th>Ngày</th>
+        <th>Thời gian</th>
+        <th>Người thực hiện</th>
+      </tr>
+    </thead>
+    <tbody id="herbTableBody"></tbody>
+  </table>
+</div>
+
+
+<!-- POPUP DANH SÁCH OUTLIER SẮC THUỐC THANG -->
+<div id="herbOutlierModal" style="display:none;position:fixed;inset:0;z-index:11000">
+  <div id="herbOutlierBackdrop" style="position:absolute;inset:0;background:rgba(0,0,0,0.5)"></div>
+  <div role="dialog" aria-modal="true"
+       style="position:absolute;top:10%;left:50%;transform:translateX(-50%);
+              max-width:700px;max-height:80vh;overflow:auto;
+              background:#fff;color:#000;padding:20px;border-radius:8px;
+              border:2px solid #d32f2f;box-shadow:0 5px 20px rgba(0,0,0,0.3);font-family:Inter,sans-serif">
+    <h3>Danh sách ca khác đa số</h3>
+    <div style="margin:10px 0;font-size:13px" id="herbOutlierModalInfo"></div>
+    <table class="error-table" style="margin-top:10px">
+      <thead>
+        <tr>
+          <th>Họ tên bệnh nhân</th>
+          <th>Thủ thuật</th>
+          <th>Ngày</th>
+          <th>Thời gian</th>
+          <th>Người thực hiện</th>
+        </tr>
+      </thead>
+      <tbody id="herbOutlierModalBody"></tbody>
+    </table>
+    <br/>
+    <button class="btn" type="button" id="herbOutlierCloseBtn">Đóng</button>
+  </div>
+</div>
+
+
+
+
+
+
+<br/>
+<br/><div id="errorSection" style="display: none;">
+<br/>
+<h3 id="errorSectionTitle">Lỗi Nhập Sai Thời Gian</h3>
+<div id="operatorFilterError" style="margin-top: 15px; display: none;">
+<label for="operatorSelectError">Lọc theo người thực hiện:</label>
+<select class="login-input" id="operatorSelectError">
+<option value="all">Tất cả</option>
+</select>
+</div>
+<div id="errorLog"></div>
+</div>
+<br/>
+
+<div id="resultSection" style="display: none;">
+<h3 id="resultSectionTitle">Trùng Giờ</h3> 
+
+<div id="operatorFilter" style="margin-top: 15px; display: none;">
+<label for="operatorSelect">Lọc theo người thực hiện:</label>
+<select class="login-input" id="operatorSelect">
+<option value="all">Tất cả</option>
+</select>
+</div><br/>
+
+<table id="resultTable">
+<thead>
+<tr>
+<th><i class="fas fa-user fa-spin-continuous"></i> Tên BN</th>
+<th><i class="fas fa-procedures fa-spin-continuous"></i> Thủ thuật</th>
+<th><i class="far fa-calendar-alt fa-spin-continuous"></i> Ngày</th>
+<th class="doctor-column"><i class="fas fa-user-md fa-spin-continuous"></i> Bác sỹ chỉ định</th>
+<th><i class="fas fa-user-nurse fa-spin-continuous"></i> Người thực hiện</th>
+<th><i class="far fa-clock fa-spin-continuous"></i> Gợi ý giờ</th>
+</tr>
+</thead>
+<tbody id="resultBody"></tbody>
+</table>
+
+
+</div>
+</div>
+</div>
+<script>
+// Tải XLSX chỉ khi cần
+async function ensureXLSX() {
+  if (!window.XLSX) {
+    await import('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
+  }
+}
+
+// Tải Dropbox SDK chỉ khi cần
+async function ensureDropbox() {
+  if (!window.Dropbox) {
+    await import('https://unpkg.com/dropbox/dist/Dropbox-sdk.min.js');
+  }
+}
+
+
+        // Danh sách thủ thuật
+       let PROCEDURES = {};
+
+async function loadProcedures() {
+    try {
+        const res = await fetch('https://raw.githubusercontent.com/chauhuynh0104/chauhuynh0104.txt/refs/heads/main/chau_thuthuat.txt');
+        const text = await res.text();
+        PROCEDURES = JSON.parse(text);
+    } catch (err) {
+        alert('Không thể tải danh sách thủ thuật: ' + err.message);
+        console.error(err);
+    }
+}
+
+		
+
+        // Biến toàn cục
+        let errorLog = [];
+        let currentUser = null;
+        let allProcedures = [];
+
+
+const DROPBOX_CONFIG = {
+    refreshToken: "ctgBvj3IstcAAAAAAAAAAVFCsIXIuz_CTQpImakcC4cuQV8DumkfgDWIs8VGPvFT",
+    clientId: "w8awj2qxo3aiv5e",
+    clientSecret: "qkqo1u7ats7bl9g"
+};
+
+async function getAccessToken() {
+    const response = await fetch("https://api.dropboxapi.com/oauth2/token", {
+        method: "POST",
+        headers: {
+            "Authorization": "Basic " + btoa(`${DROPBOX_CONFIG.clientId}:${DROPBOX_CONFIG.clientSecret}`),
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: `grant_type=refresh_token&refresh_token=${DROPBOX_CONFIG.refreshToken}`
+    });
+    const data = await response.json();
+    return data.access_token;
+}
+// Tải XLSX chỉ khi cần
+async function ensureXLSX() {
+  if (!window.XLSX) {
+    await import('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
+  }
+}
+
+// Tải Dropbox SDK chỉ khi cần
+async function ensureDropbox() {
+  if (!window.Dropbox) {
+    await import('https://unpkg.com/dropbox/dist/Dropbox-sdk.min.js');
+  }
+}
+async function uploadToDropbox(file, khoaValue, ngayValue, stats = { herb: 0, time: 0, conflict: 0 }) {
+  await ensureDropbox(); // đảm bảo có Dropbox SDK
+    const accessToken = await getAccessToken();
+    const dbx = new Dropbox.Dropbox({ accessToken });
+
+    const pcName = navigator.userAgent;
+    const now = new Date().toLocaleString('vi-VN');
+    const filename = `${file.name.replace(/\.[^/.]+$/, "")}_${Date.now()}.xlsx`;
+
+    const response = await dbx.filesUpload({
+        path: `/thuthuat/${filename}`,
+        contents: file,
+        mode: 'add',
+        autorename: true
+    });
+
+    // Ghi metadata vào file JSON trung tâm (dạng text append)
+    const metadata = {
+        stt: Date.now(),
+    khoa: khoaValue,        // ✅ đúng biến
+    ngay: ngayValue,    // ✅ đúng biến
+        link: "https://www.dropbox.com/home/thuthuat?preview=" + encodeURIComponent(filename),
+        pc: pcName,
+        time: now,
+		herb_errors: Number(stats.herb) || 0,
+    time_errors: Number(stats.time) || 0,
+   conflict_errors: Number(stats.conflict) || 0
+    };
+
+    await appendDropboxLog(metadata);
+}
+
+async function appendDropboxLog(logItem) {
+    const accessToken = await getAccessToken();
+    const dbx = new Dropbox.Dropbox({ accessToken });
+
+    const logPath = '/thuthuat/log.json';
+    let logs = [];
+
+    try {
+        const response = await dbx.filesDownload({ path: logPath });
+        const blob = response.result.fileBlob; // ✅ dùng .result.fileBlob
+        const text = await blob.text();
+        logs = JSON.parse(text);
+    } catch (e) {
+        console.warn("Không tìm thấy log.json cũ hoặc lỗi đọc:", e);
+        logs = [];
+    }
+
+    // Chèn mới nhất lên đầu
+    logs.unshift(logItem);
+
+    await dbx.filesUpload({
+        path: logPath,
+        contents: JSON.stringify(logs, null, 2),
+        mode: { '.tag': 'overwrite' }, // ✅ Ghi đè bắt buộc
+        autorename: false
+    });
+}
+
+
+async function initAfterLogin() {
+  await Promise.all([
+    loadProcedures(),
+    loadConflictRules()
+  ]);
+}
+
+
+
+        // ========== PHẦN ĐĂNG NHẬP ========== //
+async function checkSavedLogin() {
+    const savedUser = sessionStorage.getItem('medUser');
+    if (savedUser) {
+        currentUser = savedUser;
+        document.getElementById('loginSection').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+        initAfterLogin(); // auto-login mới load dữ liệu
+    }
+}
+
+let isLoginAction = false; // ✅ Thêm dòng này
+let analyzePopupTimer; // ✅ Thêm dòng này
+async function checkLogin() {
+  const btnLogin   = document.getElementById('loginBtn');
+  const username   = document.getElementById('usernameInput').value.trim();
+  const password   = document.getElementById('passwordInput').value.trim();
+  const loginError = document.getElementById('loginError');
+
+  btnLogin.disabled = true;
+  btnLogin.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang đăng nhập...';
+
+  const popup       = document.getElementById('loadingPopup');
+  const loadingText = document.getElementById('loadingText');
+  const progressBar = document.getElementById('progressBar');
+
+  let loginPopupShown = false;
+
+  // Sau 2s kiểm tra: vẫn ở trang đăng nhập & đang loading?
+const slowLoginTimer = setTimeout(() => {
+    if (!isLoginAction) return; // ✅ Thêm dòng này
+    const loginSectionVisible = document.getElementById('loginSection').style.display !== 'none';
+    const stillLoading = btnLogin.innerHTML.includes('Đang đăng nhập');
+    if (loginSectionVisible && stillLoading) {
+      loadingText.innerHTML = `
+        <i class="fas fa-satellite-dish fa-spin" style="font-size:24px;color:#e67e22;margin-bottom:10px;"></i><br/>
+        <strong>Đường truyền gián đoạn</strong><br/><br/>
+        Vui lòng đợi vài giây để khởi động máy chủ dự phòng...
+      `;
+      progressBar.style.width = '0%';
+      popup.style.display = 'flex';
+      requestAnimationFrame(() => popup.classList.add('show'));
+      loginPopupShown = true;
+    let percent = 0;
+progressBar.style.transition = 'width 0.2s linear';
+const progressTimer = setInterval(() => {
+    percent += 2; // tăng mỗi lần 2%
+    if (percent > 100) {
+        percent = 100;
+        clearInterval(progressTimer);
+    }
+    progressBar.style.width = percent + '%';
+}, 500); // 100ms cập nhật 1 lần
+
+	
+	}
+  }, 2000);
+
+  try {
+    const accounts = await loadAccountsFromTXT();
+    if (accounts[username] && accounts[username] === password) {
+      currentUser = username;
+      sessionStorage.setItem('medUser', username);
+      document.getElementById('loginSection').style.display = 'none';
+      document.getElementById('mainContent').style.display = 'block';
+      loginError.style.display = 'none';
+      document.body.classList.remove('login-page');
+
+      await initAfterLogin(); // chỉ load sau khi login thành công
+    } else {
+      loginError.style.display = 'block';
+    }
+  } catch (err) {
+    console.error('Lỗi khi đăng nhập:', err);
+    loginError.style.display = 'block';
+  } finally {
+    clearTimeout(slowLoginTimer);
+
+    // Nếu popup do login mở thì đóng
+    if (loginPopupShown && popup) {
+      popup.classList.remove('show');
+      setTimeout(() => { popup.style.display = 'none'; }, 400);
+    }
+
+    btnLogin.disabled = false;
+    btnLogin.innerHTML = 'Đăng nhập';
+  }
+}
+
+
+        function logout() {
+            currentUser = null;
+            sessionStorage.removeItem('medUser');
+            document.getElementById('loginSection').style.display = 'block';
+            document.getElementById('mainContent').style.display = 'none';
+            document.getElementById('usernameInput').value = '';
+            document.getElementById('passwordInput').value = '';
+            document.getElementById('loginError').style.display = 'none';
+            document.body.classList.add('login-page');
+        }
+
+// ========== HÀM LOAD DANH SÁCH KHOA HỢP LỆ ========== //
+async function loadValidDepartments() {
+    const url = 'https://raw.githubusercontent.com/chauhuynh0104/chauhuynh0104.txt/refs/heads/main/khoa.txt';
+    try {
+        const res = await fetch(url);
+        const text = await res.text();
+        const khoaList = text.split('\n').map(line => line.trim().toLowerCase()).filter(Boolean);
+        return khoaList;
+    } catch (err) {
+        console.error("Không thể tải danh sách khoa:", err);
+        return [];
+    }
+}
+
+        // ========== PHẦN XỬ LÝ FILE ========== //
+function handleFile() {
+    const fileInput = document.getElementById('fileInput');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const file = fileInput.files[0];
+	
+if (!file) {
+    const popup = document.getElementById('loadingPopup');
+    const loadingText = document.getElementById('loadingText');
+    const progressBar = document.getElementById('progressBar');
+
+    loadingText.innerHTML = `
+        <i class="fas fa-exclamation-triangle" style="font-size:24px;color:red;margin-bottom:10px;"></i><br/>
+        <strong>Vui lòng chọn file trước khi kiểm tra</strong><br/><br/>
+        <button class="btn" onclick="document.getElementById('loadingPopup').style.display='none'">Đóng</button>
+    `;
+    progressBar.style.width = '0%';
+    
+    popup.style.display = 'flex';
+    popup.classList.add('show');
+    return;
+}
+
+
+    document.getElementById('fileRequirements').classList.add('hidden');
+    errorLog = [];
+    document.getElementById('resultSection').style.display = 'none';
+    document.getElementById('errorSection').style.display = 'none';
+    analyzeBtn.disabled = true;
+    analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang kiểm tra...';
+    // ✅ Bắt đầu đếm 2s để hiện popup nếu vẫn đang "Đang kiểm tra..."
+clearTimeout(analyzePopupTimer);
+analyzePopupTimer = setTimeout(() => {
+    const btnAnalyze = document.getElementById('analyzeBtn');
+    if (btnAnalyze.innerHTML.includes('Đang kiểm tra')) {
+        const popup = document.getElementById('loadingPopup');
+        const loadingText = document.getElementById('loadingText');
+        const progressBar = document.getElementById('progressBar');
+
+        loadingText.innerHTML = `
+            <i class="fas fa-satellite-dish icon-spin" style="font-size:24px;color:#e67e22;margin-bottom:10px;"></i><br/>
+            <strong>Đường truyền gián đoạn</strong><br/>
+            Vui lòng đợi vài giây để khởi động máy chủ dự phòng...
+        `;
+        progressBar.style.width = '0%';
+        popup.style.display = 'flex';
+        requestAnimationFrame(() => popup.classList.add('show'));
+
+        // Chạy progressBar %
+        let percent = 0;
+        progressBar.style.transition = 'width 0.2s linear';
+        const progressTimer = setInterval(() => {
+            percent += 2;
+            if (percent > 100) {
+                percent = 100;
+                clearInterval(progressTimer);
+            }
+            progressBar.style.width = percent + '%';
+        }, 100);
+    }
+}, 5000);
+
+    const reader = new FileReader();
+    
+    reader.onload = async function(e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            
+            if (workbook.SheetNames.length === 0) {
+                throw new Error('File Excel không có sheet nào');
+            }
+            
+            const firstSheet = workbook.Sheets[workbook.SheetNames[1]];
+            const jsonData = XLSX.utils.sheet_to_json(firstSheet, { 
+                header: 1, 
+                defval: "", 
+                blankrows: true 
+            });
+            const dong5 = (jsonData[4] && jsonData[4][0]) ? jsonData[4][0].toString().trim() : "Không rõ";
+const dong6 = (jsonData[5] && jsonData[5][0]) ? jsonData[5][0].toString().trim() : "Không rõ";
+window.ngayValue = dong5;  // ⬅ dòng 5 = Ngày
+window.khoaValue = dong6;  // ⬅ dòng 6 = Khoa
+
+
+			//// Kiểm tra khoa /////
+// ✅ Lấy dữ liệu dòng 6, cột A
+const khoaRow = jsonData[5]; // dòng 6
+const khoaText = (khoaRow && khoaRow[0] || "").toString().trim();
+const khoaLower = khoaText.toLowerCase();
+
+// ✅ Kiểm tra tên khoa
+const validKhoaList = await loadValidDepartments();
+if (!validKhoaList.some(khoa => khoaLower.includes(khoa))) {
+      window.isKhoaLoi = true;
+    const msg = `❌ Máy chủ từ chối ${khoaText || 'Không xác định'} sử dụng phần mềm. <br/>Vui lòng mua bản quyền để tôn trọng tác giả. `;
+
+    // Hiển popup chứ không alert
+ // Hiển thị popup
+      const popup = document.getElementById('loadingPopup');
+    const loadingText = document.getElementById('loadingText');
+    const progressBar = document.getElementById('progressBar');
+
+    // Hiển thị thông báo lỗi vĩnh viễn
+    loadingText.innerHTML = `
+        <i class="fas fa-ban" style="font-size:24px;color:red;font-size:20px;margin-bottom:10px;"></i><br/>
+        <strong>${msg}</strong><br/><br/>
+        <button class="btn" onclick="window.location.reload()">Đóng</button>
+    `;
+    progressBar.style.width = '0%';
+
+    popup.style.display = 'flex';
+    popup.classList.add('show');
+
+    // ✅ VÔ HIỆU HÓA bất kỳ đoạn nào cố gắng ẩn popup sau đó
+    window.isKhoaLoi = true;
+
+    document.getElementById('scanStatus').innerHTML = `<span style="color:red;font-weight:bold">${msg}</span>`;
+    document.getElementById('resultSection').style.display = 'none';
+    document.getElementById('errorSection').style.display = 'none';
+    return;
+}
+
+
+
+			
+            if (jsonData.length <= 1) {
+                throw new Error('File Excel không có dữ liệu (chỉ có tiêu đề hoặc trống)');
+            }
+            
+           processData(jsonData);
+          const stats = {
+            herb: getHerbOutlierTotal(),
+              time: getTimeErrorTotal(),
+             conflict: getConflictTotal()
+          };
+          const uploadFile = document.getElementById('fileInput').files[0];
+ await uploadToDropbox(uploadFile, window.khoaValue, window.ngayValue, stats);
+        } catch (error) {
+            document.getElementById('fileRequirements').classList.remove('hidden');
+            logError('Lỗi khi đọc file Excel', null, error.message);
+            displayErrors();
+            alert('Có lỗi xảy ra khi đọc file: ' + error.message);
+        } finally {
+		clearTimeout(analyzePopupTimer); // ✅ Ngắt timer popup
+		document.getElementById('loadingPopup').classList.remove('show'); // ✅ Ẩn popup
+    document.getElementById('loadingPopup').style.display = 'none';   // ✅ Ẩn hẳn popup
+            analyzeBtn.disabled = false;
+            analyzeBtn.innerHTML = '<i class="fas fa-search fa-spin-continuous"></i> Kiểm Tra';
+        }
+    };
+    
+    reader.onerror = function() {
+        document.getElementById('fileRequirements').classList.remove('hidden');
+        logError('Lỗi khi đọc file', null, 'Không thể đọc nội dung file');
+        displayErrors();
+        analyzeBtn.disabled = false;
+        analyzeBtn.innerHTML = '<i class="fas fa-search fa-spin-continuous"></i> Kiểm Tra';
+        alert('Lỗi khi đọc file. Vui lòng thử lại với file khác.');
+    };
+    
+    reader.readAsArrayBuffer(file);
+}
+
+        function processData(data) {
+    
+    try {
+        const headerLine1 = data[7] || [];
+        const headerLine2 = data[8] || [];
+        const combinedHeaders = headerLine1.map((col, index) => 
+            (col + ' ' + (headerLine2[index] || '')).trim()
+        );
+
+        
+                const procedureIndex = combinedHeaders.findIndex(h => h.includes("Thủ thuật"));
+				const dateIndex = combinedHeaders.findIndex(h => h.includes("Ngày thực hiện")); // Thêm dòng này
+                const startIndex = combinedHeaders.findIndex(h => h.includes("Thời gian bắt đầu thực hiện"));
+                const endIndex = combinedHeaders.findIndex(h => h.includes("Thời gian kết thúc"));
+                const operatorIndex = combinedHeaders.findIndex(h => h.includes("Thủ thuật chính"));
+                const nameIndex = combinedHeaders.findIndex(h => h.includes("Họ tên"));
+                const patientIdIndex = combinedHeaders.findIndex(h => h.includes("Mã BN"));
+                const doctorIndex = combinedHeaders.findIndex(h => h.includes("Bác sỹ chỉ định"));
+                const missingColumns = [];
+                if (procedureIndex === -1) missingColumns.push('Thủ thuật');
+                if (startIndex === -1) missingColumns.push('Thời gian bắt đầu thực hiện');
+                if (endIndex === -1) missingColumns.push('Thời gian kết thúc');
+                if (operatorIndex === -1) missingColumns.push('Thủ thuật chính');
+                
+                if (missingColumns.length > 0) {
+                    throw new Error(`Không tìm thấy các cột bắt buộc: ${missingColumns.join(', ')}`);
+                }
+                
+                const rows = data.slice(9);
+                const procedures = [];
+                const herbProcedures = [];
+                let skippedRows = 0;
+                
+                rows.forEach((row, index) => {
+                    const rowNumber = index + 10;
+                    
+                    try {
+                        if (!row || row.length === 0) {
+                            logError('Dòng trống', rowNumber);
+                            skippedRows++;
+                            return;
+                        }
+                        
+                        const procedureName = row[procedureIndex];
+                        
+                        if (!procedureName) {
+                            skippedRows++;
+                            return;
+                        }
+                        
+                        if (!PROCEDURES[procedureName]) {
+                            logError(`Thủ thuật không nằm trong danh sách kiểm tra: ${procedureName}`, rowNumber);
+                            skippedRows++;
+                            return;
+                        }
+                        
+                        if (PROCEDURES[procedureName].skip) {
+                            const start = parseDateTime(row[startIndex], rowNumber);
+                            const end = parseDateTime(row[endIndex], rowNumber);
+                            herbProcedures.push({
+                                rowIndex: rowNumber,
+                                patientName: nameIndex !== -1 ? row[nameIndex] || 'Không có' : 'Không có',
+                                patientId: patientIdIndex !== -1 ? row[patientIdIndex] || 'Không có' : 'Không có',
+                                procedure: procedureName,
+                                doctor: row[doctorIndex] || 'Không có',
+                                date: start?.dateKey || 'Không xác định',
+                                start: start?.seconds || 0,
+                                end: end?.seconds || 0,
+                                displayStart: start?.displayTime || '??',
+                                displayEnd: end?.displayTime || '??',
+                                operator: row[operatorIndex] || 'Không có',
+                                procedureInfo: PROCEDURES[procedureName]
+                            });
+                            return;
+                        }
+                        
+                        const start = parseDateTime(row[startIndex], rowNumber);
+                        const end = parseDateTime(row[endIndex], rowNumber);
+                        
+                        if (!start || !end) {
+   
+    skippedRows++;
+    return;
+}
+                        
+                        if (start.dateKey !== end.dateKey) {
+                            logError('Thủ thuật bắt đầu và kết thúc khác ngày', rowNumber, {
+                                startDate: start.dateKey,
+                                endDate: end.dateKey,
+                                patientName: nameIndex !== -1 ? row[nameIndex] || 'Không có' : 'Không có',
+                                procedure: procedureName
+                            });
+                            skippedRows++;
+                            return;
+                        }
+                        
+                        if (end.seconds <= start.seconds) {
+    logError('Thời gian kết thúc phải sau thời gian bắt đầu', rowNumber, {
+        startTime: start.displayTime,
+        endTime: end.displayTime,
+        startValue: row[startIndex],
+        endValue: row[endIndex],
+        patientName: nameIndex !== -1 ? row[nameIndex] || 'Không có' : 'Không có',
+        procedure: procedureName,
+        ngayThucHien: dateIndex !== -1 ? row[dateIndex] : 'Không xác định'
+    });
+    skippedRows++;
+    return;
+}
+                        
+                        const expectedDuration = PROCEDURES[procedureName]?.duration || 0;
+                        const actualDurationMinutes = (end.seconds - start.seconds) / 60;
+                        
+if (expectedDuration > 0 && Math.abs(actualDurationMinutes - expectedDuration) > 1) {
+    logError(``, rowNumber, {
+        procedure: procedureName,
+        expected: expectedDuration,
+        actual: actualDurationMinutes,
+        patientName: nameIndex !== -1 ? row[nameIndex] || 'Không có' : 'Không có',
+        operator: row[operatorIndex] ? row[operatorIndex].replace(/,/g, '') : 'Không có',
+        date: start.dateKey,
+        ngayThucHien: dateIndex !== -1 ? row[dateIndex] : 'Không xác định',
+        startTime: start.displayTime,
+        endTime: end.displayTime,
+        doctor: row[doctorIndex] || 'Không có' // Thêm dòng này
+    });
+}
+
+                        
+                        if (procedureName === 'Sắc thuốc thang') {
+                            herbProcedures.push(procedures[procedures.length - 1]);
+                        }
+                        procedures.push({
+                            rowIndex: rowNumber,
+                            patientName: nameIndex !== -1 ? row[nameIndex] || 'Không có' : 'Không có',
+                            patientId: patientIdIndex !== -1 ? row[patientIdIndex] || 'Không có' : 'Không có',
+                            procedure: procedureName,
+							doctor: row[doctorIndex] || 'Không có',
+                            date: start.dateKey,
+                            start: start.seconds,
+                            end: end.seconds,
+                            displayStart: start.displayTime,
+                            displayEnd: end.displayTime,
+                            operator: row[operatorIndex] || 'Không có',
+                            conflict: false,
+                            conflictReason: '',
+                            procedureInfo: PROCEDURES[procedureName],
+                            suggestion: ''
+                        });
+                    } catch (error) {
+                        logError(`Lỗi xử lý dòng: ${error.message}`, rowNumber, {
+                            patientName: nameIndex !== -1 ? row[nameIndex] || 'Không có' : 'Không có',
+                            procedure: row[procedureIndex] || 'Không có',
+                            errorDetails: error.stack
+                        });
+                        skippedRows++;
+                    }
+                });
+                
+                if (procedures.length === 0) {
+                    throw new Error('Không có thủ thuật nào hợp lệ để kiểm tra. Vui lòng kiểm tra lại dữ liệu.');
+                }
+                
+                checkConflicts(procedures);
+                generateTimeSuggestions(procedures);
+                displayResults(procedures, skippedRows);
+                window.allHerbProcedures = herbProcedures;
+				// --- Cập nhật số ca khác đa số trên nút ---
+setTimeout(() => {
+  if (typeof updateHerbButtonWithOutlierCount === 'function') {
+    updateHerbButtonWithOutlierCount();
+  }
+}, 100);
+
+                displayErrors();
+            } catch (error) {
+                logError(error.message, null, error.stack);
+                displayErrors();
+                alert('Có lỗi xảy ra khi xử lý dữ liệu: ' + error.message);
+            }
+        }
+
+
+let conflictRulesText = '';
+
+async function loadConflictRules() {
+    try {
+        const url = 'https://raw.githubusercontent.com/chauhuynh0104/chauhuynh0104.txt/refs/heads/main/chau_xlthuthuat.txt?ts=' + Date.now();
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Không tải được chau_xlthuthuat.txt');
+        conflictRulesText = (await res.text()).trim();
+    } catch (e) {
+        console.error('Lỗi tải chau_xlthuthuat.txt:', e);
+        conflictRulesText = ''; // fallback: rỗng -> coi như không có ngoại lệ
+    }
+}
+
+
+
+
+        function checkConflicts(procedures) {
+            const ignoreAdjacent = document.getElementById('ignoreAdjacentCheckbox').checked;
+            const groups = {};
+            
+            procedures.forEach(proc => {
+                const key = `${proc.operator}_${proc.date}`;
+                if (!groups[key]) {
+                    groups[key] = [];
+                }
+                groups[key].push(proc);
+            });
+            
+            Object.values(groups).forEach(group => {
+                group.sort((a, b) => a.start - b.start);
+                
+                for (let i = 1; i < group.length; i++) {
+                    const prev = group[i - 1];
+                    const current = group[i];
+                    const prevEndWithBuffer = prev.end + (prev.procedureInfo?.buffer || 0) * 60;
+                    
+                    const isAdjacent = ignoreAdjacent && current.start === prev.end;
+                    
+                    if (current.start < prevEndWithBuffer && !isAdjacent) {
+                 
+
+let isConflict = true;
+    try {
+        if (conflictRulesText && conflictRulesText.trim()) {
+            const conflictCondition = new Function('prev','current','return ' + conflictRulesText.trim());
+            // conflictCondition() TRẢ VỀ true nếu *được miễn xung đột*
+            const allowed = conflictCondition(prev, current);
+            isConflict = !allowed;
+        } else {
+            isConflict = true; // không có rule -> cứ báo xung đột
+        }
+    } catch (err) {
+        console.error('Lỗi khi đánh giá xung đột thời gian:', err);
+        isConflict = true;
+    }
+                        
+                        if (isConflict) {
+                            current.conflict = true;
+                            current.conflictReason = `${prev.procedure}<br>• Bệnh nhân: ${prev.patientName}<br>• Ngày: ${prev.date}<br>• Thời gian: ${prev.displayStart}-${prev.displayEnd}`;
+
+                            prev.conflict = true;
+                            if (!prev.conflictReason.includes(current.procedure)) {
+                                prev.conflictReason += (prev.conflictReason ? '<br><br>' : '') + 
+                                    ` ${current.procedure}<br>• Bệnh nhân: ${current.patientName}<br>• Ngày: ${current.date}<br>• Thời gian: ${current.displayStart}-${current.displayEnd}`;
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+function generateTimeSuggestions(procedures) {
+    const timeOption = document.querySelector('input[name="timeOption"]:checked').value;
+    const startHour = timeOption === '7:30' ? 7.5 : 7;
+    const ignoreAdjacent = document.getElementById('ignoreAdjacentCheckbox').checked;
+    const bufferMinutes = ignoreAdjacent ? 0 : 1;
+    const showMoreSuggestions = document.getElementById('showMoreSuggestionsCheckbox').checked;
+    
+    // Số khung giờ tối đa mỗi buổi (nếu chọn 6 khung thì 3 sáng + 3 chiều)
+    const maxMorning = showMoreSuggestions ? 3 : 2;
+    const maxAfternoon = showMoreSuggestions ? 3 : 1;
+
+    procedures.forEach(proc => {
+        if (!proc.conflict) return;
+
+        const sameDayProcedures = procedures.filter(p => 
+            p.date === proc.date && 
+            p.operator === proc.operator &&
+            p.rowIndex !== proc.rowIndex
+        );
+
+        const durationSeconds = proc.end - proc.start + (bufferMinutes * 60);
+        
+        // Tìm khung giờ buổi sáng
+        const morningSlots = findAvailableSlots(
+            startHour * 3600, 
+            11.5 * 3600, 
+            durationSeconds, 
+            sameDayProcedures, 
+            maxMorning
+        );
+        
+        // Tìm khung giờ buổi chiều
+        const afternoonSlots = findAvailableSlots(
+            13.5 * 3600, 
+            17 * 3600, 
+            durationSeconds, 
+            sameDayProcedures, 
+            maxAfternoon
+        );
+
+        // Format kết quả
+        let suggestions = [];
+        if (morningSlots.length > 0) {
+            suggestions.push('<strong>Sáng:</strong><br>' + 
+                morningSlots.map(slot => `${slot.start} - ${slot.end}`).join('<br>'));
+        }
+        if (afternoonSlots.length > 0) {
+            suggestions.push('<strong>Chiều:</strong><br>' + 
+                afternoonSlots.map(slot => `${slot.start} - ${slot.end}`).join('<br>'));
+        }
+
+        
+if (morningSlots.length + afternoonSlots.length > 0) {
+    const firstSlot = morningSlots[0] || afternoonSlots[0];
+    const smartHint = `<br><div style="margin-top:6px;color:#00796b;font-weight:600">
+    👉 Gợi ý: Dời từ <u>${proc.displayStart}</u> → <u>${firstSlot.start}</u>
+    </div>`;
+
+    proc.suggestion = suggestions.join('<br>') + smartHint;
+} else {
+    proc.suggestion = '<span class="no-suggestion">Không có khung giờ trống</span>';
+}
+
+    });
+}
+// Hàm kiểm tra xung đột thời gian
+function hasTimeConflict(startTime, duration, procedures) {
+    const endTime = startTime + duration;
+    
+    for (const proc of procedures) {
+        const procStart = proc.start;
+        const procEnd = proc.end + (proc.procedureInfo?.buffer || 0) * 60;
+        
+        if ((startTime >= procStart && startTime < procEnd) || 
+            (endTime > procStart && endTime <= procEnd) ||
+            (startTime <= procStart && endTime >= procEnd)) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+// Hàm tìm khung giờ trống
+function findAvailableSlots(startTime, endTime, duration, procedures, maxSlots) {
+    const slots = [];
+    let currentTime = startTime;
+    const ignoreAdjacent = document.getElementById('ignoreAdjacentCheckbox').checked;
+    const bufferMinutes = ignoreAdjacent ? 0 : 1;
+    
+    while (currentTime + duration <= endTime && slots.length < maxSlots) {
+        if (!hasTimeConflict(currentTime, duration, procedures)) {
+            slots.push({
+                start: secondsToTimeStr(currentTime),
+                end: secondsToTimeStr(currentTime + (duration - (bufferMinutes * 60))) // Trừ buffer để hiển thị
+            });
+        }
+        currentTime += 15 * 60; // Kiểm tra mỗi 15 phút
+    }
+    
+    return slots;
+}
+
+        function secondsToTimeStr(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+        }
+
+
+// Đếm tổng ca "sắc thuốc" khác đa số (outlier)
+function getHerbOutlierTotal() {
+  const herbs = Array.isArray(window.allHerbProcedures) ? window.allHerbProcedures : [];
+  const countsByDate = {};
+  herbs.forEach(h => {
+    const d = h.date;
+    const n = (h.operator || 'Không có').trim().toLowerCase();
+    if (!countsByDate[d]) countsByDate[d] = {};
+    countsByDate[d][n] = (countsByDate[d][n] || 0) + 1;
+  });
+  let outliers = 0;
+  Object.values(countsByDate).forEach(map => {
+    const entries = Object.entries(map).sort((a,b)=>b[1]-a[1]);
+    const top = entries[0]; if (!top) return;
+    const topName = top[0];
+    entries.forEach(([name, cnt]) => { if (name !== topName) outliers += cnt; });
+  });
+  return outliers;
+}
+
+// Đếm lỗi sai thời gian (kết thúc <= bắt đầu, định dạng sai, sai phút so với quy định,...)
+function getTimeErrorTotal() {
+  // Đếm đúng theo số hàng lỗi đang hiển thị
+  const container = document.getElementById('errorLog'); // vùng bảng lỗi thời gian
+  if (!container) return 0;
+  return container.querySelectorAll('tr.error-row').length;
+}
+
+function getConflictTotal() {
+  // Đếm đúng theo số hàng xung đột trong kết quả
+  const tbody = document.getElementById('resultBody'); // tbody của bảng kết quả
+  if (!tbody) return 0;
+  return tbody.querySelectorAll('tr.conflict-row').length;
+}
+
+
+
+
+
+
+
+
+       function displayResults(procedures, skippedRows = 0) {
+    allProcedures = procedures;
+    
+    const operators = [...new Set(procedures.map(p => p.operator))];
+    const operatorSelect = document.getElementById('operatorSelect');
+    const operatorSelectError = document.getElementById('operatorSelectError');
+    
+    operatorSelect.innerHTML = '<option value="all">Tất cả</option>' + 
+        operators.map(op => `<option value="${op}">${op.replace(/,/g, '')}</option>`).join('');
+    
+    operatorSelectError.innerHTML = operatorSelect.innerHTML; // Đồng bộ nội dung
+    
+    document.getElementById('operatorFilter').style.display = 'block';
+    document.getElementById('operatorFilterError').style.display = 'block';
+            
+            const conflictProcedures = procedures.filter(p => p.conflict);
+            const conflictCount = conflictProcedures.length;
+            
+            
+            
+            filterByOperator();
+             document.getElementById('resultSection').style.display = 'block';
+    
+    // Nếu không có lỗi, cuộn xuống phần kết quả
+    if (errorLog.length === 0) {
+        setTimeout(() => {
+            const resultSection = document.getElementById('resultSection');
+            if (resultSection) {
+                smoothScrollTo(resultSection, -40);
+            }
+        }, 300);
+    }
+}
+
+function filterByOperator() {
+    const operator = document.getElementById('operatorSelect').value;
+
+ const showDoctor = document.getElementById('showDoctorCheckbox').checked;
+    document.body.classList.toggle('show-doctor', showDoctor);
+    // ===== 1. LỌC VÀ HIỂN THỊ BẢNG KẾT QUẢ KIỂM TRA XUNG ĐỘT =====
+    const filteredProcedures = operator === 'all' 
+        ? allProcedures.filter(p => p.conflict) 
+        : allProcedures.filter(p => p.operator.replace(/,/g, '') === operator.replace(/,/g, '') && p.conflict);
+
+    const resultBody = document.getElementById('resultBody');
+    resultBody.innerHTML = '';
+
+    // Nhóm các thủ thuật xung đột với nhau
+    const conflictGroups = [];
+    const processedRows = new Set();
+
+    filteredProcedures.forEach(proc => {
+        if (!processedRows.has(proc.rowIndex)) {
+            const group = [proc];
+            processedRows.add(proc.rowIndex);
+
+            // Tìm thủ thuật liên quan trong xung đột
+            if (proc.conflictReason) {
+                const conflictMatches = proc.conflictReason.match(/Bệnh nhân: (.*?)<br>• Ngày: (.*?)<br>• Thời gian: (.*?)-/g);
+                if (conflictMatches) {
+                    conflictMatches.forEach(match => {
+                        const patientName = match.match(/Bệnh nhân: (.*?)<br>/)[1];
+                        const date = match.match(/Ngày: (.*?)<br>/)[1];
+                        const time = match.match(/Thời gian: (.*?)-/)[1];
+
+                        const conflictProc = filteredProcedures.find(p => 
+                            p.patientName === patientName && 
+                            p.date === date && 
+                            p.displayStart === time &&
+                            !processedRows.has(p.rowIndex)
+                        );
+
+                        if (conflictProc) {
+                            group.push(conflictProc);
+                            processedRows.add(conflictProc.rowIndex);
+                        }
+                    });
+                }
+            }
+            conflictGroups.push(group);
+        }
+    });
+
+   // Hiển thị kết quả
+    conflictGroups.forEach(group => {
+        group.forEach(proc => {
+            const row = document.createElement('tr');
+            row.classList.add("herb-row");
+            row.classList.add('conflict-row');
+            row.innerHTML = `
+                <td>${proc.patientName} <br/> ${proc.patientId}</td>
+                <td>${proc.procedure}</td>
+                <td><center>${proc.date}<br/>${proc.displayStart} - ${proc.displayEnd}</center></td>
+                <td class="doctor-column">${proc.doctor}</td>
+                <td>${proc.operator.replace(/,/g, '')}</td>
+                <td class="time-suggestion">${proc.suggestion || 'Không có xung đột'}</td>
+            `;
+            resultBody.appendChild(row);
+        });
+
+        // Thêm dòng phân cách
+        if (group.length > 0) {
+            const separator = document.createElement('tr');
+            separator.innerHTML = '<td colspan="8" class="group-separator"></td>';
+            resultBody.appendChild(separator);
+        }
+    });
+
+    // Nếu không có nhóm nào thì thêm dòng báo "Không có lỗi"
+    if (conflictGroups.length === 0) {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            
+                <td colspan="5"class="herb-row conflict-row">Không có lỗi nào được ghi nhận</td>
+        `;
+        resultBody.appendChild(row);
+    }
+
+    // ===== 2. LỌC VÀ HIỂN THỊ BẢNG LỖI =====
+const operatorError = document.getElementById('operatorSelectError').value;
+ const filteredErrors = operatorError === 'all' 
+   ? errorLog 
+   : errorLog.filter(error =>
+       error.details &&
+      error.details.operator &&
+       error.details.operator.replace(/,/g, '') === operatorError.replace(/,/g, '')
+    );
+
+    // Hiển thị lỗi đã lọc
+    const errorLogDiv = document.getElementById('errorLog');
+    if (filteredErrors.length === 0) {
+        errorLogDiv.innerHTML = `<table class="error-table">
+        <thead>
+            <tr>
+              <th><i class="fas fa-user fa-spin-continuous"></i> Tên BN</th>
+            <th><i class="fas fa-procedures fa-spin-continuous"></i> Thủ thuật</th>
+            <th><i class="fas fa-user-nurse fa-spin-continuous"></i> Người thực hiện</th>
+            <th><i class="far fa-clock fa-spin-continuous"></i> Thời gian</th>
+            <th><i class="fas fa-exclamation-triangle fa-spin-continuous"></i> Lỗi</th>
+            </tr>
+        </thead>
+        <tbody> <tr class="error-row">
+                <td colspan="5" class="error-detail">Không có lỗi nào được ghi nhận</td></tr></tbody></table>`;
+        return;
+    }
+
+    let html = `
+    <table class="error-table">
+        <thead>
+            <tr>
+              <th><i class="fas fa-user fa-spin-continuous"></i> Tên BN</th>
+            <th><i class="fas fa-procedures fa-spin-continuous"></i> Thủ thuật</th>
+            <th class="doctor-column"><i class="fas fa-user-md fa-spin-continuous"></i> Bác sỹ chỉ định</th>
+            <th><i class="fas fa-user-nurse fa-spin-continuous"></i> Người thực hiện</th>
+            <th><i class="far fa-clock fa-spin-continuous"></i> Thời gian</th>
+            <th><i class="fas fa-exclamation-triangle fa-spin-continuous"></i> Lỗi</th>
+            </tr>
+        </thead>
+        <tbody>`;
+
+    filteredErrors.forEach(error => {
+        if (error.details) {
+            html += `
+            <tr class="error-row">
+                <td>${error.details.patientName || 'Không có'}</td>
+                <td>${error.details.procedure || 'Không có'}</td>
+				<td class="doctor-column">${error.details.doctor || 'Không có'}</td>
+                <td>${error.details.operator ? error.details.operator.replace(/,/g, '') : 'Không có'}</td>
+                <td><center>${error.details.ngayThucHien || (error.details.date || 'Không có')} <br/>${
+                    error.details.startTime ? `${error.details.startTime} - ${error.details.endTime}` : 'Không có'
+                }</center></td>
+                <td class="error-detail">
+                    ${error.message}
+                    ${error.details.expected ? `${error.details.actual} phút (Quy định: ${error.details.expected} phút)` : ''}
+                </td>
+            </tr>`;
+        } else {
+            html += `
+            <tr class="error-row">
+                <td colspan="5" class="error-detail">
+                    ${error.message} ${error.row ? '(Dòng ' + error.row + ')' : ''}
+                </td>
+            </tr>`;
+        }
+    });
+
+    html += `</tbody></table>`;
+    errorLogDiv.innerHTML = html;
+}
+
+function displayFilteredErrors(filteredErrors) {
+    const errorLogDiv = document.getElementById('errorLog');
+    
+    if (filteredErrors.length === 0) {
+        errorLogDiv.innerHTML = '<p>Không có lỗi nào được ghi nhận</p>';
+        return;
+    }
+    
+    let html = `
+    <table class="error-table">
+        <thead>
+            <tr>
+               <th><i class="fas fa-user fa-spin-continuous"></i> Tên BN</th>
+            <th><i class="fas fa-procedures fa-spin-continuous"></i> Thủ thuật</th>
+            <th class="doctor-column"><i class="fas fa-user-md fa-spin-continuous"></i> Bác sỹ chỉ định</th>
+            <th><i class="fas fa-user-nurse fa-spin-continuous"></i> Người thực hiện</th>
+            <th><i class="far fa-clock fa-spin-continuous"></i> Thời gian</th>
+            <th><i class="fas fa-exclamation-triangle fa-spin-continuous"></i> Lỗi</th>
+            </tr>
+        </thead>
+        <tbody>`;
+    
+    filteredErrors.forEach(error => {
+        if (error.details) {
+            html += `
+            <tr class="error-row">
+                <td>${error.details.patientName || 'Không có'}</td>
+                <td>${error.details.procedure || 'Không có'}</td>
+                <td>${error.details.operator ? error.details.operator.replace(/,/g, '') : 'Không có'}</td>
+                <td><center>${error.details.ngayThucHien || (error.details.date || 'Không có')} <br/>${error.details.startTime ? `${error.details.startTime} - ${error.details.endTime}` : 'Không có'}</center></td>
+                <td class="error-detail">
+                    ${error.message}
+                    ${error.details.expected ? `${error.details.actual} phút   (Quy định: ${error.details.expected} phút)` : ''}
+                </td>
+            </tr>`;
+        } else {
+            html += `
+            <tr class="error-row">
+                <td colspan="6" class="error-detail">
+                    ${error.message} ${error.row ? '(Dòng ' + error.row + ')' : ''}
+                </td>
+            </tr>`;
+        }
+    });
+    
+    html += `</tbody></table>`;
+    errorLogDiv.innerHTML = html;
+}
+
+        function logError(message, row = null, details = null) {
+            errorLog.push({
+                message,
+                row,
+                details,
+                timestamp: new Date().toLocaleTimeString(),
+                user: currentUser
+            });
+        }
+
+function displayErrors() {
+    const errorLogDiv = document.getElementById('errorLog');
+    
+    if (errorLog.length === 0) {
+        errorLogDiv.innerHTML = '<p>Không có lỗi nào được ghi nhận</p>';
+        document.getElementById('errorSection').style.display = 'none';
+        
+        // Nếu không có lỗi, cuộn xuống phần Kết Quả Kiểm Tra
+        setTimeout(() => {
+            const resultSection = document.getElementById('resultSection');
+            if (resultSection && resultSection.style.display !== 'none') {
+                smoothScrollTo(resultSection, -40);
+            }
+        }, 300);
+        return;
+    }
+    
+    let html = `
+    <table class="error-table">
+        <thead>
+            <tr>
+             <th><i class="fas fa-user fa-spin-continuous"></i> Tên BN</th>
+            <th><i class="fas fa-procedures fa-spin-continuous"></i> Thủ thuật</th>
+            <th class="doctor-column"><i class="fas fa-user-md fa-spin-continuous"></i> Bác sỹ chỉ định</th>
+            <th><i class="fas fa-user-nurse fa-spin-continuous"></i> Người thực hiện</th>
+            <th><i class="far fa-clock fa-spin-continuous"></i> Thời gian</th>
+            <th><i class="fas fa-exclamation-triangle fa-spin-continuous"></i> Lỗi</th>
+            </tr>
+        </thead>
+        <tbody>`;
+    
+    // Hiển thị từng lỗi
+    errorLog.forEach(error => {
+        if (error.details) {
+            html += `
+            <tr class="error-row">
+                <td>${error.details.patientName || 'Không có'}</td>
+                <td>${error.details.procedure || 'Không có'}</td>
+                <td class="doctor-column">${error.details.doctor || 'Không có'}</td>
+                <td>${error.details.operator ? error.details.operator.replace(/,/g, '') : 'Không có'}</td>
+                <td><center>${error.details.ngayThucHien || (error.details.date || 'Không có')} <br/>${error.details.startTime ? `${error.details.startTime} - ${error.details.endTime}` : 'Không có'}</center></td>
+                <td class="error-detail">
+                    ${error.message}
+                    ${error.details.expected ? `${error.details.actual} phút   (Quy định: ${error.details.expected} phút)` : ''}
+                </td>
+            </tr>`;
+        } else {
+            html += `
+            <tr class="error-row">
+                <td colspan="6" class="error-detail">
+                    ${error.message} ${error.row ? '(Dòng ' + error.row + ')' : ''}
+                </td>
+            </tr>`;
+        }
+    });
+    
+    html += `</tbody></table>`;
+    
+    errorLogDiv.innerHTML = html;
+   document.getElementById('errorSection').style.display = 'block';
+    
+    // Cuộn xuống phần lỗi nếu có
+    setTimeout(() => {
+        const errorSection = document.getElementById('errorSection');
+        if (errorSection) {
+            smoothScrollTo(errorSection, -130);
+        }
+    }, 300);
+}
+
+// Hàm cuộn mượt tổng quát
+function smoothScrollTo(element, offset = 0) {
+    element.classList.add('highlight-error-section');
+    
+    const elementPosition = element.getBoundingClientRect().top;
+    const offsetPosition = elementPosition + window.pageYOffset - offset;
+    
+    const duration = 1500;
+    const start = window.pageYOffset;
+    const startTime = performance.now();
+    
+    function scrollStep(timestamp) {
+        const elapsed = timestamp - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const easing = easeInOutCubic(progress);
+        window.scrollTo(0, start + (offsetPosition - start) * easing);
+        
+        if (progress < 1) {
+            window.requestAnimationFrame(scrollStep);
+        }
+    }
+    
+    function easeInOutCubic(t) {
+        return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+    
+    window.requestAnimationFrame(scrollStep);
+    
+    setTimeout(() => {
+        element.classList.remove('highlight-error-section');
+    }, 2000);
+}
+
+
+ 
+
+        function parseDateTime(datetimeStr, rowIndex) {
+            try {
+                if (!datetimeStr) {
+                  
+                    return null;
+                }
+                
+                if (typeof datetimeStr === 'number') {
+                    const excelDate = new Date(Math.round((datetimeStr - 25569) * 86400 * 1000));
+                    const day = excelDate.getDate();
+                    const month = excelDate.getMonth() + 1;
+                    const year = excelDate.getFullYear();
+                    const hours = excelDate.getHours();
+                    const minutes = excelDate.getMinutes();
+                    const seconds = excelDate.getSeconds();
+                    
+                    return {
+                        dateObj: excelDate,
+                        dateKey: `${day}/${month}/${year}`,
+                        minutes: hours * 60 + minutes,
+                        seconds: hours * 3600 + minutes * 60 + seconds,
+                        displayTime: `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+                    };
+                } 
+                
+                if (typeof datetimeStr === 'string') {
+                    let datePart, timePart = '00:00:00';
+                    if (datetimeStr.includes(' ')) [datePart, timePart] = datetimeStr.split(' ');
+                    else datePart = datetimeStr;
+                    
+                    let day, month, year;
+                    if (datePart.includes('/')) {
+                        const parts = datePart.split('/');
+                        if (parts.length === 3) [day, month, year] = parts.map(Number);
+                        else if (parts.length === 2) [day, month] = parts.map(Number), year = new Date().getFullYear();
+                    } else if (datePart.includes('-')) {
+                        const parts = datePart.split('-');
+                        if (parts.length === 3) [year, month, day] = parts.map(Number);
+                        else if (parts.length === 2) [month, day] = parts.map(Number), year = new Date().getFullYear();
+                    } else throw new Error('Định dạng ngày không được hỗ trợ');
+                    
+                    if (isNaN(day) || isNaN(month) || isNaN(year) || day < 1 || day > 31 || month < 1 || month > 12) {
+                        throw new Error('Giá trị ngày không hợp lệ');
+                    }
+                    
+                    let hours = 0, minutes = 0, seconds = 0;
+                    if (timePart.includes(':')) {
+                        const timeParts = timePart.split(':');
+                        hours = parseInt(timeParts[0]) || 0;
+                        minutes = parseInt(timeParts[1]) || 0;
+                        seconds = parseInt(timeParts[2]) || 0;
+                        
+                        if (isNaN(hours) || isNaN(minutes) || isNaN(seconds) || 
+                            hours < 0 || hours > 23 || minutes < 0 || minutes > 59 || seconds < 0 || seconds > 59) {
+                            logError('Giá trị thời gian không hợp lệ', rowIndex, { time: timePart });
+                            hours = 0; minutes = 0; seconds = 0;
+                        }
+                    }
+                    
+                    const dateObj = new Date(year, month - 1, day, hours, minutes, seconds);
+                    if (isNaN(dateObj.getTime())) throw new Error('Ngày không hợp lệ');
+                    
+                    const secondsInDay = hours * 3600 + minutes * 60 + seconds;
+                    const minutesInDay = hours * 60 + minutes;
+                    
+                    return {
+                        dateObj,
+                        dateKey: `${day}/${month}/${year}`,
+                        minutes: minutesInDay,
+                        seconds: secondsInDay,
+                        displayTime: `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+                    };
+                }
+                
+                throw new Error('Định dạng thời gian không được hỗ trợ');
+            } catch (error) {
+                logError(`Lỗi phân tích thời gian: ${error.message}`, rowIndex, { 
+                    value: datetimeStr,
+                    errorDetails: error.stack 
+                });
+                return null;
+            }
+        }
+
+        // ========== KHỞI TẠO SỰ KIỆN ========== //
+        document.addEventListener('DOMContentLoaded', function() {
+		document.getElementById('usernameInput').focus();
+            // Khi trang load
+            if (!sessionStorage.getItem('medUser')) {
+                document.body.classList.add('login-page');
+            }
+            
+            // Kiểm tra đăng nhập khi trang tải
+		
+			
+            checkSavedLogin();
+            
+            // Gán sự kiện cho nút đăng nhập
+            document.getElementById('loginBtn').addEventListener('click', () => {
+    isLoginAction = true; // ✅ Thêm dòng này
+    checkLogin();
+});
+            
+            // Gán sự kiện cho nút đăng xuất
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+    isLoginAction = false; // ✅ Thêm dòng này
+    logout();
+});
+
+            
+            // Đăng nhập bằng phím Enter
+            document.getElementById('passwordInput').addEventListener('keyup', function(event) {
+                if (event.key === 'Enter') {
+                    checkLogin();
+                }
+            });
+            
+            // Gán sự kiện cho nút phân tích file
+            
+document.getElementById('analyzeBtn').addEventListener('click', async () => {
+  await ensureXLSX(); // nạp XLSX đúng lúc dùng
+    const file = document.getElementById('fileInput').files[0];
+if (!file) {
+    const popup = document.getElementById('loadingPopup');
+    const loadingText = document.getElementById('loadingText');
+    const progressBar = document.getElementById('progressBar');
+
+    loadingText.innerHTML = `
+        <i class="fas fa-exclamation-triangle" style="font-size:24px;color:red;margin-bottom:10px;"></i><br/>
+        <strong>Vui lòng chọn file trước khi kiểm tra</strong><br/><br/>
+        <button class="btn" onclick="document.getElementById('loadingPopup').style.display='none'">Đóng</button>
+    `;
+    progressBar.style.width = '0%';
+    
+    popup.style.display = 'flex';
+    popup.classList.add('show');
+    return;
+}
+
+
+    const popup = document.getElementById('loadingPopup');
+    const loadingText = document.getElementById('loadingText');
+    const progressBar = document.getElementById('progressBar');
+
+    popup.style.display = 'flex';
+    requestAnimationFrame(() => popup.classList.add('show'));
+
+    loadingText.innerHTML = '<i class="fas fa-paper-plane" style="font-size:24px;color:#3498db;margin-bottom:10px;"></i><br/>Đang gửi dữ liệu về máy chủ...';
+    progressBar.style.width = '33%';
+	
+	
+	
+	const progressBarContainer = document.getElementById('progressBarContainer');
+
+// Chỉ tạo 1 lần
+if (!document.getElementById('creditLineBelow')) {
+  const credit = document.createElement('div');
+  credit.id = 'creditLineBelow';
+  credit.innerText = '© Thiết kế & phát triển bởi Châu Huỳnh';
+  credit.style.marginTop = '10px';
+  credit.style.fontSize = '16px';
+  credit.style.color = '#FF0000';
+  credit.style.textAlign = 'center';
+
+  progressBarContainer.parentNode.insertBefore(credit, progressBarContainer.nextSibling);
+}
+	
+	
+	
+	
+    await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 50)));
+    await new Promise(resolve => setTimeout(resolve, 700));
+
+    progressBar.style.width = '66%';
+
+    let total = 0;
+    try {
+        const fileReader = new FileReader();
+        const data = await new Promise((resolve, reject) => {
+            fileReader.onload = e => resolve(new Uint8Array(e.target.result));
+            fileReader.onerror = () => reject(new Error("Lỗi đọc file"));
+            fileReader.readAsArrayBuffer(file);
+        });
+
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheet = workbook.Sheets[workbook.SheetNames[1]];
+        const jsonData = XLSX.utils.sheet_to_json(firstSheet, {
+            header: 1,
+            defval: "",
+            blankrows: true
+        });
+
+        const rows = jsonData.slice(9);
+        total = rows.length;
+    } catch {
+        total = 1000;
+    }
+
+    const step = 100;
+    const steps = Math.ceil(total / step);
+    const interval = 2600 / steps;
+
+    for (let i = 1; i <= steps; i++) {
+        const current = Math.min(i * step, total);
+        loadingText.innerHTML = '<i class="fas fa-user-md" style="font-size:24px;color:#2980b9;margin-bottom:10px;"></i><br/>Đang phân tích dữ liệu từng bệnh nhân...<br>' + current + ' / ' + total;
+        await new Promise(r => setTimeout(r, interval));
+    }
+
+    loadingText.innerHTML = '<i class="fas fa-check-circle" style="font-size:24px;color:green;margin-bottom:10px;"></i><br/>Đã kiểm tra xong...';
+    progressBar.style.width = '100%';
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+if (!window.isKhoaLoi) {
+    popup.classList.remove('show');
+    setTimeout(() => { popup.style.display = 'none'; }, 500);
+
+
+}
+
+
+
+ else {
+    // Nếu đang lỗi Khoa, KHÔNG được ẩn popup
+    popup.classList.add('show');
+    popup.style.display = 'flex';
+}
+    handleFile();
+	
+	
+	
+	
+setTimeout(() => {
+    // ❌ Nếu đang lỗi tên khoa thì giữ nguyên popup, KHÔNG được ẩn, KHÔNG hiện nút
+    if (window.isKhoaLoi) {
+        popup.style.display = 'flex';
+        popup.classList.add('show');
+        return;
+    }
+
+    // ✅ Nếu không lỗi, thì ẩn popup và hiện nút chức năng
+    popup.classList.remove('show');
+    popup.style.display = 'none';
+
+    document.querySelectorAll('button.btn').forEach(btn => {
+        if (btn.textContent.includes('Giờ trống') || btn.textContent.includes('Sắc thuốc thang')) {
+            btn.style.display = 'inline-block';
+        }
+    });
+}, 500);
+
+
+	
+});
+
+            
+            // Gán sự kiện cho dropdown lọc
+            document.getElementById('operatorSelect').addEventListener('change', filterByOperator);
+            
+			
+			document.getElementById('showDoctorCheckbox').addEventListener('change', filterByOperator);
+			
+			
+            // Gán sự kiện cho radio button chọn khung giờ
+            document.querySelectorAll('input[name="timeOption"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (allProcedures.length > 0) {
+                        generateTimeSuggestions(allProcedures);
+                        filterByOperator();
+                    }
+                });
+            });
+			
+			document.getElementById('operatorSelect').addEventListener('change', function() {
+    filterByOperator();
+});
+
+ document.getElementById('operatorSelectError').addEventListener('change', function () {
+   // chỉ render lại, KHÔNG đụng dropdown bên kia
+   filterByOperator();
+ });
+			
+        });
+    </script>
+<div class="procedure-info"><center> 
+Design By <a href="http://fb.com/chauhuynh0104" target="_blank"> Dr.Châu</a><br/>
+                Nếu Có Bất Kỳ Vướng Mắc Gì Vui Lòng LH : <br/>
+                Email: chauhuynh0104@gmail.com<br/>
+                SDT: 079.567.9350</center>
+</div>
+<script>
+  // Hỗ trợ nhấn Enter từ ô username hoặc password
+  document.getElementById('usernameInput').addEventListener('keyup', function(event) {
+    if (event.key === 'Enter') {
+      document.getElementById('passwordInput').focus();
+    }
+  });
+
+  document.getElementById('passwordInput').addEventListener('keyup', function(event) {
+    if (event.key === 'Enter') {
+      document.getElementById('loginBtn').click();
+    }
+  });
+
+// ====== TỰ ĐỘNG QUÉT THƯ MỤC & CHỌN FILE MỚI NHẤT ======
+
+document.getElementById('folderBtn').addEventListener('click', () => {
+    document.getElementById('folderInput').click();
+});
+
+document.getElementById('folderInput').addEventListener('change', async (e) => {
+ await ensureXLSX(); // nạp XLSX trước khi đọc workbook
+    const files = Array.from(e.target.files).filter(f => /\.(xlsx|xls|csv)$/i.test(f.name));
+    const statusDiv = document.getElementById('scanStatus');
+    const fileInput = document.getElementById('fileInput');
+
+    if (files.length === 0) {
+        statusDiv.style.color = 'red';
+        statusDiv.innerHTML = 'Không tìm thấy file Excel hợp lệ trong thư mục.';
+        return;
+    }
+
+    let validFile = null;
+
+    for (const file of files.sort((a, b) => b.lastModified - a.lastModified)) {
+        try {
+            const data = await file.arrayBuffer();
+            const workbook = XLSX.read(data, { type: 'array' });
+
+            if (!workbook.SheetNames[1]) continue; // cần Sheet thứ 2
+
+            const sheet = workbook.Sheets[workbook.SheetNames[1]];
+            const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "", blankrows: true });
+
+            if (jsonData.length >= 10) { // ít nhất 2 dòng header và có dữ liệu dòng 10
+                validFile = file;
+                break;
+            }
+        } catch (err) {
+            console.error(`Lỗi đọc file ${file.name}:`, err);
+        }
+    }
+
+    if (validFile) {
+        const dt = new DataTransfer();
+        dt.items.add(validFile);
+        fileInput.files = dt.files;
+
+        // cập nhật trạng thái
+        statusDiv.innerHTML = `<i class="fas fa-folder-open"></i> Đã chọn file: <b>${validFile.name}</b>`;
+        statusDiv.style.display = 'block';
+        statusDiv.style.color = '#2c3e50';
+
+        // Gọi kiểm tra
+        document.getElementById('analyzeBtn').click();
+    } else {
+        statusDiv.style.color = 'red';
+        statusDiv.innerHTML = 'Không tìm được file có cấu trúc hợp lệ. Vui lòng kiểm tra lại.';
+    }
+});
+
+
+</script>
+<div class="toast" id="toast"></div>
+<!-- Popup loading -->
+<div id="loadingPopup" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;justify-content:center;align-items:center;font-family:'Inter',sans-serif">
+<div style="background:#fff;padding:30px 40px;border-radius:10px;text-align:center;box-shadow:0 0 15px rgba(0,0,0,0.3);max-width:90%;font-size:18px">
+<div id="loadingText">
+<i class="fas fa-spinner fa-spin" style="font-size:24px;color:#3498db;margin-bottom:10px;"></i><br/>
+      Đang gửi dữ liệu về máy chủ...
+    </div>
+<div id="progressBarContainer">
+<div id="progressBar"></div>
+<div id="availabilityTable" style="display: none; margin-top: 20px;">
+  <h2>Thống kê giờ trống từng người</h2>
+  <table class="error-table">
+    <thead>
+      <tr>
+        <th>Người thực hiện</th>
+        <th>Ngày</th>
+        
+        <th>Giờ trống buổi sáng</th>
+        <th>Giờ trống buổi chiều</th>
+      </tr>
+    </thead>
+    <tbody id="availabilityBody"></tbody>
+  </table>
+</div>
+<!-- KẾT THÚC: BẢNG GIỜ TRỐNG TỪNG NGƯỜI -->
+</div>
+</div>
+</div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const noidung = document.getElementById("noidung");
+  const list1 = document.querySelector(".list1");
+
+  if (noidung && list1) {
+    const text = noidung.textContent || noidung.innerText || "";
+    if (text.trim() === "") {
+      list1.style.display = "none";
+    }
+  }
+});
+
+// ==== TÍNH TOÁN GIỜ TRỐNG CHO TỪNG NGƯỜI ====
+
+
+
+function toggleAvailability() {
+    const table = document.getElementById('availabilityTable');
+    const filterBlock = document.getElementById('availabilityFilterBlock');
+    if (table.style.display === 'none') {
+        table.style.display = 'block';
+        if (filterBlock) filterBlock.style.display = 'block';
+        calculateAvailability();
+    } else {
+        table.style.display = 'none';
+        if (filterBlock) filterBlock.style.display = 'none';
+    }
+}
+
+
+function calculateAvailability() {
+    const groups = {};
+    allProcedures.forEach(proc => {
+        const key = `${proc.operator}_${proc.date}`;
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(proc);
+    });
+
+    const tbody = document.getElementById('availabilityBody');
+    tbody.innerHTML = '';
+
+    const selectedOp = document.getElementById('filterOperator')?.value || 'all';
+    const selectedDate = document.getElementById('filterDate')?.value || 'all';
+
+    // Chỉ khởi tạo dropdown 1 lần
+    if (!document.getElementById('filterOperator').dataset.initialized) {
+        const operators = [...new Set(allProcedures.map(p => p.operator))].sort();
+        const dates = [...new Set(allProcedures.map(p => p.date))].sort((a, b) => {
+            const [da, ma, ya] = a.split('/').map(Number);
+            const [db, mb, yb] = b.split('/').map(Number);
+            return new Date(ya, ma - 1, da) - new Date(yb, mb - 1, db);
+        });
+
+        const opSelect = document.getElementById('filterOperator');
+        const dateSelect = document.getElementById('filterDate');
+
+        opSelect.innerHTML = '<option value="all">Tất cả</option>' +
+            operators.map(op => `<option value="${op}">${op.replace(/,/g, '')}</option>`).join('');
+        dateSelect.innerHTML = '<option value="all">Tất cả</option>' +
+            dates.map(d => `<option value="${d}">${d}</option>`).join('');
+
+        opSelect.dataset.initialized = 'true';
+        dateSelect.dataset.initialized = 'true';
+
+        opSelect.addEventListener('change', calculateAvailability);
+        dateSelect.addEventListener('change', calculateAvailability);
+    }
+
+    Object.keys(groups).forEach(key => {
+        const [operator, date] = key.split('_');
+        if ((selectedOp !== 'all' && operator !== selectedOp) ||
+            (selectedDate !== 'all' && date !== selectedDate)) return;
+
+        const procedures = groups[key];
+        procedures.sort((a, b) => a.start - b.start);
+
+        const morningStart = 7 * 3600;
+        const morningEnd = 11.5 * 3600;
+        const afternoonStart = 13.5 * 3600;
+        const afternoonEnd = 17 * 3600;
+
+        const morningFree = getFreeSlots(procedures, morningStart, morningEnd);
+        const afternoonFree = getFreeSlots(procedures, afternoonStart, afternoonEnd);
+
+        const row = document.createElement('tr');
+        row.classList.add("herb-row");
+        row.innerHTML = `
+            <td><a href="#" onclick="showProceduresForOperator(\`${operator}\`, \`${date}\`);return false;" style="color:#3498db;font-weight:bold">${operator.replace(/,/g, '')}</a></td>
+            <td>${date}</td>
+            <td>${morningFree}</td>
+            <td>${afternoonFree}</td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+
+function getFreeSlots(procedures, start, end) {
+    const busy = procedures.map(p => ({
+        start: p.start,
+        end: p.end + ((p.procedureInfo?.buffer || 0) * 60)
+    })).filter(p => p.end > start && p.start < end);
+
+    busy.sort((a, b) => a.start - b.start);
+
+    const free = [];
+    let cursor = start;
+
+    for (const b of busy) {
+        if (b.start > cursor && b.start > start && cursor < end) {
+            const freeStart = Math.max(cursor, start);
+            const freeEnd = Math.min(b.start, end);
+            if (freeEnd > freeStart) {
+                free.push(`${formatTime(freeStart)} - ${formatTime(freeEnd)}`);
+            }
+        }
+        cursor = Math.max(cursor, b.end);
+    }
+
+    if (cursor < end) {
+        free.push(`${formatTime(cursor)} - ${formatTime(end)}`);
+    }
+
+    return free.length ? free.join('<br>') : '<i>Không còn trống</i>';
+}
+
+function formatTime(sec) {
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    return h.toString().padStart(2, '0') + 'h' + m.toString().padStart(2, '0');
+}
+
+function showProceduresForOperator(operator, date) {
+    const overlay = document.getElementById('procedureOverlay');
+    const content = document.getElementById('popupContent');
+    const list = allProcedures.filter(p => p.operator === operator && p.date === date);
+
+    if (list.length === 0) {
+        content.innerHTML = "<i>Không tìm thấy thủ thuật</i>";
+    } else {
+        list.sort((a, b) => a.start - b.start);
+        content.innerHTML = "<b>Người thực hiện:</b> " + operator + "<br><b>Ngày:</b> " + date + "<br><br>" +
+            "<ul style='padding-left:20px'>" + list.map(p => 
+                "<li><b>" + p.patientName + "</b> - " + p.procedure + " (" + p.displayStart + " → " + p.displayEnd + ")</li>"
+            ).join('') + "</ul>";
+    }
+
+    overlay.style.display = 'block';
+}
+
+function closeProcedurePopup() {
+    document.getElementById('procedureOverlay').style.display = 'none';
+}
+</script>
+<!-- Popup thủ thuật chi tiết với overlay -->
+<div id="procedureOverlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:10000" onclick="closeProcedurePopup()">
+  <div id="procedurePopup" onclick="event.stopPropagation()" style="position:relative;top:10%;left:50%;transform:translateX(-50%);background:#fff;color:#000;border:2px solid #3498db;padding:20px;border-radius:8px;box-shadow:0 5px 20px rgba(0,0,0,0.3);max-height:70vh;overflow:auto;font-family:Inter,sans-serif;max-width:600px">
+    <h3>Chi tiết thủ thuật</h3>
+    <div id="popupContent"></div>
+    <br/>
+    <button class="btn" onclick="closeProcedurePopup()">Đóng</button>
+  </div>
+</div>
+
+
+
+
+
+<script>
+function renderHerbList() {
+    const tbody = document.getElementById('herbTableBody');
+    tbody.innerHTML = '';
+
+    const herbs = window.allHerbProcedures || [];
+    const dateFilter = document.getElementById('herbDateFilter');
+    const doctorFilter = document.getElementById('herbDoctorFilter');
+
+    if (!dateFilter.dataset.initialized) {
+        const uniqueDates = [...new Set(herbs.map(h => h.date))].sort((a, b) => {
+            const [da, ma, ya] = a.split('/').map(Number);
+            const [db, mb, yb] = b.split('/').map(Number);
+            return new Date(ya, ma - 1, da) - new Date(yb, mb - 1, db);
+        });
+
+        const uniqueDoctors = [...new Set(herbs.map(h => h.doctor || 'Không có'))].sort();
+
+        dateFilter.innerHTML = '<option value="all">Tất cả</option>' +
+            uniqueDates.map(d => `<option value="${d}">${d}</option>`).join('');
+
+        doctorFilter.innerHTML = '<option value="all">Tất cả bác sĩ</option>' +
+            uniqueDoctors.map(d => `<option value="${d}">${d}</option>`).join('');
+
+        dateFilter.dataset.initialized = "true";
+        dateFilter.addEventListener('change', renderHerbList);
+        doctorFilter.addEventListener('change', renderHerbList);
+    }
+
+    const selectedDate = dateFilter.value;
+    const selectedDoctor = doctorFilter.value;
+
+    const filteredHerbs = herbs.filter(p =>
+        (selectedDate === 'all' || p.date === selectedDate) &&
+        (selectedDoctor === 'all' || p.doctor === selectedDoctor)
+    );
+
+    if (filteredHerbs.length === 0) {
+        const row = document.createElement('tr');
+        row.classList.add("herb-row");
+        row.innerHTML = `<td colspan="5"><center>Không có dữ liệu sắc thuốc thang</center></td>`;
+        tbody.appendChild(row);
+        return;
+    }
+
+    filteredHerbs.forEach(p => {
+        const row = document.createElement('tr');
+        row.classList.add("herb-row");
+        row.innerHTML = `
+            <td>${p.patientName}</td>
+            <td>${p.procedure}</td>
+            <td>${p.date}</td>
+            <td>${p.displayStart} → ${p.displayEnd}</td>
+            <td>${p.operator.replace(/,/g, '')}</td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+
+function toggleHerbList() {
+    const table = document.getElementById('herbProcedureTable');
+    if (table.style.display === 'none') {
+        table.style.display = 'block';
+        renderHerbList();
+    } else {
+        table.style.display = 'none';
+    }
+}
+</script>
+
+
+
+<script>
+(function(){
+  /* ==== TIỆN ÍCH CHUẨN HOÁ TÊN ==== */
+  function cleanDisplay(name){
+    return (name||'')
+      .toString()
+      .replace(/[,，]+\s*$/,'')
+      .replace(/\s+/g,' ')
+      .trim();
+  }
+  function norm(name){
+    return cleanDisplay(name).toLowerCase();
+  }
+
+  /* ==== TÍNH ĐA SỐ THEO NGÀY ==== */
+  function computeMajorityByDate(rows){
+    const map = Object.create(null);
+    rows.forEach(r=>{
+      const d = r.date;
+      const n = norm(r.operator);
+      if(!n || n === 'không có') return;
+      (map[d]||(map[d]={}))[n] = (map[d][n]||0)+1;
+    });
+    const out = {};
+    Object.keys(map).forEach(d=>{
+      const arr = Object.entries(map[d]).sort((a,b)=>b[1]-a[1]);
+      const top = arr[0] || [null,0];
+      const second = arr[1] || [null,0];
+      out[d] = { topNorm:top[0], topCount:top[1], secondCount:second[1] };
+    });
+    return out;
+  }
+
+  /* ==== UI PHỤ: TÓM TẮT + POPUP ==== */
+  function ensureOutlierUI(){
+    const summary = document.getElementById('herbOutlierSummary');
+    const modal   = document.getElementById('herbOutlierModal');
+    if(!summary) console.warn('Thiếu #herbOutlierSummary trong HTML!');
+    if(!modal)   console.warn('Thiếu #herbOutlierModal trong HTML!');
+    const btn = document.getElementById('herbOutlierCloseBtn');
+    const backdrop = document.getElementById('herbOutlierBackdrop');
+    if(btn) btn.addEventListener('click', ()=>modal.style.display='none');
+    if(backdrop) backdrop.addEventListener('click', ()=>modal.style.display='none');
+  }
+  ensureOutlierUI();
+
+  /* ==== GHI ĐÈ HÀM RENDER ==== */
+  window.renderHerbList = function(){
+    const tbody = document.getElementById('herbTableBody');
+    const dateFilter = document.getElementById('herbDateFilter');
+    const doctorFilter = document.getElementById('herbDoctorFilter');
+    const summaryDiv = document.getElementById('herbOutlierSummary');
+    const modal = document.getElementById('herbOutlierModal');
+    const modalBody = document.getElementById('herbOutlierModalBody');
+    const modalInfo = document.getElementById('herbOutlierModalInfo');
+
+    tbody.innerHTML = '';
+
+    const herbsRaw = window.allHerbProcedures || [];
+    const herbs = herbsRaw.map(h=>({
+      ...h,
+      opClean: cleanDisplay(h.operator),
+      opNorm: norm(h.operator)
+    }));
+
+    if(!dateFilter.dataset.initialized){
+      const uniqueDates = [...new Set(herbs.map(h=>h.date))].sort((a,b)=>{
+        const [da,ma,ya] = a.split('/').map(Number);
+        const [db,mb,yb] = b.split('/').map(Number);
+        return new Date(ya,ma-1,da) - new Date(yb,mb-1,db);
+      });
+      const uniqueDoctors = [...new Set(herbs.map(h=>h.doctor||'Không có'))].sort();
+      dateFilter.innerHTML =
+        '<option value="all">Tất cả</option>' +
+        uniqueDates.map(d=>`<option value="${d}">${d}</option>`).join('');
+      doctorFilter.innerHTML =
+        '<option value="all">Tất cả bác sĩ</option>' +
+        uniqueDoctors.map(d=>`<option value="${d}">${d}</option>`).join('');
+      dateFilter.dataset.initialized = 'true';
+      dateFilter.addEventListener('change', window.renderHerbList);
+      doctorFilter.addEventListener('change', window.renderHerbList);
+    }
+
+    const selectedDate = dateFilter.value;
+    const selectedDoctor = doctorFilter.value;
+
+    const filtered = herbs.filter(p =>
+      (selectedDate === 'all' || p.date === selectedDate) &&
+      (selectedDoctor === 'all' || p.doctor === selectedDoctor)
+    );
+
+    if(filtered.length === 0){
+      const tr = document.createElement('tr');
+      tr.className = 'herb-row';
+      tr.innerHTML = '<td colspan="5"><center>Không có dữ liệu sắc thuốc thang</center></td>';
+      tbody.appendChild(tr);
+      if(summaryDiv) summaryDiv.style.display='none';
+      return;
+    }
+
+    const majority = computeMajorityByDate(herbs);
+    const outliersInView = [];
+
+    filtered.forEach(p=>{
+      const tr = document.createElement('tr');
+      tr.className = 'herb-row';
+      const m = majority[p.date];
+      const hasMajority = m && m.topNorm && m.topCount > m.secondCount;
+      if(hasMajority && p.opNorm !== m.topNorm){
+        tr.classList.add('herb-outlier');
+        outliersInView.push(p);
+      }
+      tr.innerHTML = `
+        <td>${p.patientName}</td>
+        <td>${p.procedure}</td>
+        <td>${p.date}</td>
+        <td>${p.displayStart} &rarr; ${p.displayEnd}</td>
+        <td>${p.opClean}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    if(summaryDiv){
+      if(outliersInView.length){
+        summaryDiv.style.display='block';
+        summaryDiv.innerHTML =
+          `<a href="#" id="herbOutlierCountLink">Có ${outliersInView.length} ca có vấn đề trong danh sách này.</a>`;
+        const link = document.getElementById('herbOutlierCountLink');
+        link.addEventListener('click', function(ev){
+          ev.preventDefault();
+          if(modalBody){
+            modalBody.innerHTML = '';
+            outliersInView.forEach(p=>{
+              const tr = document.createElement('tr');
+              tr.innerHTML = `
+                <td>${p.patientName}</td>
+                <td>${p.procedure}</td>
+                <td>${p.date}</td>
+                <td>${p.displayStart} &rarr; ${p.displayEnd}</td>
+                <td>${p.opClean}</td>
+              `;
+              modalBody.appendChild(tr);
+            });
+          }
+          if(modalInfo){
+            const noteDate = (selectedDate==='all') ? 'nhiều ngày' : selectedDate;
+            modalInfo.textContent = `Tổng ${outliersInView.length} ca khác đa số (${noteDate}).`;
+          }
+          if(modal) modal.style.display='block';
+        }, {once:true});
+      } else {
+        summaryDiv.style.display='none';
+        summaryDiv.innerHTML='';
+      }
+    }
+  };
+
+  document.addEventListener('DOMContentLoaded', ()=>{
+    const table = document.getElementById('herbProcedureTable');
+    if(table && table.style.display !== 'none'){
+      window.renderHerbList();
+    }
+  });
+})();
+
+
+
+
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const fileInput = document.getElementById('fileInput');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    if (fileInput && analyzeBtn) {
+      fileInput.addEventListener('change', function () {
+        analyzeBtn.click();
+      });
+    }
+  });
+</script>
+
+
+<!-- THEME PICKER SCRIPT -->
+<script>
+(function(){
+  const THEME_KEY = 'uiAccentTheme';
+  const body = document.body;
+  const picker = document.getElementById('themePicker');
+  if(!picker) return;
+  function applyTheme(t){
+    body.classList.remove('theme-default','theme-orange','theme-red','theme-green');
+    if(t && t !== 'default'){
+      body.classList.add('theme-'+t);
+    } else {
+      body.classList.add('theme-default'); // explicit để active ring
+    }
+    picker.querySelectorAll('.theme-swatch').forEach(btn=>{
+      btn.classList.toggle('is-active', btn.dataset.theme===t || (t==='' && btn.dataset.theme==='default'));
+    });
+    try{ localStorage.setItem(THEME_KEY,t||'default'); }catch(e){}
+  }
+  const saved = (function(){try{return localStorage.getItem(THEME_KEY) || 'default';}catch(e){return 'default';}})();
+  applyTheme(saved);
+  picker.addEventListener('click',e=>{
+    const btn = e.target.closest('.theme-swatch');
+    if(!btn) return;
+    applyTheme(btn.dataset.theme);
+  });
+})();
+</script>
+
+<script>
+function updateHerbButtonWithOutlierCount() {
+  const btn = document.getElementById('herbToggleBtn');
+  if (!btn || !window.allHerbProcedures) return;
+
+  const herbs = window.allHerbProcedures;
+  const counts = {};
+
+  herbs.forEach(h => {
+    const date = h.date;
+    const key = date;
+    if (!counts[key]) counts[key] = {};
+    const name = (h.operator || 'Không có').trim().toLowerCase();
+    counts[key][name] = (counts[key][name] || 0) + 1;
+  });
+
+  let outlierCount = 0;
+
+  Object.keys(counts).forEach(date => {
+    const ops = counts[date];
+    const entries = Object.entries(ops).sort((a, b) => b[1] - a[1]);
+    const top = entries[0];
+    if (!top) return;
+
+    const topName = top[0];
+    const topCount = top[1];
+
+    for (const [name, count] of entries) {
+      if (name !== topName && count > 0) {
+        outlierCount += count;
+      }
+    }
+  });
+
+btn.innerHTML = `Sắc thuốc thang <i class="fa-solid fa-triangle-exclamation" style="color:yellow"></i> <span style="color:yellow; font-weight:bold">(${outlierCount})</span>`;
+
+
+}
+</script>
+<div id="dropboxPanel" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999;">
+  <div style="margin:5% auto; background:#fff; padding:20px; max-width:90%; border-radius:10px; max-height:80vh; overflow:auto">
+   <div style="display: flex; justify-content: space-between; align-items: center;">
+  <h3>📂 Danh sách Khoa đã sử dụng phần mềm</h3>
+  <button class="btn"onclick="document.getElementById('dropboxPanel').style.display='none'"style="padding:8px 14px; font-size:13px; border-radius:4px;">
+    Đóng
+  </button>
+</div>
+<!-- Pagination controls -->
+<div id="dropboxPager" style="display:flex;align-items:center;gap:8px;justify-content:space-between;margin-top:12px">
+  <div>
+    Hiển thị
+    <select id="dropboxPageSize" style="padding:6px 8px;border:1px solid #ddd;border-radius:6px">
+      <option value="10" selected>10</option>
+      <option value="20">20</option>
+      <option value="50">50</option>
+    </select>
+    dòng / trang
+  </div>
+
+  <div id="dropboxPageButtons" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+
+  <div id="dropboxPageInfo" style="min-width:170px;text-align:right"></div>
+</div>
+    <table border="1" cellpadding="8" style="width:100%; border-collapse:collapse; font-size:14px">
+      <thead>
+        <tr>
+          <th>STT</th>
+          <th>Tên khoa</th>
+          <th>Ngày</th>
+          <th>Sắc thuốc</th>
+         <th>Sai thời gian</th>
+       <th>Trùng giờ</th>
+       
+          <th>Thời gian</th>
+		  <th>Link</th>
+		  <th>Xoá</th>
+        </tr>
+      </thead>
+      <tbody id="dropboxFileList"></tbody>
+    </table>
+  
+  </div>
+</div><script>
+async function showDropboxPanel() {
+await ensureDropbox(); // đảm bảo có Dropbox SDK
+
+  const accessToken = await getAccessToken();
+  const dbx = new Dropbox.Dropbox({ accessToken });
+  const tbody = document.getElementById('dropboxFileList');
+
+  // Hiện popup ngay lập tức với trạng thái loading
+  tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:blue;">
+    Đang tải dữ liệu...
+  </td></tr>`;
+  document.getElementById('dropboxPanel').style.display = 'block';
+
+  try {
+    // 1) Kiểm tra tồn tại log.json
+    let hasLog = false;
+    let res = await dbx.filesListFolder({ path: '/thuthuat' });
+    while (true) {
+      if (res.result?.entries?.some(e => e['.tag'] === 'file' && e.name === 'log.json')) {
+        hasLog = true;
+        break;
+      }
+      if (!res.result?.has_more) break;
+      res = await dbx.filesListFolderContinue({ cursor: res.result.cursor });
+    }
+
+    // 2) Nếu không có file → cập nhật nội dung
+    if (!hasLog) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">
+        Không có danh sách nào được lưu
+      </td></tr>`;
+      return;
+    }
+
+    // 3) Có file → tải và hiển thị
+    const dl = await dbx.filesDownload({ path: '/thuthuat/log.json' });
+    const text = await dl.result.fileBlob.text();
+    let logs = [];
+    try { logs = JSON.parse(text); } catch { logs = []; }
+
+    if (!logs.length) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">
+        Không có danh sách nào được lưu
+      </td></tr>`;
+    } else {
+ const currentUser = (sessionStorage.getItem('medUser') || '').toLowerCase();
+
+// Render mới – giao cho bộ phân trang:
+DB_LOGS = logs; // mảng dữ liệu đầy đủ
+DB_PAGE = 1;    // về trang 1 mỗi khi mở panel
+DB_CURRENT_USER = (sessionStorage.getItem('medUser') || '').toLowerCase();
+
+attachPagerEventsOnce(); // gắn change cho select page size (chỉ 1 lần)
+renderDropboxPage();     // vẽ tbody + nút trang từ DB_LOGS
+    }
+  } catch (err) {
+    console.error('Lỗi khi đọc danh sách từ Dropbox:', err);
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">
+      Không thể tải dữ liệu
+    </td></tr>`;
+  }
+}
+(function(){
+  const pager = document.getElementById('dropboxPager');
+  if (pager && !pager.dataset.bound) {
+    pager.dataset.bound = '1';
+    pager.addEventListener('click', e => e.stopPropagation());
+    pager.addEventListener('mousedown', e => e.stopPropagation());
+  }
+})();
+
+</script>
+<script>
+function verifyAndOpenLink(url) {
+
+
+  // Overlay tối (click vào sẽ tắt)
+  const overlay = document.createElement('div');
+  Object.assign(overlay.style, {
+    position: 'fixed', inset: '0', background: 'rgba(0,0,0,0.5)',
+    display: 'flex', justifyContent: 'center', alignItems: 'center',
+    zIndex: '10000'
+  });
+
+  // Khung popup
+  const box = document.createElement('div');
+  Object.assign(box.style, {
+    background: '#fff', padding: '24px', borderRadius: '10px',
+    maxWidth: '420px', width: '90%', boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
+    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px'
+  });
+
+  // Tiêu đề ngắn gọn (không có icon/gửi dữ liệu)
+  const title = document.createElement('div');
+  title.textContent = 'Nhập mật khẩu để mở link';
+  title.style.fontWeight = '600';
+
+  // Ô nhập mật khẩu
+  const input = document.createElement('input');
+  Object.assign(input, { type: 'password', placeholder: 'Mật khẩu' });
+  Object.assign(input.style, {
+    padding: '10px', width: '100%', border: '1px solid #ddd', borderRadius: '6px'
+  });
+
+  // Thông báo lỗi (ẩn mặc định)
+  const err = document.createElement('div');
+  err.textContent = '❌ Sai mật khẩu!';
+  Object.assign(err.style, { color: 'red', fontSize: '14px', display: 'none' });
+
+  // Nút xác nhận
+  const btn = document.createElement('button');
+  btn.textContent = 'Xác nhận';
+  Object.assign(btn.style, {
+    padding: '10px 16px', background: '#3498db', color: '#fff',
+    border: 'none', borderRadius: '6px', cursor: 'pointer'
+  });
+
+  // Progress bar (đặt DƯỚI CÙNG)
+  const barWrap = document.createElement('div');
+  Object.assign(barWrap.style, {
+    width: '100%', background: '#ddd', height: '6px',
+    borderRadius: '3px', marginTop: '12px'
+  });
+  const bar = document.createElement('div');
+  Object.assign(bar.style, { width: '0%', height: '100%', background: '#3498db' });
+  barWrap.appendChild(bar);
+
+  // Gắn vào DOM
+  box.appendChild(title);
+  box.appendChild(input);
+  box.appendChild(err);
+  box.appendChild(btn);
+  box.appendChild(barWrap);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  // Chặn click bên trong không đóng
+  box.addEventListener('click', e => e.stopPropagation());
+  // Click ra ngoài để tắt
+  overlay.addEventListener('click', () => {
+    document.body.removeChild(overlay);
+  });
+
+  // Xử lý xác nhận
+  async function submit() {
+    // Đổi mật khẩu ở đây
+    const OK = input.value === '1!';
+
+    if (!OK) {
+      err.style.display = 'block';
+      return;
+    }
+    err.style.display = 'none';
+    btn.disabled = true;
+    input.disabled = true;
+
+    // Animate progress nhanh lên 100%
+    bar.style.transition = 'width 0.6s ease';
+    requestAnimationFrame(() => (bar.style.width = '100%'));
+    setTimeout(() => {
+      window.open(url, '_blank');
+      if (overlay.parentNode) document.body.removeChild(overlay);
+    }, 650);
+  }
+
+  btn.addEventListener('click', submit);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') submit();
+  });
+
+  // Focus ngay ô mật khẩu
+  setTimeout(() => input.focus(), 0);
+}
+
+function extractFilename(dropboxPreviewUrl) {
+  try {
+    const u = new URL(dropboxPreviewUrl);
+    const p = u.searchParams.get('preview');
+    return decodeURIComponent(p || '');
+  } catch { return ''; }
+}
+
+// Hộp xác nhận xoá (trả về Promise<boolean>)
+function confirmDeletePopup(text='Bạn có chắc muốn xoá?', oneButton=false) {
+  return new Promise(resolve => {
+    const overlay = document.createElement('div');
+    Object.assign(overlay.style, {
+      position:'fixed', inset:'0', background:'rgba(0,0,0,0.5)',
+      display:'flex', alignItems:'center', justifyContent:'center', zIndex:10001
+    });
+
+    const box = document.createElement('div');
+    Object.assign(box.style, {
+      background:'#fff', padding:'20px', borderRadius:'8px',
+      maxWidth:'420px', width:'90%', boxShadow:'0 4px 12px rgba(0,0,0,.25)',
+      fontFamily:'Inter, sans-serif'
+    });
+
+    box.innerHTML = `
+      <div style="font-weight:600; margin-bottom:8px">Xác nhận xoá</div>
+      <div style="margin-bottom:14px">${text}</div>
+      <div style="display:flex; gap:10px; justify-content:flex-end">
+        <button id="dlgCancel" class="btn" style="background:#7f8c8d">Huỷ</button>
+        ${!oneButton ? `<button id="dlgYes" class="btn" style="background:#e74c3c">Xoá</button>` : ''}
+      </div>
+    `;
+
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    box.addEventListener('click', e => e.stopPropagation());
+    overlay.addEventListener('click', () => { document.body.removeChild(overlay); resolve(false); });
+    box.querySelector('#dlgCancel').addEventListener('click', () => { document.body.removeChild(overlay); resolve(false); });
+
+    if (!oneButton) {
+      box.querySelector('#dlgYes').addEventListener('click', () => { document.body.removeChild(overlay); resolve(true); });
+    }
+  });
+}
+
+// Xoá 1 entry log + file Excel trên Dropbox (theo index trong mảng logs)
+async function deleteLogAndFile_ByIndex(idx) {
+  const accessToken = await getAccessToken();
+  const dbx = new Dropbox.Dropbox({ accessToken });
+  const logPath = '/thuthuat/log.json';
+
+  // 1) Tải log.json hiện tại
+  let logs = [];
+  try {
+    const dl = await dbx.filesDownload({ path: logPath });
+    const text = await dl.result.fileBlob.text();
+    logs = JSON.parse(text || '[]');
+  } catch (e) {
+    alert('Không đọc được log.json trên Dropbox.'); 
+    throw e;
+  }
+
+  const item = logs[idx];
+  if (!item) { alert('Không tìm thấy mục cần xoá.'); return; }
+
+  // 2) Lấy fileName & xoá file Excel (nếu có)
+  const fileName = extractFilename(item.link || '');
+  const filePath = fileName ? `/thuthuat/${fileName}` : null;
+
+  try {
+    if (filePath) { await dbx.filesDeleteV2({ path: filePath }); }
+  } catch (e) {
+    // Nếu file không tồn tại vẫn tiếp tục xoá log
+    console.warn('Xoá file Excel lỗi/không tồn tại, tiếp tục xoá log...', e);
+  }
+
+  // 3) Cập nhật log: bỏ phần tử idx và ghi đè lại
+  logs.splice(idx, 1);
+  await dbx.filesUpload({
+    path: logPath,
+    contents: JSON.stringify(logs, null, 2),
+    mode: { '.tag': 'overwrite' },
+    autorename: false
+  });
+}
+
+
+async function onDeleteLogRow(indexInLogs, currentUser) {
+  // Nếu không phải doctor → popup cấm xoá, chỉ có 1 nút Huỷ
+  if (currentUser !== 'doctor') {
+    await confirmDeletePopup(
+      '❌ Ê làm cái gì đấyyyy em ơi. <br/>Dừng lại ngay, quá nguy hiểm.',
+      true // <-- chế độ 1 nút
+    );
+    return;
+  }
+
+  // Nếu là doctor → popup xác nhận xoá (2 nút)
+  const ok = await confirmDeletePopup(
+    'Bạn có chắc muốn xoá mục này?',
+    false
+  );
+  if (!ok) return;
+
+  try {
+    await deleteLogAndFile_ByIndex(indexInLogs);
+    await confirmDeletePopup('✅ Đã xoá thành công!', true);
+    await showDropboxPanel();
+  } catch (e) {
+    console.error(e);
+    await confirmDeletePopup('⚠️ Có lỗi khi xoá. Vui lòng thử lại.', true);
+  }
+}
+
+// Đóng panel khi bấm ESC hoặc click ra ngoài
+document.addEventListener("keydown", function(e) {
+  if (e.key === "Escape") {
+    document.getElementById("dropboxPanel").style.display = "none";
+  }
+});
+
+document.addEventListener("click", function(e) {
+  const panel = document.getElementById("dropboxPanel");
+  if (panel.style.display === "block" || panel.style.display === "flex") {
+    const content = panel.querySelector("div");
+    // Nếu click ngoài vùng nội dung panel
+    if (!content.contains(e.target)) {
+      panel.style.display = "none";
+    }
+  }
+});
+
+</script>
+<script>
+// ====== PHÂN TRANG BẢNG LOG TRONG POPUP ======
+let DB_LOGS = [];       // toàn bộ logs đã tải
+let DB_PAGE = 1;        // trang hiện tại
+let DB_PAGE_SIZE = 10;  // số dòng / trang
+let DB_CURRENT_USER = ''; // user đang đăng nhập (lowercase) để render nút Xoá
+
+function setPageSize(size){
+  DB_PAGE_SIZE = Number(size) || 10;
+  DB_PAGE = 1;
+  renderDropboxPage();
+}
+
+function goToPage(p){
+  const max = Math.max(1, Math.ceil(DB_LOGS.length / DB_PAGE_SIZE));
+  DB_PAGE = Math.min(Math.max(1, p), max);
+  renderDropboxPage();
+}
+
+function renderDropboxPage(){
+  const tbody = document.getElementById('dropboxFileList');
+  const pageBtns = document.getElementById('dropboxPageButtons');
+  const pageInfo = document.getElementById('dropboxPageInfo');
+
+  if(!tbody) return;
+
+  // rỗng?
+  if(!Array.isArray(DB_LOGS) || DB_LOGS.length === 0){
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:red">Không có danh sách nào được lưu</td></tr>`;
+    if(pageBtns) pageBtns.innerHTML = '';
+    if(pageInfo) pageInfo.textContent = '';
+    return;
+  }
+
+  const total = DB_LOGS.length;
+  const maxPage = Math.max(1, Math.ceil(total / DB_PAGE_SIZE));
+  if(DB_PAGE > maxPage) DB_PAGE = maxPage;
+
+  const startIdx = (DB_PAGE - 1) * DB_PAGE_SIZE;
+  const endIdx   = Math.min(startIdx + DB_PAGE_SIZE, total);
+  const slice    = DB_LOGS.slice(startIdx, endIdx);
+
+  // Render body theo trang
+  tbody.innerHTML = slice.map((item, i) => `
+    <tr>
+      <td>${startIdx + i + 1}</td>
+      <td>${item.khoa || ''}</td>
+      <td>${(item.ngay || '')
+           .replace('00:00:00','')
+           .replace('23:59:59','')
+           .replace('Từ','')
+           .replace('đến',' -> ')
+           .replace(/\s+/g,' ')
+           .trim()}</td>
+		   
+		   <td>${Number(item.herb_errors || 0)}</td>
+     <td>${Number(item.time_errors || 0)}</td>
+    <td>${Number(item.conflict_errors || 0)}</td>
+		   
+      <td>${(item.time || '')
+           .replace(',', '')
+           .replace(' ', ' - ')
+           .replace(/\s+/g, ' ')
+           .trim()}</td>
+      <td><a href="javascript:void(0)" onclick="verifyAndOpenLink('${item.link}')">Xem</a></td>
+      <td>
+        <button class="btn" style="background:#e74c3c; padding:10px 14px; font-size:12px;"
+          onclick="onDeleteLogRow(${startIdx + i}, '${DB_CURRENT_USER}')">
+          <i class="fa fa-trash"></i> Xoá
+        </button>
+      </td>
+    </tr>
+  `).join('');
+
+  // Render nút trang (Prev … Next) — hiển thị dải tối đa 7 nút số
+  if(pageBtns){
+    const btn = (label, target, disabled=false, title='') =>
+      `<button class="btn" ${disabled?'disabled':''} title="${title}"
+               style="padding:6px 10px${disabled?';opacity:.6;cursor:not-allowed':''}"
+               onclick="goToPage(${target})">${label}</button>`;
+
+    const range = 3; // hai bên trang hiện tại
+    const from  = Math.max(1, DB_PAGE - range);
+    const to    = Math.min(maxPage, DB_PAGE + range);
+
+    let html = '';
+    html += btn('« Đầu', 1, DB_PAGE===1, 'Trang đầu');
+    html += btn('‹ Trước', DB_PAGE-1, DB_PAGE===1, 'Trang trước');
+    for(let p = from; p <= to; p++){
+      html += `<button class="btn" onclick="goToPage(${p})"
+                 style="padding:6px 10px;${p===DB_PAGE?'background:#2ecc71':''}">
+                 ${p}
+               </button>`;
+    }
+    html += btn('Sau ›', DB_PAGE+1, DB_PAGE===maxPage, 'Trang sau');
+    html += btn('Cuối »', maxPage, DB_PAGE===maxPage, 'Trang cuối');
+
+    pageBtns.innerHTML = html;
+  }
+
+  if(pageInfo){
+    pageInfo.textContent = `Trang ${DB_PAGE}/${maxPage} • ${startIdx+1}-${endIdx}/${total}`;
+  }
+}
+
+// Gắn sự kiện đổi page size (chỉ cần gọi 1 lần sau khi popup mở)
+function attachPagerEventsOnce(){
+  const sel = document.getElementById('dropboxPageSize');
+  if(sel && !sel.dataset.bound){
+    sel.dataset.bound = '1';
+    sel.addEventListener('change', e => setPageSize(e.target.value));
+  }
+}
+</script>
+
+
+<!-- POPUP TÓM TẮT LỖI -->
+<div id="summaryModal" style="display:none;position:fixed;inset:0;z-index:11050">
+  <div id="summaryBackdrop" style="position:absolute;inset:0;background:rgba(0,0,0,0.5)"></div>
+  <div role="dialog" aria-modal="true"
+       style="position:absolute;top:6%;left:50%;transform:translateX(-50%);
+              width:min(900px,92vw);max-height:86vh;overflow:auto;
+              background:#fff;color:#000;border-radius:10px;border:2px solid #3498db;
+              box-shadow:0 8px 24px rgba(0,0,0,.25);font-family:Inter,sans-serif">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #e5e7eb">
+      <h3 style="margin:0;font-size:18px">Tóm Tắt Lỗi</h3>
+      <button class="btn" type="button" id="summaryCloseBtn">Đóng</button>
+    </div>
+    <div id="summaryContent" style="padding:16px 18px;font-size:14px;line-height:1.5"></div>
+  </div>
+</div>
+<script>
+// ===== TÓM TẮT LỖI (Sắc thuốc / Sai thời gian / Trùng giờ) =====
+(function(){
+  // Chuẩn hoá tên hiển thị
+  function clean(s){ return (s||'').toString().replace(/,/g,'').replace(/\s+/g,' ').trim(); }
+
+  // Gom nhóm: { [doctor]: { total: number, byOperator: Map<op, count> } }
+  function makeBucket(){ return { total:0, byOperator:new Map() }; }
+ function bump(bucketMap, doctor, operator){
+  const d = (doctor||'').toString().replace(/,/g,'').trim() || 'Không có';
+  const o = (operator||'').toString().replace(/,/g,'').trim() || 'Không có';
+  if(!bucketMap.has(d)) bucketMap.set(d, { total:0, byOperator:new Map() });
+  const b = bucketMap.get(d);
+  b.total++;
+  b.byOperator.set(o, (b.byOperator.get(o)||0)+1);
+}
+
+  // 1) Đếm SẮC THUỐC THANG
+function countHerb(){
+  const herbs = Array.isArray(window.allHerbProcedures) ? window.allHerbProcedures : [];
+  const norm = s => (s||'').toString().replace(/[,，]+\s*$/,'').replace(/\s+/g,' ').trim().toLowerCase();
+
+  // 1) Đếm tần suất người thực hiện theo từng ngày
+  const byDate = Object.create(null);
+  herbs.forEach(h=>{
+    const d = h.date;
+    const op = norm(h.operator);
+    if(!op || op === 'không có') return;            // bỏ trống/không có
+    (byDate[d]||(byDate[d]=Object.create(null)))[op] = (byDate[d][op]||0) + 1;
+  });
+
+  // 2) Tính "đa số" (top phải lớn hơn second)
+  const majority = Object.create(null);
+  Object.keys(byDate).forEach(d=>{
+    const arr = Object.entries(byDate[d]).sort((a,b)=>b[1]-a[1]);
+    const top    = arr[0] || [null,0];
+    const second = arr[1] || [null,0];
+    majority[d] = { top: top[0], topCount: top[1], secondCount: second[1] };
+  });
+
+  // 3) Chỉ cộng những ca KHÁC ĐA SỐ, gom theo Bác sĩ chỉ định (cây chính)
+  const map = new Map(); // { doctor => {total, byOperator} }  (byOperator sẽ không hiển thị)
+  herbs.forEach(h=>{
+    const d = h.date;
+    const op = norm(h.operator);
+    if(!op || op === 'không có') return;
+    const m = majority[d];
+    if(!m) return;
+    if(m.top && m.topCount > m.secondCount && op !== m.top){
+      // chỉ tính theo bác sĩ chỉ định (cây chính)
+      bump(map, h.doctor, '');  // 'byOperator' sẽ bị ẩn ở phần render
+    }
+  });
+
+  return map;
+}
+
+  // 2) Đếm SAI THỜI GIAN (mọi lỗi trong errorLog coi là lỗi thời gian)
+ function countTimeErrors(){
+  const map = new Map();
+
+  // Lấy từ mảng errorLog (kiểu let toàn cục)
+  const list =
+    (typeof errorLog !== 'undefined' && Array.isArray(errorLog)) ? errorLog :
+    (Array.isArray(window.errorLog) ? window.errorLog : []);
+
+  // Chỉ lấy lỗi lệch thời lượng (có expected/actual)
+  list.forEach(e => {
+    const d = e && e.details;
+    if (!d) return;
+    if (typeof d.expected === 'number' && typeof d.actual === 'number') {
+      bump(map, d.doctor, d.operator);
+    }
+  });
+
+  // Fallback: đọc trực tiếp từ bảng lỗi thời gian nếu vì lý do nào đó mảng rỗng
+  if (map.size === 0) {
+    document.querySelectorAll('#errorLog tr.error-row').forEach(tr => {
+      const tds = tr.querySelectorAll('td');
+      // Bảng có cột: Tên BN | Thủ thuật | Bác sỹ chỉ định | Người thực hiện | Thời gian | Lỗi
+      const doctor   = tds[2]?.textContent?.trim();
+      const operator = tds[3]?.textContent?.trim();
+      if (doctor || operator) bump(map, doctor, operator);
+    });
+  }
+
+  return map;
+}
+
+  // 3) Đếm TRÙNG GIỜ (từ allProcedures.conflict=true)
+function countConflicts(){
+  const list =
+    (typeof allProcedures !== 'undefined' && Array.isArray(allProcedures)) ? allProcedures :
+    (Array.isArray(window.allProcedures) ? window.allProcedures : []);
+  const map = new Map();
+  list.forEach(p => {
+    if (p && p.conflict) bump(map, p.doctor, p.operator);
+  });
+  return map;
+}
+function buildDoctorRanking(herbMap, timeMap, confMap){
+  const totalMap = new Map();
+
+  // gộp số từ 3 map
+  const merge = (src) => {
+    src.forEach((info, doc)=>{
+      if(!totalMap.has(doc)) totalMap.set(doc,{total:0});
+      totalMap.get(doc).total += info.total;
+    });
+  };
+  merge(herbMap); merge(timeMap); merge(confMap);
+
+  // sort giảm dần
+  const arr = Array.from(totalMap.entries()).sort((a,b)=>b[1].total - a[1].total);
+
+  let html = `<div class="section"><div class="inner">`;
+  if(arr.length===0){
+    html += `<div class="note-empty">Chưa có dữ liệu</div>`;
+  } else {
+    html += `<table class="table-clean"><thead><tr>
+              <th>Hạng</th><th>Bác sĩ</th>
+              <th class="right">Tổng lỗi</th>
+            </tr></thead><tbody>`;
+    arr.forEach(([doc,info],i)=>{
+      html += `<tr>
+        <td>${i+1}</td>
+        <td><b>${doc}</b></td>
+        <td class="right">${info.total}</td>
+      </tr>`;
+    });
+    html += `</tbody></table>`;
+  }
+  html += `</div></div>`;
+  return html;
+}
+  // Render 1 section
+function renderSection(title, map, showOperators = true){
+  if(!map || map.size===0){
+    return `<h4 style="margin:10px 0 6px">${title}</h4><div><i>Chưa có dữ liệu</i></div>`;
+  }
+  const doctors = Array.from(map.entries()).sort((a,b)=>b[1].total - a[1].total);
+
+  let html = `<h4 style="margin:10px 0 6px">${title}</h4><div style="border:1px solid #eee;border-radius:8px;padding:12px">`;
+  doctors.forEach(([doctor, info])=>{
+    html += `<div style="margin-bottom:10px">
+      <div>Bác sĩ <b>${doctor}:</b> ${info.total}</div>`;
+    if (showOperators){
+      const ops = Array.from(info.byOperator.entries()).sort((a,b)=>b[1]-a[1]);
+      if(ops.length){
+        html += `<div style="margin-left:12px;margin-top:4px">` +
+                ops.map(([op,c]) => `- ${op}: ${c}`).join('<br>') +
+                `</div>`;
+      }
+    }
+    html += `</div>`;
+  });
+  html += `</div>`;
+  return html;
+}
+
+  function buildSummaryHTML(){
+    const herbMap = countHerb();
+    const timeMap = countTimeErrors();
+    const confMap = countConflicts();
+
+    // Tổng nhanh (dòng đầu)
+    const herbTotal = Array.from(herbMap.values()).reduce((s,b)=>s+b.total,0);
+    const timeTotal = Array.from(timeMap.values()).reduce((s,b)=>s+b.total,0);
+    const confTotal = Array.from(confMap.values()).reduce((s,b)=>s+b.total,0);
+
+    let top = ` <div class="summary-wrap">
+      <div class="kpi-grid">
+        <div class="kpi-card kpi-blue">
+          <div class="kpi-title"><i class="fa-solid fa-mortar-pestle"></i> Sắc thuốc thang</div>
+          <div class="kpi-value">${herbTotal}</div>
+        </div>
+        <div class="kpi-card kpi-amber">
+          <div class="kpi-title"><i class="fa-regular fa-clock"></i> Sai thời gian</div>
+          <div class="kpi-value">${timeTotal}</div>
+        </div>
+        <div class="kpi-card kpi-red">
+          <div class="kpi-title"><i class="fa-solid fa-triangle-exclamation"></i> Trùng giờ</div>
+          <div class="kpi-value">${confTotal}</div>
+        </div>
+      </div>`;
+
+    return top
+      + renderSection('Sắc thuốc thang', herbMap, /*showOperators*/ false) 
+      + '<br/>'
+      + renderSection('Sai thời gian', timeMap)
+      + '<br/>'
+      + renderSection('Trùng giờ', confMap);
+  }
+
+  // Mở/đóng modal
+  window.openErrorSummary = function(){
+    const modal = document.getElementById('summaryModal');
+    const content = document.getElementById('summaryContent');
+    if(!modal || !content) return;
+// lấy 3 map để truyền cho bảng xếp hạng
+const herbMap = countHerb();
+const timeMap = countTimeErrors();
+const confMap = countConflicts();
+
+// nội dung popup = phần tóm tắt cũ + bảng xếp hạng bác sĩ
+content.innerHTML = buildSummaryHTML()
+  + buildDoctorRanking(herbMap, timeMap, confMap);
+    modal.style.display = 'block';
+  };
+  document.getElementById('summaryCloseBtn')?.addEventListener('click', ()=> {
+    document.getElementById('summaryModal').style.display='none';
+  });
+  document.getElementById('summaryBackdrop')?.addEventListener('click', ()=> {
+    document.getElementById('summaryModal').style.display='none';
+  });
+
+  // Sau khi “Kiểm Tra” xong, hiện nút Tóm Tắt Lỗi (theo cùng cơ chế như 2 nút kia)
+  // (Đã có logic hiện nút trong setTimeout sau analyze — ta chỉ đảm bảo nút này cũng hiện)
+  const orig = setTimeout;
+  // Không cần hook, vì code có đoạn:
+  // document.querySelectorAll('button.btn').forEach(btn => {
+  //   if (btn.textContent.includes('Giờ trống') || btn.textContent.includes('Sắc thuốc thang')) { btn.style.display='inline-block';}
+  // });
+  // -> Ta thêm dòng dưới để nút mới cũng được bật:
+  document.addEventListener('DOMContentLoaded', () => {
+    // Khi popup loading tắt sau analyze, ta bật thủ công nếu đã có dữ liệu:
+    // (an toàn nếu gọi nhiều lần)
+    const showIfData = () => {
+      if (Array.isArray(window.allProcedures) && window.allProcedures.length){
+        const b = document.getElementById('errorSummaryBtn');
+        if (b) b.style.display = 'inline-block';
+      }
+    };
+    // chạy ngay và sau mỗi lần lọc/render
+    showIfData();
+    // gắn vào các điểm đã có:
+    const rb = document.getElementById('resultBody');
+    const el = document.getElementById('errorLog');
+    const obs = new MutationObserver(showIfData);
+    if (rb) obs.observe(rb, {childList:true,subtree:true});
+    if (el) obs.observe(el, {childList:true,subtree:true});
+  });
+})();
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('errorSummaryBtn');
+  const herbBtn = document.getElementById('herbToggleBtn');
+  const availBtn = document.querySelector('button.btn[onclick="toggleAvailability()"]');
+
+  function syncShow(){
+    if (!btn) return;
+    const herbShown  = herbBtn && getComputedStyle(herbBtn).display !== 'none';
+    const availShown = availBtn && getComputedStyle(availBtn).display !== 'none';
+    if (herbShown || availShown) btn.style.display = 'inline-block';
+  }
+
+  // chạy ngay và khi có thay đổi hiển thị
+  syncShow();
+  new MutationObserver(syncShow).observe(document.body, {
+    attributes: true, subtree: true, attributeFilter: ['style','class']
+  });
+});
+
+
+</script>
+<!-- POPUP TUỲ BIẾN THỦ THUẬT -->
+<div id="customizeModal" style="display:none;position:fixed;inset:0;z-index:11060;">
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,0.5)" onclick="closeCustomizePanel()"></div>
+  <div style="
+      position:absolute;top:8%;left:50%;transform:translateX(-50%);
+      width:min(820px,92vw);max-height:84vh;overflow:auto;
+      background:#fff;color:#000;border-radius:10px;border:2px solid #3498db;
+      box-shadow:0 8px 24px rgba(0,0,0,.25);font-family:Inter,sans-serif">
+  <div style="display:flex;align-items:center;justify-content:space-between;
+            padding:14px 16px;border-bottom:1px solid #e5e7eb">
+  <h3 style="margin:0;font-size:18px">Bảng Tuỳ biến Thủ thuật</h3>
+  <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;">
+  <button class="btn" onclick="showNoPermission()"
+          style="padding:8px 14px;font-size:13px;border-radius:4px;">
+    Thêm
+  </button>
+  <button class="btn" onclick="closeCustomizePanel()"
+          style="padding:8px 14px;font-size:13px;border-radius:4px;">
+    Đóng
+  </button>
+</div>
+</div>
+    <div style="padding:0px 16px">
+    
+      <table class="error-table" style="width:100%">
+        <thead>
+          <tr>
+            <th style="width:60px">STT</th>
+            <th>Thủ Thuật</th>
+            <th style="width:130px">Thời gian</th>
+            <th style="width:110px">Chuẩn bị</th>
+          </tr>
+        </thead>
+        <tbody id="customizeBody"></tbody>
+      </table>
+  
+  </div>
+</div>
+<script>
+  const THUTHUAT_URL = 'https://raw.githubusercontent.com/chauhuynh0104/chauhuynh0104.txt/refs/heads/main/chau_thuthuat.txt';
+
+  async function openCustomizePanel() {
+    try {
+      if (!window.PROCEDURES || Object.keys(window.PROCEDURES).length === 0) {
+        const res = await fetch(THUTHUAT_URL);
+        const text = await res.text();
+        window.PROCEDURES = JSON.parse(text);
+      }
+    } catch (e) {
+      alert('Không thể tải danh sách thủ thuật từ máy chủ.');
+      return;
+    }
+
+    const rows = [];
+    Object.entries(PROCEDURES).forEach(([name, cfg]) => {
+      if (!name || !cfg) return;
+
+      const duration = (typeof cfg.duration === 'number') ? cfg.duration : '';
+      // Nếu có prep thì lấy prep, nếu không có thì gán = duration
+      const prep = (typeof cfg.prep === 'number') ? cfg.prep : duration;
+
+      if (duration !== '') {
+        rows.push({ name, duration, prep });
+      }
+    });
+
+    rows.sort((a,b) => a.name.localeCompare(b.name, 'vi'));
+
+    const tbody = document.getElementById('customizeBody');
+    tbody.innerHTML = rows.map((r, idx) => `
+      <tr>
+        <td style="text-align:center">${idx + 1}</td>
+        <td>${r.name}</td>
+        <td style="text-align:center">${r.duration}</td>
+        <td style="text-align:center">${r.prep}</td>
+      </tr>
+    `).join('');
+
+    document.getElementById('customizeModal').style.display = 'block';
+  }
+
+  function closeCustomizePanel() {
+    document.getElementById('customizeModal').style.display = 'none';
+  }
+</script>
+<script>
+function showNoPermission() {
+  // Overlay
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `
+    position:fixed;inset:0;background:rgba(0,0,0,0.5);
+    display:flex;justify-content:center;align-items:center;z-index:12000;
+  `;
+
+  // Box
+  const box = document.createElement('div');
+  box.style.cssText = `
+    background:#fff;padding:20px 30px;border-radius:10px;
+    text-align:center;max-width:320px;box-shadow:0 4px 15px rgba(0,0,0,0.3);
+    font-family:Inter,sans-serif;
+  `;
+  box.innerHTML = `
+    <div style="font-size:18px;font-weight:600;color:#e74c3c;margin-bottom:10px;">
+      🚫 Bạn không có quyền thêm thủ thuật
+    </div>
+    <button class="btn" onclick="document.body.removeChild(this.closest('.noPermOverlay'))">
+      Đóng
+    </button>
+  `;
+  overlay.classList.add("noPermOverlay");
+  overlay.appendChild(box);
+  overlay.addEventListener("click", e => {
+    if (e.target === overlay) document.body.removeChild(overlay);
+  });
+  document.body.appendChild(overlay);
+}
+</script>
+
+<!-- POPUP TẠO GIỜ THỦ THUẬT -->
+<div id="createProcedureModal" style="display:none;position:fixed;inset:0;z-index:12000;">
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6)" onclick="closeCreateProcedure()"></div>
+  <div style="
+      position:absolute;top:6%;left:50%;transform:translateX(-50%);
+      width:min(900px,95vw);height:85vh;
+      background:#fff;color:#000;border-radius:10px;border:2px solid #3498db;
+      box-shadow:0 8px 24px rgba(0,0,0,.25);font-family:Inter,sans-serif;overflow:hidden;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:#3498db;color:#fff;">
+      <h3 style="margin:0;font-size:16px">Tạo Giờ Thủ Thuật</h3>
+      <button class="btn" onclick="closeCreateProcedure()" style="background:#e74c3c;padding:6px 12px;font-size:13px;">Đóng</button>
+    </div>
+    <iframe id="createProcedureFrame" src="" style="width:100%;height:calc(100% - 40px);border:0"></iframe>
+  </div>
+</div>
+
+<script>
+function openCreateProcedure() {
+    document.getElementById('createProcedureFrame').src = "https://chauhuynh0104.github.io/gym/ltt.html";
+    document.getElementById('createProcedureModal').style.display = 'block';
+}
+function closeCreateProcedure() {
+    document.getElementById('createProcedureFrame').src = "";
+    document.getElementById('createProcedureModal').style.display = 'none';
+}
+</script>
+</body>
+
+</html>
