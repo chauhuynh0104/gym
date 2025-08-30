@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lập Lịch Thủ Thuật</title>
+  <style>
+    :root {
+      --bg: #f7f9fc;
+      --card: #ffffff;
+      --muted: #6b7280;
+      --txt: #0b1220;
+      --acc: #1f6aff;
+      --chip: #eef2ff;
+      --ok: #059669;
+      --warn: #b45309;
+      --bad: #b91c1c;
+      --border: #e2e8f0;
+    }
+
+    html, body { background: var(--bg); color: var(--txt); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; margin: 0; }
+    h1 { font-size: 22px; margin: 16px; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 12px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 12px; }
+    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+    .row > * { flex: 1 1 auto; }
+    label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 4px; }
+    input[type="text"], input[type="time"], input[type="number"], select { width: 50%; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border); background: #ffffff; color: var(--txt); }
+    input[type="number"] { max-width: 120px; }
+    .btn { cursor: pointer; border: 1px solid var(--border); background: linear-gradient(180deg, #ffffff, #f3f4f6); color: var(--txt); padding: 10px 14px; border-radius: 12px; font-weight: 600; }
+    .btn:hover { border-color: var(--acc); box-shadow: 0 0 0 2px #dbeafe; }
+    .btn-small { padding: 6px 10px; font-size: 12px; border-radius: 10px; }
+    .chip { display: inline-flex; align-items: center; gap: 6px; background: var(--chip); border: 1px solid var(--border); padding: 6px 10px; border-radius: 999px; font-size: 12px; color: var(--txt); }
+    .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+    .muted { color: var(--muted); }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .hidden { display: none; }
+    table { width: 100%; border-collapse: collapse; overflow: hidden; border-radius: 16px; }
+    th, td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; }
+    thead th { z-index: 1;  background: #f8fafc; }
+    .tag { font-size: 11px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border); background: #ffffff; }
+    .tag-ok { border-color: rgba(20,184,166,.3); color: var(--ok); }
+    .tag-warn { border-color: rgba(251,191,36,.3); color: var(--warn); }
+    .tag-bad { border-color: rgba(239,68,68,.3); color: var(--bad); }
+    .section-title { font-weight: 700; margin-top: 6px; }
+    .divider { height: 1px; background: var(--border); margin: 10px 0; }
+
+    /* Popup overlay (generic) */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      display: none; align-items: center; justify-content: center; z-index: 9999;
+    }
+    .modal {
+      background: #fff; padding: 18px 20px; border-radius: 14px; max-width: 720px; width: calc(100% - 32px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25); font-size: 14px;
+    }
+    .modal-header { display:flex; align-items:center; justify-content: space-between; margin-bottom: 12px; }
+    .modal-title { font-weight:700; }
+    .modal-actions { display:flex; gap:8px; }
+
+    /* Small alert popup (reuses old style) */
+    #popupOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); display:none; align-items:center; justify-content:center; z-index:9999; }
+    #popupBox { background:#fff; padding:20px 28px; border-radius:12px; max-width:320px; text-align:center; box-shadow:0 6px 20px rgba(0,0,0,0.25); font-size:14px; }
+    #popupBox button { margin-top:14px; padding:8px 14px; border:none; background: var(--acc); color:#fff; border-radius:8px; cursor:pointer; }
+    #popupBox button:hover { opacity:.9; }
+
+    /* History list table */
+    #historyTable th, #historyTable td { white-space: nowrap; }
+    .nowrap { white-space: nowrap; }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+  <div class="container">
+
+    <!-- 1. Nhân viên + Lịch sử -->
+    <div class="card" id="staffCard">
+      <div class="row" style="justify-content: space-between; align-items:center;">
+        <div class="section-title">1. Tên nhân viên</div>
+        <div style="flex:0 0 auto; display:flex; gap:8px;">
+          <button class="btn btn-small" id="historyBtn">📜 Lịch sử</button>
+        </div>
+      </div>
+      <div id="staffList"></div>
+    </div>
+
+    <!-- 2. Bệnh nhân & thủ thuật -->
+    <div class="card" id="patientsCard">
+      <div class="row"><div class="section-title">2. Bệnh nhân & thủ thuật</div></div>
+      <div id="patients"></div>
+      <button class="btn btn-small" id="addPatientBtn">+ Thêm bệnh nhân</button>
+      <div class="divider"></div>
+      <div class="grid2">
+        <div>
+          <label>Giờ bắt đầu buổi sáng</label>
+          <input type="time" id="morningStart" value="07:30">
+        </div>
+        <div>
+          <label>Giờ kết thúc buổi sáng</label>
+          <input type="time" id="morningEnd" value="11:30">
+        </div>
+        <div>
+          <label>Giờ bắt đầu buổi chiều</label>
+          <input type="time" id="afternoonStart" value="13:30">
+        </div>
+        <div>
+          <label>Giờ kết thúc buổi chiều</label>
+          <input type="time" id="afternoonEnd" value="17:00">
+        </div>
+      </div>
+    </div>
+
+    <!-- 3-5. Máy móc -->
+    <div class="card" id="machinesCard">
+      <div class="row"><div class="section-title">3. Máy</div></div>
+      <div class="row">
+        <div>
+          <label>Số lượng máy điện châm</label>
+          <input type="number" min="0" id="nDienCham" value="0">
+        </div>
+        <div id="dienChamNames"></div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Số lượng máy chiếu đèn</label>
+          <input type="number" min="0" id="nChieuDen" value="0">
+        </div>
+        <div id="chieuDenNames"></div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Số lượng máy giác hơi</label>
+          <input type="number" min="0" id="nGiacHoi" value="0">
+        </div>
+        <div id="giacHoiNames"></div>
+      </div>
+    </div>
+
+    <!-- Actions & Results -->
+    <div class="card">
+      <div class="row" style="justify-content: space-between;">
+        <button class="btn" id="startBtn">Bắt đầu sắp xếp</button>
+      </div>
+      <div class="divider"></div>
+      <div id="outputWrap" class="hidden">
+        <div class="row" style="justify-content: space-between; align-items:center;">
+          <div class="section-title">Giờ thủ thuật</div>
+          <div class="row" style="flex:0 0 auto; gap:8px;">
+            <button class="btn btn-small" id="exportCSV">Tải CSV</button>
+            <button class="btn btn-small" id="copyCSV">Copy CSV</button>
+            <button class="btn btn-small" id="exportExcel">Tải Excel</button>
+          </div>
+        </div>
+        <div style="overflow:auto;">
+          <table id="resultTable">
+            <thead>
+              <tr>
+                <th>Bệnh nhân</th>
+                <th>Thủ thuật</th>
+                <th>Nhân viên</th>
+                <th>Máy</th>
+                <th>Bắt đầu</th>
+                <th>Kết thúc</th>
+                <th>Nhân viên bận</th>
+                <th>Ghi chú</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Small alert popup -->
+  <div id="popupOverlay"><div id="popupBox"><div id="popupMessage"></div><button onclick="closePopup()">OK</button></div></div>
+
+  <!-- History list modal -->
+  <div class="overlay" id="historyOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">📜 Lịch sử sắp xếp</div>
+        <div class="modal-actions">
+          <button class="btn btn-small" id="clearHistoryBtn">Xóa tất cả</button>
+          <button class="btn btn-small" id="closeHistoryBtn">Đóng</button>
+        </div>
+      </div>
+      <div style="overflow:auto; max-height: 60vh;">
+        <table id="historyTable">
+          <thead>
+            <tr>
+              <th>Tên file</th>
+              <th>Ngày giờ</th>
+              <th>Số dòng</th>
+              <th>Số bệnh nhân</th>
+              <th class="nowrap">Xem</th>
+              <th class="nowrap">Xóa</th>
+            </tr>
+          </thead>
+          <tbody id="historyListBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- History detail modal -->
+  <div class="overlay" id="historyDetailOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="historyDetailTitle">Lịch thủ thuật đã sắp</div>
+        <div class="modal-actions">
+          <button class="btn btn-small" id="closeHistoryDetailBtn">Đóng</button>
+        </div>
+      </div>
+      <div style="overflow:auto; max-height: 70vh;">
+        <table style="width:100%;" id="historyDetailTable">
+          <thead>
+            <tr>
+              <th>Bệnh nhân</th>
+              <th>Thủ thuật</th>
+              <th>Nhân viên</th>
+              <th>Máy</th>
+              <th>Bắt đầu</th>
+              <th>Kết thúc</th>
+              <th>Nhân viên bận</th>
+              <th>Ghi chú</th>
+            </tr>
+          </thead>
+          <tbody id="historyDetailBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+<script>
+// ===== Helpers for time =====
+function toMin(hhmm) { const [h,m] = hhmm.split(':').map(x=>parseInt(x,10)); return h*60+m; }
+function toHHMM(min) { min = Math.max(0, Math.round(min)); const h = Math.floor(min/60); const m = min%60; return (h<10?'0':'')+h+':' + (m<10?'0':'')+m; }
+
+// ===== Dynamic Staff Inputs =====
+const staffListEl = document.getElementById('staffList');
+function addStaffInput(value='') {
+  const row = document.createElement('div'); row.className = 'row';
+  const wrap = document.createElement('div'); wrap.style.flex = '1 1 300px';
+  const label = document.createElement('label'); label.textContent = '';
+  const input = document.createElement('input'); input.type='text'; input.placeholder=''; input.value=value; input.addEventListener('input', onStaffTyping);
+  wrap.appendChild(label); wrap.appendChild(input); row.appendChild(wrap); staffListEl.appendChild(row);
+}
+function onStaffTyping(e) {
+  const inputs = staffListEl.querySelectorAll('input[type="text"]');
+  const last = inputs[inputs.length-1];
+  if (e.target === last && last.value.trim() !== '') { addStaffInput(''); refreshPatientStaffOptions(); }
+  else { refreshPatientStaffOptions(); }
+}
+addStaffInput(''); // initial
+
+// ===== Patients & Procedures =====
+const patientsEl = document.getElementById('patients');
+const addPatientBtn = document.getElementById('addPatientBtn');
+
+const PROCEDURES = [
+  {key:'dien_cham', label:'Điện châm [kim ngắn]', duration:20, staffActive:3, patientActive:20, deviceType:'dienCham', allowOverlapWith:['chieu_den_after_3']},
+  {key:'chieu_den', label:'Điều trị bằng tia hồng ngoại', duration:10, staffActive:1, patientActive:10, deviceType:'chieuDen', allowOverlapWith:[]},
+  {key:'xoa_bop', label:'Xoa bóp bấm huyệt bằng tay', duration:30, staffActive:30, patientActive:30, deviceType:null, allowOverlapWith:[]},
+  {key:'xoa_bop_vung', label:'Kỹ thuật xoa bóp vùng', duration:15, staffActive:15, patientActive:15, deviceType:null, allowOverlapWith:[]},
+  {key:'giac_hoi', label:'Giác hơi ', duration:5, staffActive:2, patientActive:5, deviceType:'giacHoi', allowOverlapWith:[]},
+];
+
+function createPatientCard(idx) {
+  const card = document.createElement('div'); card.className = 'card'; card.dataset.index = idx;
+  const nameRow = document.createElement('div'); nameRow.className = 'row';
+  nameRow.innerHTML = `
+    <div style="flex:2 1 360px;">
+      <label>Tên bệnh nhân</label>
+      <input type="text" class="patient-name">
+    </div>
+    <div style="flex:1 1 200px;">
+      <label>Giờ vào viện</label>
+      <input type="time" class="patient-arrival">
+    </div>
+    <div style="flex:1 1 240px;">
+      <label>Nhân viên phụ trách</label>
+      <select class="patient-staff"></select>
+    </div>`;
+  card.appendChild(nameRow);
+
+  const procRow = document.createElement('div'); procRow.className = 'row';
+  const procWrap = document.createElement('div'); procWrap.style.flex = '2 1 500px';
+  const label = document.createElement('label'); label.textContent = 'Thủ thuật cho bệnh nhân này';
+  const select = document.createElement('select'); select.className = 'patient-proc-select';
+  PROCEDURES.forEach(p => { const opt = document.createElement('option'); opt.value=p.key; opt.textContent=p.label; select.appendChild(opt); });
+  const addBtn = document.createElement('button'); addBtn.className='btn btn-small'; addBtn.textContent='Thêm'; addBtn.style.marginLeft='8px';
+  addBtn.addEventListener('click', () => { const key = select.value; const proc = PROCEDURES.find(p=>p.key===key); addProcChip(card, proc); });
+  procWrap.appendChild(label); procWrap.appendChild(select); procWrap.appendChild(addBtn);
+  procRow.appendChild(procWrap);
+
+  const chips = document.createElement('div'); chips.className = 'chips patient-proc-chips';
+  procRow.appendChild(chips);
+
+  card.appendChild(procRow); patientsEl.appendChild(card); refreshPatientStaffOptions();
+}
+
+function addProcChip(card, proc) {
+  const chips = card.querySelector('.patient-proc-chips');
+  const chip = document.createElement('span'); chip.className = 'chip'; chip.dataset.key = proc.key; chip.innerHTML = `${proc.label} <button class="btn btn-small" style="margin-left:6px;">×</button>`;
+  chip.querySelector('button').addEventListener('click', ()=>chip.remove()); chips.appendChild(chip);
+}
+
+function refreshPatientStaffOptions() {
+  const names = getStaffNames();
+  document.querySelectorAll('.patient-staff').forEach(sel => {
+    const current = sel.value; sel.innerHTML = '<option value="">(chưa chọn)</option>';
+    names.filter(n=>n).forEach(n => { const opt = document.createElement('option'); opt.value=n; opt.textContent=n; sel.appendChild(opt); });
+    sel.value = current;
+  });
+}
+
+function getStaffNames() { return Array.from(staffListEl.querySelectorAll('input[type="text"]')).map(i=>i.value.trim()).filter(Boolean); }
+
+function getPatientsData() {
+  const cards = Array.from(patientsEl.querySelectorAll('.card'));
+  return cards.map(card => {
+    const name = card.querySelector('.patient-name').value.trim();
+    const arrival = card.querySelector('.patient-arrival').value;
+    const prefStaff = card.querySelector('.patient-staff').value || null;
+    const procs = Array.from(card.querySelectorAll('.patient-proc-chips .chip')).map(ch => ch.dataset.key);
+    return {name, arrival: arrival || null, prefStaff, procs};
+  }).filter(p => p.name && p.procs.length>0);
+}
+
+function addPatient() { const idx = patientsEl.querySelectorAll('.card').length; createPatientCard(idx); }
+addPatient(); addPatientBtn.addEventListener('click', addPatient);
+patientsEl.addEventListener('click', (e)=>{ if (e.target.closest('.end-patient')) { addPatient(); } });
+
+// ===== Machines dynamic names =====
+function rebuildNameInputs(count, container, type) {
+  container.innerHTML = '';
+  let prefix = ''; if (type==='dienCham') prefix='ĐC'; else if (type==='chieuDen') prefix='HN'; else if (type==='giacHoi') prefix='GH';
+  for (let i=0;i<count;i++) {
+    const wrap = document.createElement('div'); wrap.className='row';
+    const inner = document.createElement('div'); inner.style.flex='1 1 220px';
+    const label = document.createElement('label'); label.textContent = `${prefix}${i+1}`;
+    const input = document.createElement('input'); input.type='text'; input.value=`${prefix}${i+1}`;
+    inner.appendChild(label); inner.appendChild(input); wrap.appendChild(inner); container.appendChild(wrap);
+  }
+}
+
+const nDienCham = document.getElementById('nDienCham');
+const nChieuDen = document.getElementById('nChieuDen');
+const nGiacHoi = document.getElementById('nGiacHoi');
+const dienChamNames = document.getElementById('dienChamNames');
+const chieuDenNames = document.getElementById('chieuDenNames');
+const giacHoiNames = document.getElementById('giacHoiNames');
+
+nDienCham.addEventListener('input', ()=> rebuildNameInputs(parseInt(nDienCham.value||'0',10), dienChamNames, 'dienCham'));
+nChieuDen.addEventListener('input', ()=> rebuildNameInputs(parseInt(nChieuDen.value||'0',10), chieuDenNames, 'chieuDen'));
+nGiacHoi.addEventListener('input', ()=> rebuildNameInputs(parseInt(nGiacHoi.value||'0',10), giacHoiNames, 'giacHoi'));
+
+// ===== Scheduler =====
+const startBtn = document.getElementById('startBtn');
+const outputWrap = document.getElementById('outputWrap');
+const resultTableBody = document.querySelector('#resultTable tbody');
+const exportCSVBtn = document.getElementById('exportCSV');
+const copyCSVBtn = document.getElementById('copyCSV');
+
+function getMachineNames(container) { return Array.from(container.querySelectorAll('input[type="text"]')).map(i=>i.value.trim()).filter(Boolean); }
+
+function buildResources() {
+  return {
+    staff: getStaffNames().map(n => ({name:n, busy:[]})).filter(s=>s.name),
+    machines: {
+      dienCham: getMachineNames(dienChamNames).map(n=>({name:n, busy:[]})),
+      chieuDen: getMachineNames(chieuDenNames).map(n=>({name:n, busy:[]})),
+      giacHoi: getMachineNames(giacHoiNames).map(n=>({name:n, busy:[]})),
+    }
+  };
+}
+
+function isFree(busyIntervals, start, end) { return !busyIntervals.some(b => !(end <= b.start || start >= b.end)); }
+function book(busyIntervals, start, end, meta={}) { busyIntervals.push({start, end, ...meta}); }
+function addCooldown(busyIntervals, atMinute) { book(busyIntervals, atMinute, atMinute+1, {cooldown:true}); }
+
+function findSlotForTask(task, patient, resources, windows, preferMorning=true) {
+  const devicePool = task.deviceType ? resources.machines[task.deviceType] : null;
+  const staff = resources.staff.find(s=>s.name===patient.prefStaff);
+  if (!staff) return null;
+  const parts = preferMorning ? [[windows.morningStart, windows.morningEnd],[windows.afternoonStart, windows.afternoonEnd]] : [[windows.afternoonStart, windows.afternoonEnd],[windows.morningStart, windows.morningEnd]];
+  let earliest = Math.max(windows.morningStart, patient.arrivalMin || windows.morningStart);
+  for (const [wStart, wEnd] of parts) {
+    let t = Math.max(earliest, wStart);
+    let overlapAnchor = null;
+    if (task.type==='chieu_den' && patient._dienChamPlaced) { overlapAnchor = patient._dienChamStart + 3; t = Math.max(t, overlapAnchor); }
+    while (t + task.duration <= wEnd) {
+      let patientOK = true;
+      if (task.type==='chieu_den' && patient._dienChamPlaced) {
+        patientOK = patient.busy.every(pb => { if (pb.type==='xoa_bop' || pb.type==='giac_hoi' || pb.type==='xoa_bop_vung') { return (t+task.patientActive <= pb.start) || (t >= pb.end); } return true; });
+      } else { patientOK = isFree(patient.busy, t, t + task.patientActive); }
+      if (!patientOK) { t++; continue; }
+      const sStart = t; const sEnd = t + task.staffActive; const staffOK = isFree(staff.busy, sStart, sEnd); if (!staffOK) { t++; continue; }
+      let chosenDevice = null; if (devicePool) { for (const dev of devicePool) { if (isFree(dev.busy, t, t + task.duration)) { chosenDevice = dev; break; } } if (!chosenDevice) { t++; continue; } }
+      return { start:t, end:t+task.duration, staffBusyStart:sStart, staffBusyEnd:sEnd, machine: chosenDevice ? chosenDevice.name : '' };
+    }
+  }
+  return null;
+}
+
+function showPopup(msg) { document.getElementById('popupMessage').textContent = msg; document.getElementById('popupOverlay').style.display = 'flex'; }
+function closePopup() { document.getElementById('popupOverlay').style.display = 'none'; }
+
+function validateMachineCounts(patients){
+  // Xác định các thủ thuật đang dùng
+  const allProcs = new Set();
+  patients.forEach(p => (p.procs||[]).forEach(k => allProcs.add(k)));
+  const needsDienCham = allProcs.has('dien_cham');
+  const needsChieuDen = allProcs.has('chieu_den');
+  const needsGiacHoi = allProcs.has('giac_hoi');
+
+  const missing = [];
+  const numDC = parseInt((document.getElementById('nDienCham').value||'0'), 10);
+  const numCD = parseInt((document.getElementById('nChieuDen').value||'0'), 10);
+  const numGH = parseInt((document.getElementById('nGiacHoi').value||'0'), 10);
+
+  if (needsDienCham && (!Number.isFinite(numDC) || numDC <= 0)) missing.push('máy điện châm');
+  if (needsChieuDen && (!Number.isFinite(numCD) || numCD <= 0)) missing.push('máy chiếu đèn');
+  if (needsGiacHoi && (!Number.isFinite(numGH) || numGH <= 0)) missing.push('máy giác hơi');
+
+  if (missing.length){
+    showPopup('Chưa nhập ' + missing.join(', ') + '.');
+    return false;
+  }
+  return true;
+}
+
+
+function scheduleAll() {
+  const staffNames = getStaffNames().filter(Boolean);
+  if (staffNames.length===0) { showPopup('Hãy nhập ít nhất 1 nhân viên.'); return []; }
+  const patients = getPatientsData();
+  if (patients.length===0) { showPopup('Hãy nhập ít nhất 1 bệnh nhân và thủ thuật.'); return []; }
+
+  
+  // Ràng buộc số lượng máy cho các thủ thuật cần thiết
+  if (!validateMachineCounts(patients)) { return []; }
+const windows = {
+    morningStart: toMin(document.getElementById('morningStart').value),
+    morningEnd: toMin(document.getElementById('morningEnd').value),
+    afternoonStart: toMin(document.getElementById('afternoonStart').value),
+    afternoonEnd: toMin(document.getElementById('afternoonEnd').value),
+  };
+
+  const resources = buildResources();
+  patients.forEach(p=>{ p.busy=[]; p.arrivalMin = p.arrival ? toMin(p.arrival) : null; p._dienChamPlaced=false; p._dienChamStart=null; });
+
+  const results = [];
+  for (const p of patients) {
+    for (const key of p.procs) {
+      if (key==='chieu_den' && p.procs.includes('dien_cham') && !p._dienChamPlaced) { continue; }
+      const def = PROCEDURES.find(x=>x.key===key); if (!def) continue;
+      const slot = findSlotForTask({type:def.key, duration:def.duration, staffActive:def.staffActive, patientActive:def.patientActive, deviceType:def.deviceType, allowOverlapWith:def.allowOverlapWith}, p, resources, windows, true)
+                || findSlotForTask({type:def.key, duration:def.duration, staffActive:def.staffActive, patientActive:def.patientActive, deviceType:def.deviceType, allowOverlapWith:def.allowOverlapWith}, p, resources, windows, false);
+      if (!slot) {
+        results.push({patient:p.name, proc:def.label, staff:p.prefStaff||'', machine:'', start:'', end:'', staffBusy:'', note:'Không tìm được slot phù hợp'});
+        continue;
+      }
+      commitBooking(p, def, slot, resources, results);
+    }
+    if (p.procs.includes('dien_cham') && p.procs.includes('chieu_den')) {
+      if (!p._chieuTried && !p.busy.some(b => b.type==='chieu_den')) {
+        p._chieuTried = true;
+        const def = PROCEDURES.find(x=>x.key==='chieu_den');
+        const slot = findSlotForTask({type:def.key, duration:def.duration, staffActive:def.staffActive, patientActive:def.patientActive, deviceType:def.deviceType, allowOverlapWith:def.allowOverlapWith}, p, resources, windows, true)
+                  || findSlotForTask({type:def.key, duration:def.duration, staffActive:def.staffActive, patientActive:def.patientActive, deviceType:def.deviceType, allowOverlapWith:def.allowOverlapWith}, p, resources, windows, false);
+        if (slot) commitBooking(p, def, slot, resources, results);
+        else results.push({patient:p.name, proc:def.label, staff:p.prefStaff||'', machine:'', start:'', end:'', staffBusy:'', note:'Không tìm được slot phù hợp'});
+      }
+    }
+  }
+  results.sort((a,b)=> a.patient.localeCompare(b.patient, 'vi'));
+  return results;
+}
+
+function commitBooking(p, def, slot, resources, results) {
+  const staff = resources.staff.find(s=>s.name===p.prefStaff);
+  book(p.busy, slot.start, slot.end, {type:def.key}); addCooldown(p.busy, slot.end + 0);
+  if (staff) { book(staff.busy, slot.staffBusyStart, slot.staffBusyEnd, {patient:p.name, type:def.key}); addCooldown(staff.busy, slot.staffBusyEnd + 0); }
+  if (def.deviceType && slot.machine) { const pool = resources.machines[def.deviceType]; const dev = pool.find(d=>d.name===slot.machine); if (dev) book(dev.busy, slot.start, slot.end, {patient:p.name, type:def.key}); }
+  if (def.key==='dien_cham') { p._dienChamPlaced=true; p._dienChamStart=slot.start; }
+  results.push({ patient:p.name, proc:def.label, staff:p.prefStaff||'', machine:slot.machine||'', start:toHHMM(slot.start), end:toHHMM(slot.end), staffBusy:`${toHHMM(slot.staffBusyStart)}–${toHHMM(slot.staffBusyEnd)}`, note:(def.key==='chieu_den' && p._dienChamPlaced && slot.start >= p._dienChamStart+3) ? 'Chiếu đèn chồng lên Điện châm' : '' });
+}
+
+// ===== Render results =====
+function renderTable(rows) {
+  resultTableBody.innerHTML = '';
+  for (const r of rows) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${r.patient}</td><td>${r.proc}</td><td>${r.staff}</td><td>${r.machine}</td><td>${r.start}</td><td>${r.end}</td><td>${r.staffBusy}</td><td>${r.note}</td>`;
+    resultTableBody.appendChild(tr);
+  }
+}
+
+function rowsToCSV(rows) {
+  const header = ['Bệnh nhân','Thủ thuật','Nhân viên','Máy','Bắt đầu','Kết thúc','Nhân viên bận','Ghi chú'];
+  const esc = v => `"${String(v||'').replace(/"/g,'""')}"`;
+  return [header.map(esc).join(','), ...rows.map(r=>[r.patient,r.proc,r.staff,r.machine,r.start,r.end,r.staffBusy,r.note].map(esc).join(','))].join('\n');
+}
+
+// ===== Export buttons =====
+exportCSVBtn.addEventListener('click', ()=>{
+  const rows = Array.from(resultTableBody.querySelectorAll('tr')).map(tr=>({ patient: tr.children[0].textContent, proc: tr.children[1].textContent, staff: tr.children[2].textContent, machine: tr.children[3].textContent, start: tr.children[4].textContent, end: tr.children[5].textContent, staffBusy: tr.children[6].textContent, note: tr.children[7].textContent, }));
+  const csv = rowsToCSV(rows);
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='lich_thu_thuat.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+});
+
+copyCSVBtn.addEventListener('click', async ()=>{
+  const rows = Array.from(resultTableBody.querySelectorAll('tr')).map(tr=>({ patient: tr.children[0].textContent, proc: tr.children[1].textContent, staff: tr.children[2].textContent, machine: tr.children[3].textContent, start: tr.children[4].textContent, end: tr.children[5].textContent, staffBusy: tr.children[6].textContent, note: tr.children[7].textContent, }));
+  const csv = rowsToCSV(rows);
+  try { await navigator.clipboard.writeText(csv); showPopup('Đã copy CSV vào clipboard.'); }
+  catch(e) { showPopup('Không copy được. Hãy dùng nút Tải CSV.'); }
+});
+
+// ===== Excel Export (giữ nguyên từ bản trước) =====
+ document.getElementById('exportExcel').addEventListener('click', () => {
+   const toHHMMSS = (t) => (t && t.includes(':')) ? (t.length === 5 ? t + ':00' : t) : '';
+   const rows = Array.from(document.querySelectorAll('#resultTable tbody tr')).map((tr, i) => {
+    const tds = Array.from(tr.children).map(td => td.textContent.trim());
+    const stt = i + 1; const hoTen = tds[0] || ''; const thuThuat = tds[1] || ''; const nhanVien = tds[2] || ''; const batDau = tds[4] || ''; const ketThuc = tds[5] || '';
+    const now = new Date(); const dd = String(now.getDate()).padStart(2,'0'); const mm = String(now.getMonth()+1).padStart(2,'0'); const yyyy = now.getFullYear();
+    const ngayThucHien = `${dd}/${mm}/${yyyy}`;
+    const tgBatDauText = `${ngayThucHien}\r\n${toHHMMSS(batDau)}`; const tgKetThucText = `${ngayThucHien}\r\n${toHHMMSS(ketThuc)}`;
+    return [ stt, hoTen, '', '', '', '', '', '', '', thuThuat, ngayThucHien, tgBatDauText, tgKetThucText, '', nhanVien, '' ];
+  });
+  const titleBlock = [ ['SỞ Y TẾ TỈNH QUẢNG NAM', ...Array(15).fill(null)], ['BỆNH VIỆN Y HỌC CỔ TRUYỀN', ...Array(15).fill(null)], [], ['SỔ THỦ THUẬT', ...Array(15).fill(null)], ['Ngày hôm nay', ...Array(15).fill(null)], ['Khoa Nội', ...Array(15).fill(null)], [], [ 'STT','Họ tên','Mã BN','Mã điều trị','Tuổi','Nhóm PTTT','Số lượng','Năm sinh', 'Thủ thuật','Ngày thực hiện','Thời gian bắt đầu thực hiện','Thời gian kết thúc','Bác sỹ chỉ định','Thủ thuật chính','Điều dưỡng thực hiện' ], [ '','','','','','','','Nam','Nữ','','','','','','','' ], ];
+  const data = [...titleBlock, ...rows];
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  ws['!merges'] = [ {s:{r:0,c:0}, e:{r:0,c:15}}, {s:{r:1,c:0}, e:{r:1,c:15}}, {s:{r:3,c:0}, e:{r:3,c:15}}, {s:{r:4,c:0}, e:{r:4,c:15}}, {s:{r:5,c:0}, e:{r:5,c:15}}, ...[0,1,2,3,4,5,6,9,10,11,12,13,14,15].map(c => ({s:{r:7,c}, e:{r:8,c}})), {s:{r:7,c:7}, e:{r:7,c:8}}, ];
+  ws['!cols'] = [ {wch:4}, {wch:22}, {wch:10}, {wch:12}, {wch:6}, {wch:12}, {wch:8}, {wch:6}, {wch:6}, {wch:26}, {wch:14}, {wch:22}, {wch:20}, {wch:18}, {wch:18}, {wch:20}, ];
+  const setCenterBold = (addr) => { if (ws[addr]) ws[addr].s = {alignment:{horizontal:'center', vertical:'center'}, font:{bold:true}}; };
+  ['A1','A2','A5','A7','A8'].forEach(setCenterBold);
+  const wrapCols = [ 'A8','B8','C8','D8','E8','F8','G8','H8','I8','J8','K8','L8','M8','N8','O8','P8' ];
+  wrapCols.forEach(a => { if (ws[a]) { ws[a].s = { alignment: { wrapText: true, horizontal: 'center', vertical: 'center' }, font: { bold: true } }; } });
+  const headerRows = titleBlock.length; const dataRowCount = rows.length;
+  for (let r = 0; r < dataRowCount; r++) { const rr = headerRows + r; const addrL = XLSX.utils.encode_cell({ r: rr, c: 11 }); const addrM = XLSX.utils.encode_cell({ r: rr, c: 12 }); [addrL, addrM].forEach(addr => { if (ws[addr]) { ws[addr].t = 's'; ws[addr].v = String(ws[addr].v || ''); ws[addr].s = { alignment: { wrapText: true, horizontal: 'center', vertical: 'center' } }; } }); }
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Sổ Thủ Thuật'); XLSX.writeFile(wb, 'so_thu_thuat.xlsx');
+});
+
+// ===== Start scheduling + save history =====
+startBtn.addEventListener('click', ()=>{
+  const rows = scheduleAll();
+  if (rows.length) { outputWrap.classList.remove('hidden'); renderTable(rows); saveHistory(rows); }
+});
+
+// ===== Dynamic machine section visibility =====
+const machinesCard = document.getElementById('machinesCard');
+const dienChamRow = nDienCham.closest('.row');
+const chieuDenRow = nChieuDen.closest('.row');
+const giacHoiRow = nGiacHoi.closest('.row');
+machinesCard.style.display = 'none'; dienChamRow.style.display = 'none'; chieuDenRow.style.display = 'none'; giacHoiRow.style.display = 'none';
+patientsEl.addEventListener('click', (e) => { if (e.target.closest('.btn') && e.target.textContent.trim() === 'Thêm') { setTimeout(updateMachineVisibility, 0); } });
+patientsEl.addEventListener('click', (e) => { if (e.target.tagName === 'BUTTON' && e.target.textContent.trim() === '×') { setTimeout(updateMachineVisibility, 0); } });
+function updateMachineVisibility() {
+  const procs = Array.from(document.querySelectorAll('.patient-proc-chips .chip')).map(ch => ch.dataset.key);
+  const hasDienCham = procs.includes('dien_cham'); const hasChieuDen = procs.includes('chieu_den'); const hasGiacHoi = procs.includes('giac_hoi');
+  machinesCard.style.display = (hasDienCham || hasChieuDen || hasGiacHoi) ? '' : 'none';
+  dienChamRow.style.display = hasDienCham ? '' : 'none';
+  chieuDenRow.style.display = hasChieuDen ? '' : 'none';
+  giacHoiRow.style.display = hasGiacHoi ? '' : 'none';
+}
+
+// ======= LỊCH SỬ localStorage =======
+const HISTORY_PREFIX = 'scheduler_history_v1:';
+const HISTORY_INDEX_KEY = 'scheduler_history_index_v1';
+
+
+function fmt2(n){ return n<10 ? '0'+n : ''+n; }
+function makeFilename(ts, rows){
+// tên file là tên nhân viên đầu tiên nếu có, nếu không thì mặc định thời gian
+let staffNames = getStaffNames();
+let prefix = staffNames.length > 0 ? staffNames[0].replace(/\s+/g,'_') : 'Lich';
+const d=new Date(ts);
+return `${prefix}_${d.getFullYear()}${fmt2(d.getMonth()+1)}${fmt2(d.getDate())}_${fmt2(d.getHours())}${fmt2(d.getMinutes())}${fmt2(d.getSeconds())}`;
+}
+
+
+function getUniquePatients(rows){ return Array.from(new Set(rows.map(r=>r.patient).filter(Boolean))); }
+
+
+function loadHistoryIndex(){ try{ return JSON.parse(localStorage.getItem(HISTORY_INDEX_KEY)) || []; } catch(e){ return []; } }
+function saveHistoryIndex(idx){ localStorage.setItem(HISTORY_INDEX_KEY, JSON.stringify(idx)); }
+
+
+function saveHistory(rows){
+const ts = Date.now();
+const id = String(ts);
+const name = makeFilename(ts, rows);
+const patients = getUniquePatients(rows);
+const meta = { id, name, createdAt: ts, rowCount: rows.length, patientCount: patients.length };
+const payload = { meta, rows };
+try {
+localStorage.setItem(HISTORY_PREFIX+id, JSON.stringify(payload));
+const idx = loadHistoryIndex();
+idx.push(meta);
+if (idx.length > 200) {
+const remove = idx.splice(0, idx.length - 200);
+remove.forEach(it => localStorage.removeItem(HISTORY_PREFIX+it.id));
+}
+saveHistoryIndex(idx);
+} catch(e) {
+showPopup('Không lưu được lịch sử (localStorage đầy?). Hãy xóa bớt trong mục Lịch sử.');
+}
+}
+
+// UI Lịch sử
+const historyBtn = document.getElementById('historyBtn');
+const historyOverlay = document.getElementById('historyOverlay');
+const historyListBody = document.getElementById('historyListBody');
+const closeHistoryBtn = document.getElementById('closeHistoryBtn');
+const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+
+const historyDetailOverlay = document.getElementById('historyDetailOverlay');
+const historyDetailBody = document.getElementById('historyDetailBody');
+const historyDetailTitle = document.getElementById('historyDetailTitle');
+const closeHistoryDetailBtn = document.getElementById('closeHistoryDetailBtn');
+
+function openHistoryList(){ renderHistoryList(); historyOverlay.style.display='flex'; }
+function closeHistoryList(){ historyOverlay.style.display='none'; }
+function openHistoryDetail(id){
+  const raw = localStorage.getItem(HISTORY_PREFIX+id);
+  if (!raw) { showPopup('Không tìm thấy dữ liệu lịch sử.'); return; }
+  let data; try { data = JSON.parse(raw); } catch(e){ showPopup('Dữ liệu lịch sử bị lỗi.'); return; }
+  const { meta, rows } = data;
+  historyDetailTitle.textContent = `Lịch thủ thuật đã sắp · ${meta.name}`;
+  historyDetailBody.innerHTML='';
+  rows.forEach(r=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${r.patient}</td><td>${r.proc}</td><td>${r.staff}</td><td>${r.machine}</td><td>${r.start}</td><td>${r.end}</td><td>${r.staffBusy}</td><td>${r.note}</td>`;
+    historyDetailBody.appendChild(tr);
+  });
+  historyDetailOverlay.style.display='flex';
+}
+function closeHistoryDetail(){ historyDetailOverlay.style.display='none'; }
+
+function renderHistoryList(){
+  const idx = loadHistoryIndex().slice().sort((a,b)=>b.createdAt - a.createdAt);
+  historyListBody.innerHTML='';
+  if (idx.length===0){
+    const tr=document.createElement('tr');
+    const td=document.createElement('td'); td.colSpan=6; td.textContent='Chưa có lịch sử nào.'; tr.appendChild(td); historyListBody.appendChild(tr); return;
+  }
+  idx.forEach(item=>{
+    const tr=document.createElement('tr');
+    const d = new Date(item.createdAt);
+    const when = `${fmt2(d.getDate())}/${fmt2(d.getMonth()+1)}/${d.getFullYear()} ${fmt2(d.getHours())}:${fmt2(d.getMinutes())}:${fmt2(d.getSeconds())}`;
+    tr.innerHTML = `
+      <td class="nowrap">${item.name}</td>
+      <td class="nowrap">${when}</td>
+      <td class="nowrap" style="text-align:center;">${item.rowCount}</td>
+      <td class="nowrap" style="text-align:center;">${item.patientCount}</td>
+      <td class="nowrap"><button class="btn btn-small" data-act="view" data-id="${item.id}">Xem</button></td>
+      <td class="nowrap"><button class="btn btn-small" data-act="del" data-id="${item.id}">Xóa</button></td>`;
+    historyListBody.appendChild(tr);
+  });
+}
+
+historyListBody.addEventListener('click', (e)=>{
+  const btn = e.target.closest('button'); if (!btn) return;
+  const id = btn.getAttribute('data-id'); const act = btn.getAttribute('data-act');
+  if (act==='view') openHistoryDetail(id);
+  else if (act==='del') { deleteHistoryItem(id); renderHistoryList(); }
+});
+
+function deleteHistoryItem(id){
+  localStorage.removeItem(HISTORY_PREFIX+id);
+  const idx = loadHistoryIndex().filter(x=>x.id!==id); saveHistoryIndex(idx);
+}
+
+function clearAllHistory(){
+  const idx = loadHistoryIndex(); idx.forEach(it => localStorage.removeItem(HISTORY_PREFIX+it.id)); saveHistoryIndex([]);
+}
+
+historyBtn.addEventListener('click', openHistoryList);
+closeHistoryBtn.addEventListener('click', closeHistoryList);
+clearHistoryBtn.addEventListener('click', ()=>{ if (confirm('Xóa tất cả lịch sử?')) { clearAllHistory(); renderHistoryList(); }});
+closeHistoryDetailBtn.addEventListener('click', closeHistoryDetail);
+
+// Đóng modal khi click ra ngoài
+[historyOverlay, historyDetailOverlay].forEach(ov=>{
+  ov.addEventListener('click', (e)=>{ if (e.target===ov) ov.style.display='none'; });
+});
+</script>
+
+<footer style="text-align:center; padding:20px; color:var(--muted); font-size:14px;">Design by <strong>Dr.Châu</strong></footer>
+</body>
+</html>
