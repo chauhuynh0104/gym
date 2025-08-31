@@ -681,8 +681,61 @@ function clearAllHistory(){
 
 historyBtn.addEventListener('click', openHistoryList);
 closeHistoryBtn.addEventListener('click', closeHistoryList);
-clearHistoryBtn.addEventListener('click', ()=>{ if (confirm('Xóa tất cả lịch sử?')) { clearAllHistory(); renderHistoryList(); }});
-closeHistoryDetailBtn.addEventListener('click', closeHistoryDetail);
+// Thay confirm() bằng popup tuỳ chỉnh
+clearHistoryBtn.addEventListener('click', ()=>{
+  showConfirmPopup('Xóa tất cả lịch sử?', ()=>{
+    clearAllHistory();
+    renderHistoryList();
+  });
+});
+
+// Hàm popup xác nhận
+function showConfirmPopup(message, onConfirm){
+  const overlay = document.createElement('div');
+  overlay.style.position = 'fixed';
+  overlay.style.inset = 0;
+  overlay.style.background = 'rgba(0,0,0,0.5)';
+  overlay.style.display = 'flex';
+  overlay.style.alignItems = 'center';
+  overlay.style.justifyContent = 'center';
+  overlay.style.zIndex = 10000;
+
+  const box = document.createElement('div');
+  box.style.background = '#fff';
+  box.style.padding = '20px';
+  box.style.borderRadius = '12px';
+  box.style.maxWidth = '320px';
+  box.style.textAlign = 'center';
+  box.style.boxShadow = '0 6px 20px rgba(0,0,0,0.25)';
+
+  const msg = document.createElement('div');
+  msg.textContent = message;
+
+  const btnWrap = document.createElement('div');
+  btnWrap.style.marginTop = '14px';
+  btnWrap.style.display = 'flex';
+  btnWrap.style.justifyContent = 'center';
+  btnWrap.style.gap = '12px';
+
+  const okBtn = document.createElement('button');
+  okBtn.textContent = 'OK';
+  okBtn.className = 'btn btn-small';
+  okBtn.style.background = 'var(--acc)';
+  okBtn.style.color = '#fff';
+  okBtn.onclick = ()=>{ document.body.removeChild(overlay); onConfirm(); };
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.textContent = 'Hủy';
+  cancelBtn.className = 'btn btn-small';
+  cancelBtn.onclick = ()=>{ document.body.removeChild(overlay); };
+
+  btnWrap.appendChild(okBtn);
+  btnWrap.appendChild(cancelBtn);
+  box.appendChild(msg);
+  box.appendChild(btnWrap);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+}closeHistoryDetailBtn.addEventListener('click', closeHistoryDetail);
 
 // Đóng modal khi click ra ngoài
 [historyOverlay, historyDetailOverlay].forEach(ov=>{
