@@ -309,7 +309,7 @@ function addProcChip(card, proc) {
 function refreshPatientStaffOptions() {
   const names = getStaffNames();
   document.querySelectorAll('.patient-staff').forEach(sel => {
-    const current = sel.value; sel.innerHTML = '<option value="">(chưa chọn)</option>';
+    const current = sel.value; sel.innerHTML = '<option value="">(Chưa chọn)</option>';
     names.filter(n=>n).forEach(n => { const opt = document.createElement('option'); opt.value=n; opt.textContent=n; sel.appendChild(opt); });
     sel.value = current;
   });
