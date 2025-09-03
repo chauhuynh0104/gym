@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Lập Lịch Thủ Thuật</title>
+  <title>Lập Lịch Thủ Thuật </title>
   <style>
     :root {
       --bg: #f7f9fc;
@@ -17,7 +17,6 @@
       --bad: #b91c1c;
       --border: #e2e8f0;
     }
-
     html, body { background: var(--bg); color: var(--txt); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; margin: 0; }
     h1 { font-size: 22px; margin: 16px; }
     .container { max-width: 1100px; margin: 0 auto; padding: 12px; }
@@ -45,26 +44,17 @@
     .section-title { font-weight: 700; margin-top: 6px; }
     .divider { height: 1px; background: var(--border); margin: 10px 0; }
 
-    /* Popup overlay (generic) */
-    .overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
-      display: none; align-items: center; justify-content: center; z-index: 9999;
-    }
-    .modal {
-      background: #fff; padding: 18px 20px; border-radius: 14px; max-width: 720px; width: calc(100% - 32px);
-      box-shadow: 0 6px 20px rgba(0,0,0,0.25); font-size: 14px;
-    }
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 9999; }
+    .modal { background: #fff; padding: 18px 20px; border-radius: 14px; max-width: 720px; width: calc(100% - 32px); box-shadow: 0 6px 20px rgba(0,0,0,0.25); font-size: 14px; }
     .modal-header { display:flex; align-items:center; justify-content: space-between; margin-bottom: 12px; }
     .modal-title { font-weight:700; }
     .modal-actions { display:flex; gap:8px; }
 
-    /* Small alert popup (reuses old style) */
     #popupOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); display:none; align-items:center; justify-content:center; z-index:9999; }
     #popupBox { background:#fff; padding:20px 28px; border-radius:12px; max-width:320px; text-align:center; box-shadow:0 6px 20px rgba(0,0,0,0.25); font-size:14px; }
     #popupBox button { margin-top:14px; padding:8px 14px; border:none; background: var(--acc); color:#fff; border-radius:8px; cursor:pointer; }
     #popupBox button:hover { opacity:.9; }
 
-    /* History list table */
     #historyTable th, #historyTable td { white-space: nowrap; }
     .nowrap { white-space: nowrap; }
   </style>
@@ -179,7 +169,7 @@
   <div class="overlay" id="historyOverlay">
     <div class="modal">
       <div class="modal-header">
-        <div class="modal-title">📜 Lịch sử sắp xếp</div>
+        <div class="modal-title">📜 Lịch sử sắp xếp </div>
         <div class="modal-actions">
           <button class="btn btn-small" id="clearHistoryBtn">Xóa tất cả</button>
           <button class="btn btn-small" id="closeHistoryBtn">Đóng</button>
@@ -233,11 +223,144 @@
   </div>
 
 <script>
-// ===== Helpers for time =====
-function toMin(hhmm) { const [h,m] = hhmm.split(':').map(x=>parseInt(x,10)); return h*60+m; }
+/*
+  Dropbox-backed history for scheduler.
+  WARNING: this script contains app secret + refresh token (provided by user).
+  Keep this file secure.
+*/
+
+/* ======= CẤU HÌNH DROPBOX =======
+   Bạn đã cung cấp (đã chèn trực tiếp vào code):
+   - refreshToken
+   - APP_KEY
+   - APP_SECRET
+   Thao tác OAuth2: dùng refresh token để lấy access token, sau đó gọi endpoint content API.
+*/
+const DROPBOX = {
+  refreshToken: 'O4v-xPPKvnAAAAAAAAAAATLzEX47vCTSEpoiR55IjJC5isF2DsSoKTckCkGP2RQA',
+  appKey: 'z19htlmxpaes9jb',
+  appSecret: '3168y37xae5fw0h',
+  // thư mục gốc trong App folder: ta lưu dưới /scheduler_history_v1
+  baseFolder: '/scheduler_history_v1'
+};
+
+/* Token cache in-memory */
+let _dbxToken = null; // {access_token, expires_at(ms)}
+async function dbxGetAccessToken() {
+  const now = Date.now();
+  if (_dbxToken && _dbxToken.expires_at && _dbxToken.expires_at > now + 5000) {
+    return _dbxToken.access_token;
+  }
+  // exchange refresh token
+  const url = 'https://api.dropbox.com/oauth2/token';
+  const body = new URLSearchParams();
+  body.append('grant_type','refresh_token');
+  body.append('refresh_token', DROPBOX.refreshToken);
+  // Use Basic auth with client_id:client_secret
+  const basic = btoa(`${DROPBOX.appKey}:${DROPBOX.appSecret}`);
+  try {
+    const res = await fetch(url, { method:'POST', headers:{ 'Authorization':'Basic '+basic, 'Content-Type':'application/x-www-form-urlencoded' }, body: body.toString() });
+    if (!res.ok) {
+      throw new Error('Không lấy được access token từ Dropbox: ' + res.status + ' ' + res.statusText);
+    }
+    const j = await res.json();
+    if (!j.access_token) throw new Error('Response không có access_token');
+    _dbxToken = { access_token: j.access_token, expires_at: Date.now() + (j.expires_in ? j.expires_in*1000 : 50*60*1000) };
+    return _dbxToken.access_token;
+  } catch (e) {
+    console.error(e);
+    showPopup('Lỗi kết nối Dropbox: ' + (e.message || e));
+    throw e;
+  }
+}
+
+/* Upload raw bytes or text to Dropbox content API as a file (overwrite) */
+async function dropboxUpload(path, data, mode='overwrite') {
+  const token = await dbxGetAccessToken();
+  const url = 'https://content.dropboxapi.com/2/files/upload';
+  const args = { path, mode: {'.tag': mode}, autorename: false, mute: true, strict_conflict: false };
+  const res = await fetch(url, { method:'POST', headers:{
+    'Authorization':'Bearer '+token,
+    'Content-Type':'application/octet-stream',
+    'Dropbox-API-Arg': JSON.stringify(args)
+  }, body: data });
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error('Upload thất bại: ' + res.status + ' ' + t);
+  }
+  return res.json();
+}
+
+/* Download a file's content from Dropbox (content/download) */
+async function dropboxDownload(path) {
+  const token = await dbxGetAccessToken();
+  const url = 'https://content.dropboxapi.com/2/files/download';
+  const res = await fetch(url, { method:'POST', headers:{
+    'Authorization':'Bearer '+token,
+    'Dropbox-API-Arg': JSON.stringify({ path })
+  }});
+  if (!res.ok) {
+    if (res.status === 409 || res.status === 409) return null;
+    const t = await res.text();
+    throw new Error('Download thất bại: ' + res.status + ' ' + t);
+  }
+  const txt = await res.text();
+  return txt;
+}
+
+/* Delete a file (files/delete_v2) */
+async function dropboxDelete(path) {
+  const token = await dbxGetAccessToken();
+  const url = 'https://api.dropboxapi.com/2/files/delete_v2';
+  const res = await fetch(url, { method:'POST', headers:{
+    'Authorization':'Bearer '+token,
+    'Content-Type':'application/json'
+  }, body: JSON.stringify({ path }) });
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error('Xóa thất bại: ' + res.status + ' ' + t);
+  }
+  return res.json();
+}
+
+/* Ensure base folder exists (App folder may already allow writing to base path) 
+   We'll attempt to create folder; if exists, ignore error.
+*/
+async function ensureBaseFolder() {
+  const token = await dbxGetAccessToken();
+  const url = 'https://api.dropboxapi.com/2/files/create_folder_v2';
+  try {
+    const res = await fetch(url, { method:'POST', headers:{
+      'Authorization':'Bearer '+token,
+      'Content-Type':'application/json'
+    }, body: JSON.stringify({ path: DROPBOX.baseFolder, autorename:false }) });
+    if (!res.ok) {
+      const j = await res.json().catch(()=>null);
+      // If folder exists, dropbox returns specific error - ignore
+      if (j && j.error && j.error['.tag'] === 'path' && j.error.path['.tag'] === 'conflict') {
+        return;
+      }
+      // else if already exists, ignore
+      // in many cases create_folder_v2 returns 409 if exists; swallow that
+    }
+  } catch (e) {
+    // non-blocking – ignore if can't create (folder may already exist)
+    console.warn('ensureBaseFolder error', e);
+  }
+}
+
+/* Path helpers */
+function indexPath() { return `${DROPBOX.baseFolder}/index.json`; }
+function itemPath(id) { return `${DROPBOX.baseFolder}/${id}.json`; }
+
+/* ====== Scheduler code (unchanged logic) ====== */
+
+/* Helpers for time */
+function toMin(hhmm) { if (!hhmm) return 0; const [h,m] = hhmm.split(':').map(x=>parseInt(x,10)); return h*60+m; }
 function toHHMM(min) { min = Math.max(0, Math.round(min)); const h = Math.floor(min/60); const m = min%60; return (h<10?'0':'')+h+':' + (m<10?'0':'')+m; }
 
-// ===== Dynamic Staff Inputs =====
+/* ... staff/patients/procedures code (same as before) ... */
+// We'll reuse the same UI creation functions from original file (slightly trimmed for brevity)
 const staffListEl = document.getElementById('staffList');
 function addStaffInput(value='') {
   const row = document.createElement('div'); row.className = 'row';
@@ -252,9 +375,8 @@ function onStaffTyping(e) {
   if (e.target === last && last.value.trim() !== '') { addStaffInput(''); refreshPatientStaffOptions(); }
   else { refreshPatientStaffOptions(); }
 }
-addStaffInput(''); // initial
+addStaffInput('');
 
-// ===== Patients & Procedures =====
 const patientsEl = document.getElementById('patients');
 const addPatientBtn = document.getElementById('addPatientBtn');
 
@@ -303,7 +425,8 @@ function createPatientCard(idx) {
 function addProcChip(card, proc) {
   const chips = card.querySelector('.patient-proc-chips');
   const chip = document.createElement('span'); chip.className = 'chip'; chip.dataset.key = proc.key; chip.innerHTML = `${proc.label} <button class="btn btn-small" style="margin-left:6px;">×</button>`;
-  chip.querySelector('button').addEventListener('click', ()=>chip.remove()); chips.appendChild(chip);
+  chip.querySelector('button').addEventListener('click', ()=>{ chip.remove(); setTimeout(updateMachineVisibility, 0); });
+  chips.appendChild(chip); setTimeout(updateMachineVisibility, 0);
 }
 
 function refreshPatientStaffOptions() {
@@ -332,7 +455,7 @@ function addPatient() { const idx = patientsEl.querySelectorAll('.card').length;
 addPatient(); addPatientBtn.addEventListener('click', addPatient);
 patientsEl.addEventListener('click', (e)=>{ if (e.target.closest('.end-patient')) { addPatient(); } });
 
-// ===== Machines dynamic names =====
+/* Machines dynamic names */
 function rebuildNameInputs(count, container, type) {
   container.innerHTML = '';
   let prefix = ''; if (type==='dienCham') prefix='ĐC'; else if (type==='chieuDen') prefix='HN'; else if (type==='giacHoi') prefix='GH';
@@ -356,7 +479,7 @@ nDienCham.addEventListener('input', ()=> rebuildNameInputs(parseInt(nDienCham.va
 nChieuDen.addEventListener('input', ()=> rebuildNameInputs(parseInt(nChieuDen.value||'0',10), chieuDenNames, 'chieuDen'));
 nGiacHoi.addEventListener('input', ()=> rebuildNameInputs(parseInt(nGiacHoi.value||'0',10), giacHoiNames, 'giacHoi'));
 
-// ===== Scheduler =====
+/* Scheduler logic (as before) */
 const startBtn = document.getElementById('startBtn');
 const outputWrap = document.getElementById('outputWrap');
 const resultTableBody = document.querySelector('#resultTable tbody');
@@ -404,11 +527,15 @@ function findSlotForTask(task, patient, resources, windows, preferMorning=true) 
   return null;
 }
 
-function showPopup(msg) { document.getElementById('popupMessage').textContent = msg; document.getElementById('popupOverlay').style.display = 'flex'; }
-function closePopup() { document.getElementById('popupOverlay').style.display = 'none'; }
+function showPopup(msg) {
+  document.getElementById('popupMessage').textContent = msg;
+  document.getElementById('popupOverlay').style.display = 'flex';
+}
 
+function closePopup() {
+  document.getElementById('popupOverlay').style.display = 'none';
+}
 function validateMachineCounts(patients){
-  // Xác định các thủ thuật đang dùng
   const allProcs = new Set();
   patients.forEach(p => (p.procs||[]).forEach(k => allProcs.add(k)));
   const needsDienCham = allProcs.has('dien_cham');
@@ -431,17 +558,15 @@ function validateMachineCounts(patients){
   return true;
 }
 
-
 function scheduleAll() {
   const staffNames = getStaffNames().filter(Boolean);
   if (staffNames.length===0) { showPopup('Hãy nhập ít nhất 1 nhân viên.'); return []; }
   const patients = getPatientsData();
   if (patients.length===0) { showPopup('Hãy nhập ít nhất 1 bệnh nhân và thủ thuật.'); return []; }
 
-  
-  // Ràng buộc số lượng máy cho các thủ thuật cần thiết
   if (!validateMachineCounts(patients)) { return []; }
-const windows = {
+
+  const windows = {
     morningStart: toMin(document.getElementById('morningStart').value),
     morningEnd: toMin(document.getElementById('morningEnd').value),
     afternoonStart: toMin(document.getElementById('afternoonStart').value),
@@ -488,7 +613,7 @@ function commitBooking(p, def, slot, resources, results) {
   results.push({ patient:p.name, proc:def.label, staff:p.prefStaff||'', machine:slot.machine||'', start:toHHMM(slot.start), end:toHHMM(slot.end), staffBusy:`${toHHMM(slot.staffBusyStart)}–${toHHMM(slot.staffBusyEnd)}`, note:(def.key==='chieu_den' && p._dienChamPlaced && slot.start >= p._dienChamStart+3) ? 'Chiếu đèn chồng lên Điện châm' : '' });
 }
 
-// ===== Render results =====
+/* Render results */
 function renderTable(rows) {
   resultTableBody.innerHTML = '';
   for (const r of rows) {
@@ -504,7 +629,7 @@ function rowsToCSV(rows) {
   return [header.map(esc).join(','), ...rows.map(r=>[r.patient,r.proc,r.staff,r.machine,r.start,r.end,r.staffBusy,r.note].map(esc).join(','))].join('\n');
 }
 
-// ===== Export buttons =====
+/* ===== Export buttons (same) ===== */
 exportCSVBtn.addEventListener('click', ()=>{
   const rows = Array.from(resultTableBody.querySelectorAll('tr')).map(tr=>({ patient: tr.children[0].textContent, proc: tr.children[1].textContent, staff: tr.children[2].textContent, machine: tr.children[3].textContent, start: tr.children[4].textContent, end: tr.children[5].textContent, staffBusy: tr.children[6].textContent, note: tr.children[7].textContent, }));
   const csv = rowsToCSV(rows);
@@ -520,38 +645,226 @@ copyCSVBtn.addEventListener('click', async ()=>{
   catch(e) { showPopup('Không copy được. Hãy dùng nút Tải CSV.'); }
 });
 
-// ===== Excel Export (giữ nguyên từ bản trước) =====
- document.getElementById('exportExcel').addEventListener('click', () => {
-   const toHHMMSS = (t) => (t && t.includes(':')) ? (t.length === 5 ? t + ':00' : t) : '';
-   const rows = Array.from(document.querySelectorAll('#resultTable tbody tr')).map((tr, i) => {
-    const tds = Array.from(tr.children).map(td => td.textContent.trim());
-    const stt = i + 1; const hoTen = tds[0] || ''; const thuThuat = tds[1] || ''; const nhanVien = tds[2] || ''; const batDau = tds[4] || ''; const ketThuc = tds[5] || '';
-    const now = new Date(); const dd = String(now.getDate()).padStart(2,'0'); const mm = String(now.getMonth()+1).padStart(2,'0'); const yyyy = now.getFullYear();
-    const ngayThucHien = `${dd}/${mm}/${yyyy}`;
-    const tgBatDauText = `${ngayThucHien}\r\n${toHHMMSS(batDau)}`; const tgKetThucText = `${ngayThucHien}\r\n${toHHMMSS(ketThuc)}`;
-    return [ stt, hoTen, '', '', '', '', '', '', '', thuThuat, ngayThucHien, tgBatDauText, tgKetThucText, '', nhanVien, '' ];
-  });
-  const titleBlock = [ ['SỞ Y TẾ TỈNH QUẢNG NAM', ...Array(15).fill(null)], ['BỆNH VIỆN Y HỌC CỔ TRUYỀN', ...Array(15).fill(null)], [], ['SỔ THỦ THUẬT', ...Array(15).fill(null)], ['Ngày hôm nay', ...Array(15).fill(null)], ['Khoa Nội', ...Array(15).fill(null)], [], [ 'STT','Họ tên','Mã BN','Mã điều trị','Tuổi','Nhóm PTTT','Số lượng','Năm sinh', 'Thủ thuật','Ngày thực hiện','Thời gian bắt đầu thực hiện','Thời gian kết thúc','Bác sỹ chỉ định','Thủ thuật chính','Điều dưỡng thực hiện' ], [ '','','','','','','','Nam','Nữ','','','','','','','' ], ];
-  const data = [...titleBlock, ...rows];
-  const ws = XLSX.utils.aoa_to_sheet(data);
-  ws['!merges'] = [ {s:{r:0,c:0}, e:{r:0,c:15}}, {s:{r:1,c:0}, e:{r:1,c:15}}, {s:{r:3,c:0}, e:{r:3,c:15}}, {s:{r:4,c:0}, e:{r:4,c:15}}, {s:{r:5,c:0}, e:{r:5,c:15}}, ...[0,1,2,3,4,5,6,9,10,11,12,13,14,15].map(c => ({s:{r:7,c}, e:{r:8,c}})), {s:{r:7,c:7}, e:{r:7,c:8}}, ];
-  ws['!cols'] = [ {wch:4}, {wch:22}, {wch:10}, {wch:12}, {wch:6}, {wch:12}, {wch:8}, {wch:6}, {wch:6}, {wch:26}, {wch:14}, {wch:22}, {wch:20}, {wch:18}, {wch:18}, {wch:20}, ];
-  const setCenterBold = (addr) => { if (ws[addr]) ws[addr].s = {alignment:{horizontal:'center', vertical:'center'}, font:{bold:true}}; };
-  ['A1','A2','A5','A7','A8'].forEach(setCenterBold);
-  const wrapCols = [ 'A8','B8','C8','D8','E8','F8','G8','H8','I8','J8','K8','L8','M8','N8','O8','P8' ];
-  wrapCols.forEach(a => { if (ws[a]) { ws[a].s = { alignment: { wrapText: true, horizontal: 'center', vertical: 'center' }, font: { bold: true } }; } });
-  const headerRows = titleBlock.length; const dataRowCount = rows.length;
-  for (let r = 0; r < dataRowCount; r++) { const rr = headerRows + r; const addrL = XLSX.utils.encode_cell({ r: rr, c: 11 }); const addrM = XLSX.utils.encode_cell({ r: rr, c: 12 }); [addrL, addrM].forEach(addr => { if (ws[addr]) { ws[addr].t = 's'; ws[addr].v = String(ws[addr].v || ''); ws[addr].s = { alignment: { wrapText: true, horizontal: 'center', vertical: 'center' } }; } }); }
-  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Sổ Thủ Thuật'); XLSX.writeFile(wb, 'so_thu_thuat.xlsx');
+/* Excel export (kept) */
+document.getElementById('exportExcel').addEventListener('click', () => {
+  const toHHMMSS = (t) => (t && t.includes(':')) ? (t.length === 5 ? t + ':00' : t) : '';
+  const rows = Array.from(document.querySelectorAll('#resultTable tbody tr')).map((tr, i) => {
+   const tds = Array.from(tr.children).map(td => td.textContent.trim());
+   const stt = i + 1; const hoTen = tds[0] || ''; const thuThuat = tds[1] || ''; const nhanVien = tds[2] || ''; const batDau = tds[4] || ''; const ketThuc = tds[5] || '';
+   const now = new Date(); const dd = String(now.getDate()).padStart(2,'0'); const mm = String(now.getMonth()+1).padStart(2,'0'); const yyyy = now.getFullYear();
+   const ngayThucHien = `${dd}/${mm}/${yyyy}`;
+   const tgBatDauText = `${ngayThucHien}\r\n${toHHMMSS(batDau)}`; const tgKetThucText = `${ngayThucHien}\r\n${toHHMMSS(ketThuc)}`;
+   return [ stt, hoTen, '', '', '', '', '', '', '', thuThuat, ngayThucHien, tgBatDauText, tgKetThucText, '', nhanVien, '' ];
+ });
+ const titleBlock = [ ['SỞ Y TẾ TỈNH QUẢNG NAM', ...Array(15).fill(null)], ['BỆNH VIỆN Y HỌC CỔ TRUYỀN', ...Array(15).fill(null)], [], ['SỔ THỦ THUẬT', ...Array(15).fill(null)], ['Ngày hôm nay', ...Array(15).fill(null)], ['Khoa Nội', ...Array(15).fill(null)], [], [ 'STT','Họ tên','Mã BN','Mã điều trị','Tuổi','Nhóm PTTT','Số lượng','Năm sinh', 'Thủ thuật','Ngày thực hiện','Thời gian bắt đầu thực hiện','Thời gian kết thúc','Bác sỹ chỉ định','Thủ thuật chính','Điều dưỡng thực hiện' ], [ '','','','','','','','Nam','Nữ','','','','','','','' ], ];
+ const data = [...titleBlock, ...rows];
+ const ws = XLSX.utils.aoa_to_sheet(data);
+ ws['!merges'] = [ {s:{r:0,c:0}, e:{r:0,c:15}}, {s:{r:1,c:0}, e:{r:1,c:15}}, {s:{r:3,c:0}, e:{r:3,c:15}}, {s:{r:4,c:0}, e:{r:4,c:15}}, {s:{r:5,c:0}, e:{r:5,c:15}}, ...[0,1,2,3,4,5,6,9,10,11,12,13,14,15].map(c => ({s:{r:7,c}, e:{r:8,c}})), {s:{r:7,c:7}, e:{r:7,c:8}}, ];
+ ws['!cols'] = [ {wch:4}, {wch:22}, {wch:10}, {wch:12}, {wch:6}, {wch:12}, {wch:8}, {wch:6}, {wch:6}, {wch:26}, {wch:14}, {wch:22}, {wch:20}, {wch:18}, {wch:18}, {wch:20}, ];
+ const setCenterBold = (addr) => { if (ws[addr]) ws[addr].s = {alignment:{horizontal:'center', vertical:'center'}, font:{bold:true}}; };
+ ['A1','A2','A5','A7','A8'].forEach(setCenterBold);
+ const wrapCols = [ 'A8','B8','C8','D8','E8','F8','G8','H8','I8','J8','K8','L8','M8','N8','O8','P8' ];
+ wrapCols.forEach(a => { if (ws[a]) { ws[a].s = { alignment: { wrapText: true, horizontal: 'center', vertical: 'center' }, font: { bold: true } }; } });
+ const headerRows = titleBlock.length; const dataRowCount = rows.length;
+ for (let r = 0; r < dataRowCount; r++) { const rr = headerRows + r; const addrL = XLSX.utils.encode_cell({ r: rr, c: 11 }); const addrM = XLSX.utils.encode_cell({ r: rr, c: 12 }); [addrL, addrM].forEach(addr => { if (ws[addr]) { ws[addr].t = 's'; ws[addr].v = String(ws[addr].v || ''); ws[addr].s = { alignment: { wrapText: true, horizontal: 'center', vertical: 'center' } }; } }); }
+ const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Sổ Thủ Thuật'); XLSX.writeFile(wb, 'so_thu_thuat.xlsx');
 });
 
-// ===== Start scheduling + save history =====
-startBtn.addEventListener('click', ()=>{
+/* ====== Dropbox-backed History (replacing localStorage) ====== */
+
+/* Utility: format */
+function fmt2(n){ return n<10 ? '0'+n : ''+n; }
+function makeFilename(ts, rows){
+  let staffNames = getStaffNames();
+  let prefix = staffNames.length > 0 ? staffNames[0].replace(/\s+/g,'_') : 'Lich';
+  const d=new Date(ts);
+  return `${prefix}_${d.getFullYear()}${fmt2(d.getMonth()+1)}${fmt2(d.getDate())}_${fmt2(d.getHours())}${fmt2(d.getMinutes())}${fmt2(d.getSeconds())}`;
+}
+
+function getUniquePatients(rows){ return Array.from(new Set(rows.map(r=>r.patient).filter(Boolean))); }
+
+/* Save history to Dropbox: creates item file and updates index.json */
+async function saveHistory(rows){
+  try {
+    await ensureBaseFolder();
+  } catch(e){
+    console.warn('ensureBaseFolder failed', e);
+  }
+  const ts = Date.now();
+  const id = String(ts);
+  const name = makeFilename(ts, rows);
+  const patients = getUniquePatients(rows);
+  const meta = { id, name, createdAt: ts, rowCount: rows.length, patientCount: patients.length };
+  const payload = { meta, rows };
+
+  try {
+    // upload item
+    const p = itemPath(id);
+    await dropboxUpload(p, JSON.stringify(payload), 'overwrite');
+
+    // load index
+    let idx = [];
+    try {
+      const raw = await dropboxDownload(indexPath());
+      if (raw) idx = JSON.parse(raw);
+    } catch(e) { idx = []; }
+
+    idx.push(meta);
+    if (idx.length > 200) {
+      const remove = idx.splice(0, idx.length - 200);
+      // delete the removed files
+      for (const it of remove) {
+        try { await dropboxDelete(itemPath(it.id)); } catch(e){ console.warn('delete old item error', e); }
+      }
+    }
+    // save index (overwrite)
+    await dropboxUpload(indexPath(), JSON.stringify(idx), 'overwrite');
+    showPopup('Đã lưu lịch sử sắp xếp.');
+  } catch (e) {
+    console.error(e);
+    showPopup('Lỗi khi lưu lịch sử: ' + (e.message || e));
+  }
+}
+
+/* Render history list by downloading index.json from Dropbox */
+/* ==== LỊCH SỬ ==== */
+async function renderHistoryList(){
+  historyListBody.innerHTML = '';
+  try {
+    showPopup("Đang tải dữ liệu…");
+    const raw = await dropboxDownload(indexPath());
+    closePopup();
+    if (!raw) {
+      const tr=document.createElement('tr');
+      const td=document.createElement('td'); td.colSpan=6; td.textContent='Chưa có lịch sử nào.'; tr.appendChild(td); historyListBody.appendChild(tr); return;
+    }
+    let idx = JSON.parse(raw);
+    idx = idx.slice().sort((a,b)=>b.createdAt - a.createdAt);
+    if (idx.length===0) {
+      const tr=document.createElement('tr');
+      const td=document.createElement('td'); td.colSpan=6; td.textContent='Chưa có lịch sử nào.'; tr.appendChild(td); historyListBody.appendChild(tr); return;
+    }
+    idx.forEach(item=>{
+      const tr=document.createElement('tr');
+      const d = new Date(item.createdAt);
+      const when = `${fmt2(d.getDate())}/${fmt2(d.getMonth()+1)}/${d.getFullYear()} ${fmt2(d.getHours())}:${fmt2(d.getMinutes())}:${fmt2(d.getSeconds())}`;
+      tr.innerHTML = `
+        <td class="nowrap">${item.name}</td>
+        <td class="nowrap">${when}</td>
+        <td class="nowrap" style="text-align:center;">${item.rowCount}</td>
+        <td class="nowrap" style="text-align:center;">${item.patientCount}</td>
+        <td class="nowrap"><button class="btn btn-small" data-act="view" data-id="${item.id}">Xem</button></td>
+        <td class="nowrap"><button class="btn btn-small" data-act="del" data-id="${item.id}">Xóa</button></td>`;
+      historyListBody.appendChild(tr);
+    });
+  } catch (e) {
+    console.error(e);
+    closePopup();
+    const tr=document.createElement('tr');
+    const td=document.createElement('td'); td.colSpan=6; td.textContent='Không thể tải danh sách lịch sử .'; tr.appendChild(td); historyListBody.appendChild(tr);
+  }
+}
+
+/* Open history detail: download specific item file */
+async function openHistoryDetail(id){
+  try {
+    const raw = await dropboxDownload(itemPath(id));
+    if (!raw) { showPopup('Không tìm thấy dữ liệu lịch sử.'); return; }
+    let data;
+    try { data = JSON.parse(raw); } catch(e){ showPopup('Dữ liệu lịch sử bị lỗi.'); return; }
+    const { meta, rows } = data;
+    historyDetailTitle.textContent = `Lịch thủ thuật đã sắp · ${meta.name}`;
+    historyDetailBody.innerHTML='';
+    rows.forEach(r=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${r.patient}</td><td>${r.proc}</td><td>${r.staff}</td><td>${r.machine}</td><td>${r.start}</td><td>${r.end}</td><td>${r.staffBusy}</td><td>${r.note}</td>`;
+      historyDetailBody.appendChild(tr);
+    });
+    historyDetailOverlay.style.display='flex';
+  } catch (e) {
+    console.error(e);
+    showPopup('Lỗi khi tải dữ liệu lịch sử: ' + (e.message || e));
+  }
+}
+
+/* Delete a single history item: delete file and update index */
+async function deleteHistoryItem(id){
+  try {
+    // delete file
+    await dropboxDelete(itemPath(id));
+  } catch(e){ console.warn('dropbox delete item failed', e); }
+  try {
+    // update index
+    let idx = [];
+    try { const raw = await dropboxDownload(indexPath()); if (raw) idx = JSON.parse(raw); } catch(e){ idx = []; }
+    idx = idx.filter(x=>x.id!==id);
+    await dropboxUpload(indexPath(), JSON.stringify(idx), 'overwrite');
+  } catch(e){
+    console.warn('update index after delete failed', e);
+  }
+}
+
+/* Clear all history */
+async function clearAllHistory(){
+  try {
+    let idx = [];
+    try { const raw = await dropboxDownload(indexPath()); if (raw) idx = JSON.parse(raw); } catch(e){ idx = []; }
+    for (const it of idx) {
+      try { await dropboxDelete(itemPath(it.id)); } catch(e){ console.warn('delete item', it.id, 'failed', e); }
+    }
+    // write empty index
+    await dropboxUpload(indexPath(), JSON.stringify([]), 'overwrite');
+    showPopup('Đã xóa toàn bộ lịch sử trên máy chủ.');
+  } catch(e){
+    console.error(e);
+    showPopup('Lỗi khi xóa lịch sử: ' + (e.message || e));
+  }
+}
+
+/* UI wiring for history list */
+const historyBtn = document.getElementById('historyBtn');
+const historyOverlay = document.getElementById('historyOverlay');
+const historyListBody = document.getElementById('historyListBody');
+const closeHistoryBtn = document.getElementById('closeHistoryBtn');
+const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+
+const historyDetailOverlay = document.getElementById('historyDetailOverlay');
+const historyDetailBody = document.getElementById('historyDetailBody');
+const historyDetailTitle = document.getElementById('historyDetailTitle');
+const closeHistoryDetailBtn = document.getElementById('closeHistoryDetailBtn');
+
+function openHistoryList(){ renderHistoryList(); historyOverlay.style.display='flex'; }
+function closeHistoryList(){ historyOverlay.style.display='none'; }
+
+historyListBody.addEventListener('click', async (e)=>{
+  const btn = e.target.closest('button'); if (!btn) return;
+  const id = btn.getAttribute('data-id'); const act = btn.getAttribute('data-act');
+  if (act==='view') {
+    await openHistoryDetail(id);
+  } else if (act==='del') {
+    showConfirmPopup('Xóa lịch sử này?', async ()=>{
+      await deleteHistoryItem(id);
+      await renderHistoryList();
+    });
+  }
+});
+
+closeHistoryBtn.addEventListener('click', closeHistoryList);
+clearHistoryBtn.addEventListener('click', ()=>{ showConfirmPopup('Xóa tất cả lịch sử?', async ()=>{ await clearAllHistory(); await renderHistoryList(); }); });
+
+closeHistoryDetailBtn.addEventListener('click', ()=>{ historyDetailOverlay.style.display='none'; });
+
+[historyOverlay, historyDetailOverlay].forEach(ov=>{
+  ov.addEventListener('click', (e)=>{ if (e.target===ov) ov.style.display='none'; });
+});
+
+/* Start scheduling + save history (startBtn becomes async) */
+startBtn.addEventListener('click', async ()=>{
   const rows = scheduleAll();
-  if (rows.length) { outputWrap.classList.remove('hidden'); renderTable(rows); saveHistory(rows); }
+  if (rows.length) { outputWrap.classList.remove('hidden'); renderTable(rows); await saveHistory(rows); }
 });
 
-// ===== Dynamic machine section visibility =====
+/* Machines visibility management (same behavior) */
 const machinesCard = document.getElementById('machinesCard');
 const dienChamRow = nDienCham.closest('.row');
 const chieuDenRow = nChieuDen.closest('.row');
@@ -568,128 +881,7 @@ function updateMachineVisibility() {
   giacHoiRow.style.display = hasGiacHoi ? '' : 'none';
 }
 
-// ======= LỊCH SỬ localStorage =======
-const HISTORY_PREFIX = 'scheduler_history_v1:';
-const HISTORY_INDEX_KEY = 'scheduler_history_index_v1';
-
-
-function fmt2(n){ return n<10 ? '0'+n : ''+n; }
-function makeFilename(ts, rows){
-// tên file là tên nhân viên đầu tiên nếu có, nếu không thì mặc định thời gian
-let staffNames = getStaffNames();
-let prefix = staffNames.length > 0 ? staffNames[0].replace(/\s+/g,'_') : 'Lich';
-const d=new Date(ts);
-return `${prefix}_${d.getFullYear()}${fmt2(d.getMonth()+1)}${fmt2(d.getDate())}_${fmt2(d.getHours())}${fmt2(d.getMinutes())}${fmt2(d.getSeconds())}`;
-}
-
-
-function getUniquePatients(rows){ return Array.from(new Set(rows.map(r=>r.patient).filter(Boolean))); }
-
-
-function loadHistoryIndex(){ try{ return JSON.parse(localStorage.getItem(HISTORY_INDEX_KEY)) || []; } catch(e){ return []; } }
-function saveHistoryIndex(idx){ localStorage.setItem(HISTORY_INDEX_KEY, JSON.stringify(idx)); }
-
-
-function saveHistory(rows){
-const ts = Date.now();
-const id = String(ts);
-const name = makeFilename(ts, rows);
-const patients = getUniquePatients(rows);
-const meta = { id, name, createdAt: ts, rowCount: rows.length, patientCount: patients.length };
-const payload = { meta, rows };
-try {
-localStorage.setItem(HISTORY_PREFIX+id, JSON.stringify(payload));
-const idx = loadHistoryIndex();
-idx.push(meta);
-if (idx.length > 200) {
-const remove = idx.splice(0, idx.length - 200);
-remove.forEach(it => localStorage.removeItem(HISTORY_PREFIX+it.id));
-}
-saveHistoryIndex(idx);
-} catch(e) {
-showPopup('Không lưu được lịch sử (localStorage đầy?). Hãy xóa bớt trong mục Lịch sử.');
-}
-}
-
-// UI Lịch sử
-const historyBtn = document.getElementById('historyBtn');
-const historyOverlay = document.getElementById('historyOverlay');
-const historyListBody = document.getElementById('historyListBody');
-const closeHistoryBtn = document.getElementById('closeHistoryBtn');
-const clearHistoryBtn = document.getElementById('clearHistoryBtn');
-
-const historyDetailOverlay = document.getElementById('historyDetailOverlay');
-const historyDetailBody = document.getElementById('historyDetailBody');
-const historyDetailTitle = document.getElementById('historyDetailTitle');
-const closeHistoryDetailBtn = document.getElementById('closeHistoryDetailBtn');
-
-function openHistoryList(){ renderHistoryList(); historyOverlay.style.display='flex'; }
-function closeHistoryList(){ historyOverlay.style.display='none'; }
-function openHistoryDetail(id){
-  const raw = localStorage.getItem(HISTORY_PREFIX+id);
-  if (!raw) { showPopup('Không tìm thấy dữ liệu lịch sử.'); return; }
-  let data; try { data = JSON.parse(raw); } catch(e){ showPopup('Dữ liệu lịch sử bị lỗi.'); return; }
-  const { meta, rows } = data;
-  historyDetailTitle.textContent = `Lịch thủ thuật đã sắp · ${meta.name}`;
-  historyDetailBody.innerHTML='';
-  rows.forEach(r=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${r.patient}</td><td>${r.proc}</td><td>${r.staff}</td><td>${r.machine}</td><td>${r.start}</td><td>${r.end}</td><td>${r.staffBusy}</td><td>${r.note}</td>`;
-    historyDetailBody.appendChild(tr);
-  });
-  historyDetailOverlay.style.display='flex';
-}
-function closeHistoryDetail(){ historyDetailOverlay.style.display='none'; }
-
-function renderHistoryList(){
-  const idx = loadHistoryIndex().slice().sort((a,b)=>b.createdAt - a.createdAt);
-  historyListBody.innerHTML='';
-  if (idx.length===0){
-    const tr=document.createElement('tr');
-    const td=document.createElement('td'); td.colSpan=6; td.textContent='Chưa có lịch sử nào.'; tr.appendChild(td); historyListBody.appendChild(tr); return;
-  }
-  idx.forEach(item=>{
-    const tr=document.createElement('tr');
-    const d = new Date(item.createdAt);
-    const when = `${fmt2(d.getDate())}/${fmt2(d.getMonth()+1)}/${d.getFullYear()} ${fmt2(d.getHours())}:${fmt2(d.getMinutes())}:${fmt2(d.getSeconds())}`;
-    tr.innerHTML = `
-      <td class="nowrap">${item.name}</td>
-      <td class="nowrap">${when}</td>
-      <td class="nowrap" style="text-align:center;">${item.rowCount}</td>
-      <td class="nowrap" style="text-align:center;">${item.patientCount}</td>
-      <td class="nowrap"><button class="btn btn-small" data-act="view" data-id="${item.id}">Xem</button></td>
-      <td class="nowrap"><button class="btn btn-small" data-act="del" data-id="${item.id}">Xóa</button></td>`;
-    historyListBody.appendChild(tr);
-  });
-}
-
-historyListBody.addEventListener('click', (e)=>{
-  const btn = e.target.closest('button'); if (!btn) return;
-  const id = btn.getAttribute('data-id'); const act = btn.getAttribute('data-act');
-  if (act==='view') openHistoryDetail(id);
-  else if (act==='del') { deleteHistoryItem(id); renderHistoryList(); }
-});
-
-function deleteHistoryItem(id){
-  localStorage.removeItem(HISTORY_PREFIX+id);
-  const idx = loadHistoryIndex().filter(x=>x.id!==id); saveHistoryIndex(idx);
-}
-
-function clearAllHistory(){
-  const idx = loadHistoryIndex(); idx.forEach(it => localStorage.removeItem(HISTORY_PREFIX+it.id)); saveHistoryIndex([]);
-}
-
-historyBtn.addEventListener('click', openHistoryList);
-closeHistoryBtn.addEventListener('click', closeHistoryList);
-// Thay confirm() bằng popup tuỳ chỉnh
-clearHistoryBtn.addEventListener('click', ()=>{
-  showConfirmPopup('Xóa tất cả lịch sử?', ()=>{
-    clearAllHistory();
-    renderHistoryList();
-  });
-});
-
-// Hàm popup xác nhận
+/* small confirm popup helper (reused) */
 function showConfirmPopup(message, onConfirm){
   const overlay = document.createElement('div');
   overlay.style.position = 'fixed';
@@ -735,11 +927,105 @@ function showConfirmPopup(message, onConfirm){
   box.appendChild(btnWrap);
   overlay.appendChild(box);
   document.body.appendChild(overlay);
-}closeHistoryDetailBtn.addEventListener('click', closeHistoryDetail);
+}
 
-// Đóng modal khi click ra ngoài
-[historyOverlay, historyDetailOverlay].forEach(ov=>{
-  ov.addEventListener('click', (e)=>{ if (e.target===ov) ov.style.display='none'; });
+/* Open history button */
+historyBtn.addEventListener('click', async ()=>{ openHistoryList(); });
+const DELETE_PASSWORD = "1!"; // đổi mật khẩu ở đây
+
+function showPasswordPopup(message, onConfirm) {
+  const overlay = document.createElement('div');
+  overlay.style.position = 'fixed';
+  overlay.style.inset = 0;
+  overlay.style.background = 'rgba(0,0,0,0.5)';
+  overlay.style.display = 'flex';
+  overlay.style.alignItems = 'center';
+  overlay.style.justifyContent = 'center';
+  overlay.style.zIndex = 10001;
+
+  const box = document.createElement('div');
+  box.style.background = '#fff';
+  box.style.padding = '20px';
+  box.style.borderRadius = '12px';
+  box.style.maxWidth = '320px';
+  box.style.textAlign = 'center';
+  box.style.boxShadow = '0 6px 20px rgba(0,0,0,0.25)';
+
+  const msg = document.createElement('div');
+  msg.textContent = message;
+
+  const input = document.createElement('input');
+  input.type = 'password';
+  input.placeholder = 'Nhập mật khẩu';
+  input.style.marginTop = '12px';
+  input.style.padding = '8px';
+  input.style.width = '100%';
+  input.style.border = '1px solid #ccc';
+  input.style.borderRadius = '8px';
+
+  const errorMsg = document.createElement('div');
+  errorMsg.style.color = 'red';
+  errorMsg.style.marginTop = '6px';
+  errorMsg.style.fontSize = '13px';
+  errorMsg.style.display = 'none';
+  errorMsg.textContent = 'Sai mật khẩu!';
+
+  const btnWrap = document.createElement('div');
+  btnWrap.style.marginTop = '14px';
+  btnWrap.style.display = 'flex';
+  btnWrap.style.justifyContent = 'center';
+  btnWrap.style.gap = '12px';
+
+  const okBtn = document.createElement('button');
+  okBtn.textContent = 'Xác nhận';
+  okBtn.className = 'btn btn-small';
+  okBtn.style.background = 'var(--acc)';
+  okBtn.style.color = '#fff';
+  okBtn.onclick = ()=>{
+    if (input.value === DELETE_PASSWORD) {
+      document.body.removeChild(overlay);
+      onConfirm();
+    } else {
+      errorMsg.style.display = 'block';
+      input.value = '';
+      input.focus();
+    }
+  };
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.textContent = 'Hủy';
+  cancelBtn.className = 'btn btn-small';
+  cancelBtn.onclick = ()=>{ document.body.removeChild(overlay); };
+
+  btnWrap.appendChild(okBtn);
+  btnWrap.appendChild(cancelBtn);
+  box.appendChild(msg);
+  box.appendChild(input);
+  box.appendChild(errorMsg);
+  box.appendChild(btnWrap);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+}
+
+/* Thay đổi các chỗ gọi confirm trước đây để yêu cầu mật khẩu */
+historyListBody.addEventListener('click', async (e)=>{
+  const btn = e.target.closest('button'); if (!btn) return;
+  const id = btn.getAttribute('data-id'); const act = btn.getAttribute('data-act');
+  if (act==='view') {
+    await openHistoryDetail(id);
+  } else if (act==='del') {
+    showPasswordPopup('Nhập mật khẩu để xóa lịch sử này:', async ()=>{
+      await deleteHistoryItem(id);
+      await renderHistoryList();
+    });
+  }
+});
+
+clearHistoryBtn.addEventListener('click', ()=>{
+  showPasswordPopup('Nhập mật khẩu để xóa toàn bộ lịch sử:', async ()=>{
+    await clearAllHistory();
+    await renderHistoryList();
+  });
 });
 </script>
 
