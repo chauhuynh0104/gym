@@ -6,9 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Lập Lịch Thủ Thuật </title>
   <style>body {
-      font-family: 'Inter', sans-serif;
-      transition: background 0.3s, color 0.3s;
-    }
+  font-family: 'Inter', sans-serif;
+}
     :root {
       --bg: #f7f9fc;
       --card: #ffffff;
@@ -20,103 +19,101 @@
       --warn: #b45309;
       --bad: #b91c1c;
       --border: #e2e8f0;
-      --input-bg: #fff;
     }
-    body.dark {
-      --bg: #0f172a;
-      --card: #1e293b;
-      --muted: #94a3b8;
-      --txt: #f1f5f9;
-      --acc: #60a5fa;
-      --chip: #1e40af;
-      --border: #334155;
-      --input-bg: #0f172a;
-    }
-
-    html, body { background: var(--bg); color: var(--txt); margin: 0; }
+    html, body { background: var(--bg); color: var(--txt); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; margin: 0; }
     h1 { font-size: 22px; margin: 16px; }
     .container { max-width: 1100px; margin: 0 auto; padding: 12px; }
-
-    /* Toggle button */
-    #darkToggle {
-      position: fixed;
-      top: 14px;
-      left: 14px;
-      z-index: 10000;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-      transition: background 0.3s, transform 0.2s;
-    }
-    #darkToggle:hover {
-      transform: scale(1.1);
-    }
-
-    .card {
-      background: var(--card);
-      border-radius: 16px;
-      padding: 20px;
-      margin-bottom: 16px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-      border: 1px solid var(--border);
-      backdrop-filter: blur(10px);
-      transition: background 0.3s, color 0.3s, border 0.3s;
-    }
-    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+ .card {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(10px);
+  background: #FFFFFF;
+  
+}    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
     .row > * { flex: 1 1 auto; }
     label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 4px; }
-    input[type="text"], input[type="time"], input[type="number"], select {
-      width: 50%;
-      padding: 12px 14px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: var(--input-bg);
-      color: var(--txt);
-      font-size: 14px;
-      transition: 0.25s;
-    }
-    input:focus, select:focus {
-      outline: none;
-      border-color: var(--acc);
-      box-shadow: 0 0 0 3px rgba(31,106,255,0.25);
-    }
-    .btn {
-      cursor: pointer;
-      background: linear-gradient(135deg, #1f6aff, #4facfe);
-      border: none;
-      color: #fff;
-      padding: 10px 16px;
-      border-radius: 12px;
-      font-weight: 600;
-      transition: 0.25s;
-    }
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(31,106,255,0.3);
-    }
-    .btn-small { padding: 6px 10px; font-size: 12px; border-radius: 10px; }
+input[type="text"], input[type="time"], input[type="number"], select {
+  width: 50%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  color: var(--txt);
+  font-size: 14px;
+  transition: 0.25s;
+}
+
+
+
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--acc);
+  box-shadow: 0 0 0 3px rgba(31,106,255,0.25);
+}  .btn {
+  cursor: pointer;
+  background: linear-gradient(135deg, #1f6aff, #4facfe);
+  border: none;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-weight: 600;
+  transition: 0.25s;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(31,106,255,0.3);
+}    .btn-small { padding: 6px 10px; font-size: 12px; border-radius: 10px; }
     .chip { display: inline-flex; align-items: center; gap: 6px; background: var(--chip); border: 1px solid var(--border); padding: 6px 10px; border-radius: 999px; font-size: 12px; color: var(--txt); }
     .chips { display: flex; gap: 8px; flex-wrap: wrap; }
     .muted { color: var(--muted); }
     .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .hidden { display: none; }
-    table { width: 100%; border-collapse: collapse; border-radius: 12px; overflow: hidden; }
-    th, td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; }
-    thead th { background: var(--acc); color: #fff; text-align: left; padding: 12px; position: sticky; top: 0; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 12px;
+  overflow: hidden;
+}    th, td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; }
+  thead th {
+  background: var(--acc);
+  color: #fff;
+  text-align: left;
+  padding: 12px;
+  position: sticky;
+  top: 0;
+}
+    .tag { font-size: 11px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border); background: #ffffff; }
+    .tag-ok { border-color: rgba(20,184,166,.3); color: var(--ok); }
+    .tag-warn { border-color: rgba(251,191,36,.3); color: var(--warn); }
+    .tag-bad { border-color: rgba(239,68,68,.3); color: var(--bad); }
+    .section-title { font-weight: 700; margin-top: 6px; }
     .divider { height: 1px; background: var(--border); margin: 10px 0; }
-    tbody tr:nth-child(even) { background: rgba(0,0,0,0.02); }
-    tbody tr:hover { background: rgba(31,106,255,0.1); }
+
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 9999; }
+    .modal { background: #fff; padding: 18px 20px; border-radius: 14px; max-width: 720px; width: calc(100% - 32px); box-shadow: 0 6px 20px rgba(0,0,0,0.25); font-size: 14px; }
+    .modal-header { display:flex; align-items:center; justify-content: space-between; margin-bottom: 12px; }
+    .modal-title { font-weight:700; }
+    .modal-actions { display:flex; gap:8px; }
+
+    #popupOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); display:none; align-items:center; justify-content:center; z-index:9999; }
+    #popupBox { background:#fff; padding:20px 28px; border-radius:12px; max-width:320px; text-align:center; box-shadow:0 6px 20px rgba(0,0,0,0.25); font-size:14px; }
+    #popupBox button { margin-top:14px; padding:8px 14px; border:none; background: var(--acc); color:#fff; border-radius:8px; cursor:pointer; }
+    #popupBox button:hover { opacity:.9; }
+
+    #historyTable th, #historyTable td { white-space: nowrap; }
+    .nowrap { white-space: nowrap; }
+	
+	tbody tr:nth-child(even) { background: #f9fbff; }
+tbody tr:hover { background: #eef4ff; }
   </style><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
-<body><div id="darkToggle">🌙</div>
+<body>
   <div class="container">
 
     <!-- 1. Nhân viên + Lịch sử -->
@@ -278,21 +275,7 @@
     </div>
   </div>
 
-<script>const toggleBtn = document.getElementById('darkToggle');
-    const body = document.body;
-
-    // Load trạng thái dark mode từ localStorage
-    if (localStorage.getItem('theme') === 'dark') {
-      body.classList.add('dark');
-      toggleBtn.textContent = '☀️';
-    }
-
-    toggleBtn.addEventListener('click', () => {
-      body.classList.toggle('dark');
-      const isDark = body.classList.contains('dark');
-      toggleBtn.textContent = isDark ? '☀️' : '🌙';
-      localStorage.setItem('theme', isDark ? 'dark' : 'light');
-    });
+<script>
 /*
   Dropbox-backed history for scheduler.
   WARNING: this script contains app secret + refresh token (provided by user).
