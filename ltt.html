@@ -1,10 +1,13 @@
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Lập Lịch Thủ Thuật </title>
-  <style>
+  <style>body {
+  font-family: 'Inter', sans-serif;
+}
     :root {
       --bg: #f7f9fc;
       --card: #ffffff;
@@ -20,23 +23,70 @@
     html, body { background: var(--bg); color: var(--txt); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; margin: 0; }
     h1 { font-size: 22px; margin: 16px; }
     .container { max-width: 1100px; margin: 0 auto; padding: 12px; }
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 12px; }
-    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+ .card {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(10px);
+  background: #FFFFFF;
+  
+}    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
     .row > * { flex: 1 1 auto; }
     label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 4px; }
-    input[type="text"], input[type="time"], input[type="number"], select { width: 50%; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border); background: #ffffff; color: var(--txt); }
-    input[type="number"] { max-width: 120px; }
-    .btn { cursor: pointer; border: 1px solid var(--border); background: linear-gradient(180deg, #ffffff, #3498db); color: var(--txt); padding: 10px 14px; border-radius: 12px; font-weight: 600; }
-    .btn:hover { border-color: var(--acc); box-shadow: 0 0 0 2px #dbeafe; }
-    .btn-small { padding: 6px 10px; font-size: 12px; border-radius: 10px; }
+input[type="text"], input[type="time"], input[type="number"], select {
+  width: 50%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  color: var(--txt);
+  font-size: 14px;
+  transition: 0.25s;
+}
+
+
+
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--acc);
+  box-shadow: 0 0 0 3px rgba(31,106,255,0.25);
+}  .btn {
+  cursor: pointer;
+  background: linear-gradient(135deg, #1f6aff, #4facfe);
+  border: none;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-weight: 600;
+  transition: 0.25s;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(31,106,255,0.3);
+}    .btn-small { padding: 6px 10px; font-size: 12px; border-radius: 10px; }
     .chip { display: inline-flex; align-items: center; gap: 6px; background: var(--chip); border: 1px solid var(--border); padding: 6px 10px; border-radius: 999px; font-size: 12px; color: var(--txt); }
     .chips { display: flex; gap: 8px; flex-wrap: wrap; }
     .muted { color: var(--muted); }
     .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .hidden { display: none; }
-    table { width: 100%; border-collapse: collapse; overflow: hidden; border-radius: 16px; }
-    th, td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; }
-    thead th { z-index: 1;  background: #f8fafc; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 12px;
+  overflow: hidden;
+}    th, td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; }
+  thead th {
+  background: var(--acc);
+  color: #fff;
+  text-align: left;
+  padding: 12px;
+  position: sticky;
+  top: 0;
+}
     .tag { font-size: 11px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border); background: #ffffff; }
     .tag-ok { border-color: rgba(20,184,166,.3); color: var(--ok); }
     .tag-warn { border-color: rgba(251,191,36,.3); color: var(--warn); }
@@ -57,7 +107,10 @@
 
     #historyTable th, #historyTable td { white-space: nowrap; }
     .nowrap { white-space: nowrap; }
-  </style>
+	
+	tbody tr:nth-child(even) { background: #f9fbff; }
+tbody tr:hover { background: #eef4ff; }
+  </style><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
@@ -366,7 +419,7 @@ function addStaffInput(value='') {
   const row = document.createElement('div'); row.className = 'row';
   const wrap = document.createElement('div'); wrap.style.flex = '1 1 300px';
   const label = document.createElement('label'); label.textContent = '';
-  const input = document.createElement('input'); input.type='text'; input.placeholder=''; input.value=value; input.addEventListener('input', onStaffTyping);
+  const input = document.createElement('input'); input.type='text'; input.placeholder='Nhập tên nhân viên'; input.value=value; input.addEventListener('input', onStaffTyping);
   wrap.appendChild(label); wrap.appendChild(input); row.appendChild(wrap); staffListEl.appendChild(row);
 }
 function onStaffTyping(e) {
@@ -394,7 +447,7 @@ function createPatientCard(idx) {
   nameRow.innerHTML = `
     <div style="flex:2 1 360px;">
       <label>Tên bệnh nhân</label>
-      <input type="text" class="patient-name">
+      <input type="text" class="patient-name"placeholder="Nhập tên bệnh nhân">
     </div>
     <div style="flex:1 1 200px;">
       <label>Giờ vào viện</label>
@@ -730,20 +783,31 @@ async function saveHistory(rows){
 /* ==== LỊCH SỬ ==== */
 async function renderHistoryList(){
   historyListBody.innerHTML = '';
+  // Hiện dòng "Đang tải dữ liệu…" ngay trong bảng
+  const loadingTr = document.createElement('tr');
+  const loadingTd = document.createElement('td');
+  loadingTd.colSpan = 6;
+  loadingTd.style.textAlign = 'center';
+  loadingTd.textContent = 'Đang tải dữ liệu…';
+  loadingTr.appendChild(loadingTd);
+  historyListBody.appendChild(loadingTr);
+
   try {
-    showPopup("Đang tải dữ liệu…");
     const raw = await dropboxDownload(indexPath());
-    closePopup();
     if (!raw) {
-      const tr=document.createElement('tr');
-      const td=document.createElement('td'); td.colSpan=6; td.textContent='Chưa có lịch sử nào.'; tr.appendChild(td); historyListBody.appendChild(tr); return;
+      historyListBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Chưa có lịch sử nào.</td></tr>';
+      return;
     }
+
     let idx = JSON.parse(raw);
     idx = idx.slice().sort((a,b)=>b.createdAt - a.createdAt);
+
     if (idx.length===0) {
-      const tr=document.createElement('tr');
-      const td=document.createElement('td'); td.colSpan=6; td.textContent='Chưa có lịch sử nào.'; tr.appendChild(td); historyListBody.appendChild(tr); return;
+      historyListBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Chưa có lịch sử nào.</td></tr>';
+      return;
     }
+
+    historyListBody.innerHTML = '';
     idx.forEach(item=>{
       const tr=document.createElement('tr');
       const d = new Date(item.createdAt);
@@ -759,9 +823,7 @@ async function renderHistoryList(){
     });
   } catch (e) {
     console.error(e);
-    closePopup();
-    const tr=document.createElement('tr');
-    const td=document.createElement('td'); td.colSpan=6; td.textContent='Không thể tải danh sách lịch sử .'; tr.appendChild(td); historyListBody.appendChild(tr);
+    historyListBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Không thể tải danh sách lịch sử.</td></tr>';
   }
 }
 
@@ -836,21 +898,9 @@ const closeHistoryDetailBtn = document.getElementById('closeHistoryDetailBtn');
 function openHistoryList(){ renderHistoryList(); historyOverlay.style.display='flex'; }
 function closeHistoryList(){ historyOverlay.style.display='none'; }
 
-historyListBody.addEventListener('click', async (e)=>{
-  const btn = e.target.closest('button'); if (!btn) return;
-  const id = btn.getAttribute('data-id'); const act = btn.getAttribute('data-act');
-  if (act==='view') {
-    await openHistoryDetail(id);
-  } else if (act==='del') {
-    showConfirmPopup('Xóa lịch sử này?', async ()=>{
-      await deleteHistoryItem(id);
-      await renderHistoryList();
-    });
-  }
-});
+
 
 closeHistoryBtn.addEventListener('click', closeHistoryList);
-clearHistoryBtn.addEventListener('click', ()=>{ showConfirmPopup('Xóa tất cả lịch sử?', async ()=>{ await clearAllHistory(); await renderHistoryList(); }); });
 
 closeHistoryDetailBtn.addEventListener('click', ()=>{ historyDetailOverlay.style.display='none'; });
 
