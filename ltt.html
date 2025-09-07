@@ -442,15 +442,19 @@ const PROCEDURES = [
 ];
 
 function createPatientCard(idx) {
-  const card = document.createElement('div'); card.className = 'card'; card.dataset.index = idx;
-  const nameRow = document.createElement('div'); nameRow.className = 'row';
+  const card = document.createElement('div'); 
+  card.className = 'card'; 
+  card.dataset.index = idx;
+
+  const nameRow = document.createElement('div'); 
+  nameRow.className = 'row';
   nameRow.innerHTML = `
     <div style="flex:2 1 360px;">
       <label>Tên bệnh nhân</label>
-      <input type="text" class="patient-name"placeholder="Nhập tên bệnh nhân">
+      <input type="text" class="patient-name" placeholder="Nhập tên bệnh nhân">
     </div>
     <div style="flex:1 1 200px;">
-      <label>Giờ vào viện</label>
+      <label>Giờ vào viện <i>(Nếu lần đầu)</i></label>
       <input type="time" class="patient-arrival">
     </div>
     <div style="flex:1 1 240px;">
@@ -463,16 +467,51 @@ function createPatientCard(idx) {
   const procWrap = document.createElement('div'); procWrap.style.flex = '2 1 500px';
   const label = document.createElement('label'); label.textContent = 'Thủ thuật cho bệnh nhân này';
   const select = document.createElement('select'); select.className = 'patient-proc-select';
-  PROCEDURES.forEach(p => { const opt = document.createElement('option'); opt.value=p.key; opt.textContent=p.label; select.appendChild(opt); });
-  const addBtn = document.createElement('button'); addBtn.className='btn btn-small'; addBtn.textContent='Thêm'; addBtn.style.marginLeft='8px';
-  addBtn.addEventListener('click', () => { const key = select.value; const proc = PROCEDURES.find(p=>p.key===key); addProcChip(card, proc); });
-  procWrap.appendChild(label); procWrap.appendChild(select); procWrap.appendChild(addBtn);
+  PROCEDURES.forEach(p => { 
+    const opt = document.createElement('option'); 
+    opt.value=p.key; 
+    opt.textContent=p.label; 
+    select.appendChild(opt); 
+  });
+  const addBtn = document.createElement('button'); 
+  addBtn.className='btn btn-small'; 
+  addBtn.textContent='Thêm'; 
+  addBtn.style.marginLeft='8px';
+
+ // 🔒 Ràng buộc: phải nhập tên bệnh nhân trước khi thêm thủ thuật
+addBtn.addEventListener('click', () => { 
+  const nameInput = card.querySelector('.patient-name');
+  if (!nameInput.value.trim()) {
+    showPopup('Vui lòng nhập tên bệnh nhân trước khi thêm thủ thuật.');
+    return;
+  }
+
+  const key = select.value; 
+  const proc = PROCEDURES.find(p=>p.key===key);
+
+  // 🔒 Ràng buộc: không cho thêm thủ thuật trùng
+  const chips = card.querySelectorAll('.patient-proc-chips .chip');
+  for (const ch of chips) {
+    if (ch.dataset.key === key) {
+      showPopup('Thủ thuật này đã được thêm cho bệnh nhân.');
+      return;
+    }
+  }
+
+  addProcChip(card, proc); 
+});
+
+  procWrap.appendChild(label); 
+  procWrap.appendChild(select); 
+  procWrap.appendChild(addBtn);
   procRow.appendChild(procWrap);
 
   const chips = document.createElement('div'); chips.className = 'chips patient-proc-chips';
   procRow.appendChild(chips);
 
-  card.appendChild(procRow); patientsEl.appendChild(card); refreshPatientStaffOptions();
+  card.appendChild(procRow); 
+  patientsEl.appendChild(card); 
+  refreshPatientStaffOptions();
 }
 
 function addProcChip(card, proc) {
@@ -504,7 +543,18 @@ function getPatientsData() {
   }).filter(p => p.name && p.procs.length>0);
 }
 
-function addPatient() { const idx = patientsEl.querySelectorAll('.card').length; createPatientCard(idx); }
+function addPatient() { 
+  const existing = Array.from(patientsEl.querySelectorAll('.card'));
+  for (const c of existing) {
+    const name = c.querySelector('.patient-name').value.trim();
+    if (!name) {
+      showPopup('Hãy nhập tên cho bệnh nhân hiện tại trước khi thêm bệnh nhân mới.');
+      return;
+    }
+  }
+  const idx = existing.length; 
+  createPatientCard(idx); 
+}
 addPatient(); addPatientBtn.addEventListener('click', addPatient);
 patientsEl.addEventListener('click', (e)=>{ if (e.target.closest('.end-patient')) { addPatient(); } });
 
