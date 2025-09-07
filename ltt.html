@@ -68,7 +68,20 @@ input:focus, select:focus {
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(31,106,255,0.3);
 }    .btn-small { padding: 6px 10px; font-size: 12px; border-radius: 10px; }
-    .chip { display: inline-flex; align-items: center; gap: 6px; background: var(--chip); border: 1px solid var(--border); padding: 6px 10px; border-radius: 999px; font-size: 12px; color: var(--txt); }
+ 
+.btn {
+  position: relative; overflow: hidden;
+}
+.btn::after {
+  content: ""; position: absolute; inset: -150% -150%;
+  background: conic-gradient(from 0deg, transparent, rgba(79,172,254,.7), transparent 30%);
+  animation: spin 2.8s linear infinite;
+}
+.btn > * { position: relative; }
+@keyframes spin { to { transform: rotate(360deg) } }
+
+
+ .chip { display: inline-flex; align-items: center; gap: 6px; background: var(--chip); border: 1px solid var(--border); padding: 6px 10px; border-radius: 999px; font-size: 12px; color: var(--txt); }
     .chips { display: flex; gap: 8px; flex-wrap: wrap; }
     .muted { color: var(--muted); }
     .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -663,9 +676,51 @@ function validateMachineCounts(patients){
 
 function scheduleAll() {
   const staffNames = getStaffNames().filter(Boolean);
-  if (staffNames.length===0) { showPopup('Hãy nhập ít nhất 1 nhân viên.'); return []; }
+  if (staffNames.length===0) { 
+    showPopup('Hãy nhập ít nhất 1 nhân viên.');
+    return [];
+  }
+
+  // Kiểm tra mỗi bệnh nhân đều có tên và ít nhất 1 thủ thuật
+  const rawCards = Array.from(patientsEl.querySelectorAll('.card'));
+  let invalid = false;
+  rawCards.forEach(card => {
+    const nameEl = card.querySelector('.patient-name');
+    const name = (nameEl?.value || '').trim();
+    const hasProc = card.querySelectorAll('.patient-proc-chips .chip').length > 0;
+    if (!name || !hasProc) {
+      invalid = true;
+      if (!name) {
+        nameEl?.classList.add('input-error');
+        setTimeout(()=> nameEl?.classList.remove('input-error'), 800);
+      }
+    }
+  });
+  if (invalid) {
+    showPopup('Mỗi bệnh nhân phải có TÊN và ít nhất 1 THỦ THUẬT.');
+    return [];
+  }
+
+  // 🔒 Ràng buộc mới: bắt buộc chọn nhân viên cho từng bệnh nhân
+  let missingStaff = false;
+  rawCards.forEach(card => {
+    const staffSel = card.querySelector('.patient-staff');
+    if (!staffSel || !staffSel.value.trim()) {
+      missingStaff = true;
+      staffSel?.classList.add('input-error');
+      setTimeout(()=> staffSel?.classList.remove('input-error'), 800);
+    }
+  });
+  if (missingStaff) {
+    showPopup('Mỗi bệnh nhân phải chọn NHÂN VIÊN phụ trách.');
+    return [];
+  }
+
   const patients = getPatientsData();
-  if (patients.length===0) { showPopup('Hãy nhập ít nhất 1 bệnh nhân và thủ thuật.'); return []; }
+  if (patients.length===0) { 
+    showPopup('Hãy nhập ít nhất 1 bệnh nhân và thủ thuật.'); 
+    return []; 
+  }
 
   if (!validateMachineCounts(patients)) { return []; }
 
