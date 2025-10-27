@@ -1,403 +1,622 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lịch Tập 6 Buổi</title>
-<style>
-    body {font-family: Arial, sans-serif; background:#f7f8fa; color:#333; margin:0; padding:0;}
-    header {text-align:center; background:#007BFF; color:white; padding:15px; font-size:1.4em; font-weight:bold;top:0; box-shadow:0 2px 5px rgba(0,0,0,0.15);}
-    .fade-in {animation: fadeIn 0.4s ease forwards;}
-    @keyframes fadeIn {from {opacity:0; transform:translateY(15px);} to {opacity:1; transform:translateY(0);}}
-    .menu, .workout {max-width:600px; margin:0 auto; padding:15px;}
-    /* ======= MENU BUTTONS (NEW STYLE) ======= */
-    .menu-btn {
-        width:100%; padding:15px; margin:10px 0;
-        border:2px solid #007BFF; border-radius:12px;
-        background:#fff; color:#007BFF; font-size:1.1em; font-weight:bold;
-        cursor:pointer; transition: all 0.25s ease;
-        box-shadow:0 2px 4px rgba(0,0,0,0.05);
-    }
-    .menu-btn:hover {background:#f0f7ff;}
-    .menu-btn:active {transform:scale(0.98); background:#e5f2ff;}
-    .back-btn, .reset-btn, .reset-workout-btn {
-        width:100%; padding:15px; margin:8px 0; border:none; border-radius:8px;
-        font-size:1.05em; cursor:pointer; color:white;
-        box-shadow:0 2px 5px rgba(0,0,0,0.2); transition: all 0.2s ease;
-    }
-    .back-btn {background:#6c757d;} .back-btn:active{transform:scale(0.98);}
-    .reset-btn {background:#dc3545;} .reset-btn:active{transform:scale(0.98);}
-    .reset-workout-btn {background:#fd7e14;} .reset-workout-btn:active{transform:scale(0.98);}
-    
-    .exercise {background:white; padding:12px; margin:12px 0; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.1); position: relative;}
-.exercise strong {
-    display: inline-block;
-    margin-bottom: 8px;
-    font-size: 1.05em;
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>5 Buổi Thân Trên — Progression Trainer (Auto-fill Sets & Reps)</title>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+:root {
+  --bg: #ffffff;
+  --card: #f7f8fb;
+  --accent: #ff7a18;
+  --muted: #666;
+  --border: #e6e9ef;
+  --text: #222;
 }
-    .set {margin:6px 0; display:flex; justify-content:space-between; align-items:center;}
-    .set button {
-        background:#28a745; color:white; border:none; border-radius:5px; padding:6px 10px; font-size:0.9em;
-        box-shadow:0 2px 3px rgba(0,0,0,0.2); transition: transform 0.1s ease;
-    }
-    .set button:active {transform:scale(0.95);}
-    .set button:disabled {background:#ccc; color:#666;}
-    .locked button {background:#999; color:#fff; cursor:not-allowed;}
-    .highlight {background:#ffc107 !important; color:#000 !important;}
-    .rest-timer {color:#f44336; font-weight:bold;}
-    .time-input {width:60px; text-align:center; border-radius:5px; border:1px solid #ccc; padding:3px; margin-left:5px;}
-    .completed {text-decoration:line-through; opacity:0.6;}
-    .progress-container {background:#ddd; border-radius:8px; height:20px; margin:15px 0; overflow:hidden;}
-    .progress-bar {height:100%; width:0%; background:#28a745; text-align:center; color:white; font-size:0.8em; line-height:20px; transition:width 0.3s ease;}
-    .gym-date-box {background:#fff; padding:10px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.05); margin-bottom:15px; font-size:0.95em;}
-    .gym-date-box input {width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; margin-top:5px;}
 
+* {
+  box-sizing: border-box;
+}
 
+body {
+  font-family: "Inter", "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  margin: 0;
+  padding: 16px;
+}
 
-.exercise-header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 8px;
+.app {
+  max-width: 1100px;
+  margin: 0 auto;
 }
-.exercise-title {
-    flex-grow: 1;
-    font-size: 1.05em;
+
+header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
 }
-.exercise-actions {
-    display: flex;
-    gap: 5px;
-}   .exercise-actions button {
-        background: none; border: none; cursor: pointer; font-size: 0.9em;
-        margin-left: 5px; color: #6c757d; padding: 2px 5px;
-    }
-    .exercise-actions button:hover {color: #007BFF;}
-    .add-exercise {margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 8px;}
-    .add-exercise input {width: calc(100% - 90px); padding: 8px; border: 1px solid #ccc; border-radius: 5px;}
-    .add-exercise button {width: 80px; padding: 8px; margin-left: 10px; background: #007BFF; color: white; border: none; border-radius: 5px;}
-footer {
-    text-align: center;
-    padding: 15px;
-    background: linear-gradient(135deg, #343a40 0%, #23272b 100%);
-    color: white;
-    font-size: 0.9em;
-    margin-top: auto;
+
+h1 {
+  margin: 0;
+  font-size: 22px;
+  color: var(--text);
 }
+
+.small {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.card {
+  background: var(--card);
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 14px;
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.menu button {
+  flex: 1 1 auto;
+  background: white;
+  border: 1px solid var(--border);
+  color: #333;
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.menu button:hover {
+  background: #fff4ec;
+}
+
+.menu button.active {
+  background: linear-gradient(90deg, var(--accent), #ffb06b);
+  color: white;
+  border: none;
+}
+
+.ex-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.ex {
+  background: white;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid #eef0f6;
+  transition: transform 0.2s ease;
+}
+
+.ex:hover {
+  transform: translateY(-2px);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+label {
+  font-size: 13px;
+  color: #333;
+  min-width: 70px;
+}
+
+input[type="number"],
+select {
+  flex: 1 1 60px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #d7dbe6;
+  background: #fff;
+  color: #222;
+  font-size: 14px;
+}
+
+input[readonly] {
+  background: #f4f6fa;
+  color: #555;
+}
+
+.btn {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background: #fff;
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.btn:hover {
+  background: #f4f4f4;
+}
+
+.btn.primary {
+  background: var(--accent);
+  color: white;
+  border: none;
+}
+
+.btn.primary:hover {
+  background: #ff8a35;
+}
+
+.suggest {
+  margin-top: 10px;
+  border-radius: 8px;
+  background: #fff7ef;
+  color: #663300;
+  border: 1px solid #ffdfc4;
+  padding: 10px;
+  font-size: 14px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+th,
+td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #f0f2f8;
+  text-align: left;
+}
+
+.chart-wrap {
+  height: 260px;
+  background: white;
+  border: 1px solid #eef0f6;
+  border-radius: 10px;
+  padding: 8px;
+  margin-top: 10px;
+}
+
+/* === Responsive === */
+@media (max-width: 600px) {
+  body {
+    padding: 12px;
+  }
+
+  .row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .row label {
+    text-align: left;
+    min-width: auto;
+  }
+
+  .btn {
+    width: 100%;
+  }
+
+  .menu button {
+    flex: 1 1 100%;
+  }
+
+  .chart-wrap {
+    height: 200px;
+  }
+}
+
 </style>
 </head>
 <body>
+  <div class="app">
 
-<header>Lịch Tập 6 Buổi</header>
+    <div class="menu card" id="menuDays">
+      <button data-day="1" class="active">Thứ 2 — PUSH I</button>
+      <button data-day="2">Thứ 3 — PULL I</button>
+      <button data-day="3">Thứ 4 — VAI / NGỰC TRÊN</button>
+      <button data-day="4">Thứ 5 — PULL II</button>
+      <button data-day="5">Thứ 6 — PUSH II</button>
+    </div>
 
-<div class="menu fade-in" id="menu">
-    <div class="gym-date-box" id="gym-date-box"></div>
-    <h2>Chọn nhóm cơ hôm nay</h2>
-    <button class="menu-btn" onclick="showWorkout('chestA')">💪 Thứ 2 - Ngực (Chest A)</button>
-    <button class="menu-btn" onclick="showWorkout('backA')">🏋️ Thứ 3 - Lưng (Back A)</button>
-    <button class="menu-btn" onclick="showWorkout('shoulder')">🏐 Thứ 4 - Vai + Cầu vai</button>
-    <button class="menu-btn" onclick="showWorkout('backB')">🏋️ Thứ 5 - Lưng (Back B)</button>
-    <button class="menu-btn" onclick="showWorkout('chestB')">💪 Thứ 6 - Ngực (Chest B)</button>
-    <button class="menu-btn" onclick="showWorkout('backC')">🏋️ Thứ 7 - Lưng (Back C)</button>
-    <button class="reset-btn" onclick="resetProgress()">🔄 Reset toàn bộ tiến trình</button>
-</div>
+    <div id="dayContent" class="card"></div>
 
-<div class="workout fade-in" id="workout" style="display:none;"></div>
-<footer>Design by Dr.Châu</footer>
+    <div class="card">
+      <h3>Progression Log & Chart</h3>
+      <div class="row">
+        <label style="min-width:110px">Chọn bài:</label>
+        <select id="selectExercise"></select>
+        <button class="btn primary" id="showLog">Hiện log</button>
+        <button class="btn" id="clearLog">Xóa log</button>
+      </div>
+      <div id="logTableWrap"></div>
+      <div class="chart-wrap"><canvas id="progressChart"></canvas></div>
+    </div>
+
+    <footer style="margin-top:12px;color:#666;font-size:13px;display:none">
+      Thuật toán: so sánh <strong>Volume = Kg × Reps × Sets</strong> hiện tại với lần trước: tăng ≥5% = tiến bộ; ±5% = stagnant (đề nghị +1rep hoặc +1set hoặc +1.25kg); giảm ≥5% = regress (ưu tiên phục hồi).
+    </footer>
+  </div>
+
 <script>
-// ==================== DATA ====================
-// Load data from localStorage or use default
-let data = JSON.parse(localStorage.getItem('workoutData')) || {
-    chestA: ["Incline Smith Bench Press – 4 sets × 6-10 reps","Iso-Lateral Chest Press (Incline Angle) – 3 sets × 10-12 reps","Flat Bench Press Machine – 3 sets × 10-12 reps","Cable Crossover (High to Low) – 3 sets × 12-15 reps","Fly Chest Machine – 3 sets × 12-15 reps"],
-    backA: ["Pull-up – 4 sets × max","Lat Pulldown Machine (wide grip) – 3 sets × 10-12 reps","Iso-Lateral Pulldown – 3 sets × 8-10 reps","Seated Cable Row Machine (neutral grip) – 3 sets × 10-12 reps","Cable Straight Arm Pulldown – 3 sets × 12-15 reps"],
-    shoulder: ["Shoulder Press Smith Machine – 4 sets × 6-10 reps","Shoulder Press Machine – 3 sets × 10-12 reps","Dumbbell Lateral Raise – 3 sets × 12-15 reps","Rear Delt on Fly Machine – 3 sets × 12-15 reps","Dumbbell Shrugs – 3 sets × 12-15 reps"],
-    backB: ["Pull-up (nắm ngửa) – 3 sets × max","Iso-Lateral Row – 3 sets × 8-10 reps","Seated Cable Row (wide grip hoặc V-bar) – 3 sets × 10-12 reps","Cable Shrug – 3 sets × 15 reps"],
-    chestB: ["Flat Barbell Bench Press – 4 sets × 6-10 reps","Flat Bench Press Machine – 3 sets × 10-12 reps","Iso-Lateral Chest Press (neutral/flat) – 3 sets × 10-12 reps","Cable Crossover (Low to High) – 3 sets × 12-15 reps","Fly Chest Machine – 3 sets × 12-15 reps"],
-    backC: ["Pull-up (rộng) – 3 sets × max","Lat Pulldown Machine (reverse grip) – 3 sets × 10 reps","Iso-Lateral Pulldown (từng tay) – 3 sets × 8 reps mỗi bên","Seated Cable Row (drop set) – 3 sets (10-10-10 reps, giảm tạ)","Dumbbell Shrug hoặc Cable Shrug – 3 sets × 15 reps"]
+/* ====== Plan + default sets & reps (the table 🔥 provided) ====== */
+const plan = {
+  1: { name:'PUSH I', ex: [
+    {name:'Flat Barbell Bench Press', sets:4, reps:8},
+    {name:'Incline Barbell Bench Press', sets:4, reps:8},
+    {name:'Iso-Lateral Chest Press', sets:3, reps:10},
+    {name:'Dumbbell Shoulder Press', sets:3, reps:10},
+    {name:'Cable Crossover', sets:3, reps:12},
+    {name:'Rope Pushdown', sets:3, reps:10},
+    {name:'Overhead Dumbbell Extension', sets:3, reps:12}
+  ]},
+  2: { name:'PULL I', ex: [
+    {name:'Weighted Pull-up', sets:4, reps:8},
+    {name:'Seated Cable Row', sets:4, reps:8},
+    {name:'T-Bar Row / Machine Row', sets:3, reps:10},
+    {name:'Lat Pulldown (wide)', sets:3, reps:10},
+    {name:'Dumbbell Shrug', sets:3, reps:15},
+    {name:'Barbell Curl', sets:3, reps:8},
+    {name:'Incline Dumbbell Curl', sets:3, reps:12}
+  ]},
+  3: { name:'VAI / NGỰC TRÊN', ex: [
+    {name:'Smith Shoulder Press', sets:4, reps:8},
+    {name:'Dumbbell Lateral Raise', sets:4, reps:12},
+    {name:'Rear Delt Fly Machine', sets:3, reps:12},
+    {name:'Incline Bench Press Machine', sets:3, reps:10},
+    {name:'Dumbbell Front Raise', sets:3, reps:12},
+    {name:'Cable Rope Overhead Extension', sets:3, reps:12},
+    {name:'Dips', sets:3, reps:8}
+  ]},
+  4: { name:'PULL II', ex: [
+    {name:'Pull-up (wide grip)', sets:4, reps:8},
+    {name:'Iso-Lateral Pulldown', sets:4, reps:10},
+    {name:'Seated Row (close grip)', sets:3, reps:10},
+    {name:'Face Pull', sets:3, reps:15},
+    {name:'Upright Row', sets:3, reps:10},
+    {name:'Hammer Curl', sets:3, reps:10},
+    {name:'Concentration Curl', sets:3, reps:12}
+  ]},
+  5: { name:'PUSH II', ex: [
+    {name:'Incline Smith Bench Press', sets:4, reps:8},
+    {name:'Flat Machine Press', sets:4, reps:10},
+    {name:'Dumbbell Fly / Pec Deck', sets:3, reps:12},
+    {name:'Arnold Press', sets:3, reps:10},
+    {name:'Lateral Raise', sets:3, reps:12},
+    {name:'Close Grip Bench Press', sets:3, reps:8},
+    {name:'Rope Pushdown Superset Dumbbell Curl', sets:3, reps:12}
+  ]}
 };
 
-function saveWorkoutData() {
-    localStorage.setItem('workoutData', JSON.stringify(data));
-}
+/* ====== State ====== */
+const STORAGE_KEY = 'upper_progression_v3';
+let state = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
 
-let totalSets=0, completedSets=0, currentDay=null;
+/* ====== Helpers ====== */
+function $(s, ctx=document){ return ctx.querySelector(s); }
+function $a(s, ctx=document){ return Array.from((ctx||document).querySelectorAll(s)); }
 
-// ==================== GYM DATE ====================
-function checkGymDate(){
-    const box=document.getElementById('gym-date-box');
-    let storedDate = localStorage.getItem("gymStartDate");
-    if(storedDate){
-        const startDate = new Date(storedDate);
-        const nextMonth = new Date(startDate);
-        nextMonth.setMonth(startDate.getMonth()+1);
-        const today=new Date();
-        if(today >= nextMonth){
-            box.innerHTML=`<strong>Đến hạn đóng tiền!</strong><br>
-                           <input type="date" id="gym-input" value="${today.toISOString().split('T')[0]}" onchange="saveGymDate()">`;
-        }else{
-            box.innerHTML=`✅ Đã đóng từ: <b>${startDate.toLocaleDateString('vi-VN')}</b><br>
-                           Hạn đóng tiếp: <b>${nextMonth.toLocaleDateString('vi-VN')}</b>`;
-        }
-    }else{
-        box.innerHTML=`<strong>Nhập ngày bắt đầu đóng tiền gym:</strong>
-                       <input type="date" id="gym-input" onchange="saveGymDate()">`;
-    }
-}
-function saveGymDate(){
-    const val=document.getElementById('gym-input').value;
-    if(val){localStorage.setItem("gymStartDate",val); checkGymDate();}
-}
+/* ====== Render day with sets/reps prefilled (readonly) ====== */
+const dayContent = $('#dayContent');
 
-// ==================== WORKOUT ====================
-function showWorkout(day){
-    // Kiểm tra ngày mới và reset nếu cần
-    checkAndResetDailyWorkout(day);
-    
-    document.getElementById('menu').style.display='none';
-    const workout=document.getElementById('workout');
-    workout.style.display='block';
-    totalSets = completedSets = 0;
-    currentDay = day;
-    
-    workout.innerHTML = `<button class="back-btn" onclick="backToMenu()">⬅ Quay lại menu</button>
-                         <button class="reset-workout-btn" onclick="resetCurrentWorkout()">🔄 Reset bài tập hôm nay</button>
-                         <h2>Bài tập hôm nay</h2>
-                         <div class="progress-container"><div class="progress-bar" id="progress-bar">0%</div></div>`;
-    
-    // Hiển thị các bài tập
-    data[day].forEach((ex,i)=>{
-        const sets = ex.match(/\d+\s*sets/)?.[0] || "3 sets";
-        totalSets += parseInt(sets);
-        const keyTime=`${day}-time-${i}`;
-        const savedTime=localStorage.getItem(keyTime) || 120;
-   workout.innerHTML += `<div class="exercise fade-in">
-    <div class="exercise-header">
-        <span class="exercise-title"><b>${i+1}. ${ex}</b></span>
-        <div class="exercise-actions">
-            <button onclick="editExercise('${day}', ${i})">✏️</button>
-            <button onclick="deleteExercise('${day}', ${i})">🗑️</button>
+function renderDay(day){
+  const data = plan[day];
+  let html = `<h3 style="margin-top:0">${data.name}</h3><div class="ex-list">`;
+  data.ex.forEach((ex, idx)=>{
+    const encoded = encodeURIComponent(ex.name);
+    html += `
+      <div class="ex" data-name="${encoded}">
+        <h3>${ex.name}</h3>
+
+      <div class="row">
+  <label>Set</label>
+  <input type="number" class="inputSets" value="${ex.sets}" ...>
+  <label style="min-width:60px">Reps</label>
+  <input type="number" class="inputReps" value="${ex.reps}" ...>
+  <label style="min-width:60px">Kg</label>
+  <input type="number" class="inputKg" ...>
+</div>
+
+        <div class="row"style="margin-top:8px;">
+          <label>Target reps</label>
+          <input type="number" class="inputTarget" value="${ex.reps}" min="1" step="1" style="width:80px">
+          <div class="small" style="margin-left:8px">Volume = Kg × Reps × Sets</div>
         </div>
-    </div>
-    <label>Nghỉ (s): <input type="number" class="time-input" value="${savedTime}" oninput="saveTime('${keyTime}',this.value)"></label>
-    <div class="sets">${generateSets(day,i,sets)}</div>
-</div>`;
+
+        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+          <button class="btn primary btnSuggest">Đề nghị</button>
+          <button class="btn btnSave">Lưu session</button>
+          <button class="btn btnCalc">Tính volume</button>
+          <div style="margin-left:auto;font-size:13px;color:#333">Volume: <span class="kv curVolume">—</span></div>
+        </div>
+
+        <div class="suggest" style="display:none"></div>
+      </div>`;
+  });
+  html += `</div>`;
+  dayContent.innerHTML = html;
+
+  // attach events
+  $a('.btnSuggest').forEach(b => b.addEventListener('click', onSuggest));
+  $a('.btnSave').forEach(b => b.addEventListener('click', onSaveSession));
+  $a('.btnCalc').forEach(b => b.addEventListener('click', onCalcVolume));
+  populateExerciseSelect();
+  $a('.ex').forEach(ex => updateVolumeDisplay(ex));
+  restoreKgValues();
+  attachKgAutoSave();
+}
+
+
+/* ====== Auto-save Kg input to localStorage ====== */
+function restoreKgValues(){
+  $a('.ex').forEach(ex => {
+    const exName = decodeURIComponent(ex.dataset.name);
+    const key = 'kg:' + exName;
+    const savedKg = localStorage.getItem(key);
+    if(savedKg !== null){
+      const input = ex.querySelector('.inputKg');
+      if(input) input.value = savedKg;
+    }
+  });
+}
+function attachKgAutoSave(){
+  $a('.inputKg').forEach(inp => {
+    inp.addEventListener('input', e => {
+      const exEl = e.target.closest('.ex');
+      if(!exEl) return;
+      const exName = decodeURIComponent(exEl.dataset.name);
+      const key = 'kg:' + exName;
+      localStorage.setItem(key, e.target.value);
     });
-    
-    // Thêm nút thêm bài tập
-    workout.innerHTML += `<div class="add-exercise">
-        <input type="text" id="new-exercise" placeholder="Thêm bài tập mới (VD: Dumbbell Press – 3 sets × 10 reps)">
-        <button onclick="addExercise('${day}')">Thêm</button>
-    </div>`;
-    
-    lockAllExceptFirst();
-    updateProgress();
-    
-    setTimeout(() => checkActiveTimers(day), 500);
-    
+  });
 }
 
-function editExercise(day, index) {
-    const newExercise = prompt("Sửa bài tập:", data[day][index]);
-    if (newExercise !== null) {
-        data[day][index] = newExercise;
-        saveWorkoutData();
-        showWorkout(day);
-    }
+/* ====== Volume calculation ====== */
+function computeVolume(sets, reps, kg){
+  const s = Number(sets) || 0;
+  const r = Number(reps) || 0;
+  const k = Number(kg) || 0;
+  return Number((k * r * s).toFixed(2));
 }
 
-function deleteExercise(day, index) {
-    if (confirm("Bạn có chắc muốn xóa bài tập này?")) {
-        data[day].splice(index, 1);
-        saveWorkoutData();
-        showWorkout(day);
-    }
+function updateVolumeDisplay(exEl){
+  const sets = exEl.querySelector('.inputSets').value;
+  const reps = exEl.querySelector('.inputReps').value;
+  const kg = exEl.querySelector('.inputKg').value;
+  const vol = computeVolume(sets, reps, kg);
+  exEl.querySelector('.curVolume').textContent = vol > 0 ? (vol + ' kg') : '—';
 }
 
-function addExercise(day) {
-    const input = document.getElementById('new-exercise');
-    if (input.value.trim()) {
-        data[day].push(input.value.trim());
-        saveWorkoutData();
-        showWorkout(day);
+/* ====== Suggestion algorithm (volume-based) ====== */
+function recommendIncrementByName(name){
+  const lowerKeywords = ['Row','Squat','Dead','Pulldown','Pull','Shrug','T-Bar'];
+  const isLower = lowerKeywords.some(k => name.includes(k));
+  if(isLower) return {kg:2.5, txt:'+2.5 kg'};
+  return {kg:1.25, txt:'+1.25 kg'};
+}
+
+function onSuggest(e){
+  const exEl = e.target.closest('.ex');
+  const exName = decodeURIComponent(exEl.dataset.name);
+  const sets = Number(exEl.querySelector('.inputSets').value) || 0;
+  const reps = Number(exEl.querySelector('.inputReps').value) || 0;
+  const kg = Number(exEl.querySelector('.inputKg').value) || 0;
+  const target = Number(exEl.querySelector('.inputTarget').value) || reps;
+  const suggestEl = exEl.querySelector('.suggest');
+  suggestEl.style.display = 'block';
+  suggestEl.innerHTML = '';
+
+  if(kg <= 0){
+    suggestEl.innerHTML = '<div>Vui lòng nhập <strong>Kg</strong> (phải > 0) để nhận gợi ý.</div>';
+    updateVolumeDisplay(exEl);
+    return;
+  }
+
+  const curVolume = computeVolume(sets, reps, kg);
+  updateVolumeDisplay(exEl);
+
+  const list = state[exName] || [];
+  const prev = list.length > 0 ? list[list.length - 1] : null;
+  const prevVolume = prev ? Number(prev.curVolume) : 0;
+  let messages = [];
+
+  if(!prev){
+    messages.push(`<div>Chưa có bản ghi trước cho <strong>${exName}</strong>. Baseline hiện tại: <span class="kv">${curVolume} kg</span>.</div>`);
+    if(reps >= target){
+      const inc = recommendIncrementByName(exName);
+      messages.push(`<div>Nếu đã đạt target reps (${target}), gợi ý: tăng tạ ${inc.txt} lần tới và đặt reps về ${Math.max(3,target-2)}-${target} để duy trì progressive overload.</div>`);
     } else {
-        alert("Vui lòng nhập tên bài tập!");
+      messages.push(`<div>Gợi ý: ổn định reps theo target trong 2 session, hoặc tăng volume ~5% bằng cách +1 rep hoặc +1 set trước khi tăng tạ.</div>`);
     }
+    messages.push(`<div>Nhấn <strong>Lưu session</strong> để hệ thống lưu baseline và so sánh ở lần sau.</div>`);
+    suggestEl.innerHTML = messages.join('');
+    return;
+  }
+
+  let pct = 0;
+  if(prevVolume === 0) pct = 100;
+  else pct = ((curVolume - prevVolume) / prevVolume) * 100;
+  const pctDisplay = Number(pct.toFixed(2));
+  messages.push(`<div>Lần trước: <strong>${prevVolume} kg</strong> — Hiện tại: <strong>${curVolume} kg</strong>. Δ = <strong>${pctDisplay}%</strong>.</div>`);
+
+  if(pct >= 5){
+    messages.push(`<div><strong>Tiến bộ (+${pctDisplay}%).</strong> Volume đã tăng ≥5% → tốt. Có thể giữ mức này hoặc tăng tạ ${recommendIncrementByName(exName).txt} nếu reps ổn định.</div>`);
+  } else if(pct > -5 && pct < 5){
+    messages.push(`<div><strong>Ổn định (±5%).</strong> Đề nghị tăng ~7% volume bằng cách: 1) +1 rep mỗi set; 2) hoặc +1 set; 3) hoặc +${recommendIncrementByName(exName).txt} (nếu có micro plates).</div>`);
+  } else {
+    messages.push(`<div><strong>Giảm (-${Math.abs(pctDisplay)}%).</strong> Volume giảm đáng kể — có thể do fatigue/giấc ngủ/ăn uống. Gợi ý: phục hồi, giữ hoặc giảm nhẹ tải, tập lại kỹ thuật.</div>`);
+  }
+
+  if(reps >= target && pct < 5){
+    const inc = recommendIncrementByName(exName);
+    messages.push(`<div><strong>Lưu ý:</strong> Bạn đạt target reps (${target}) nhưng volume chưa tăng đủ — khuyến nghị tăng tạ ${inc.txt} lần tới và giữ reps.</div>`);
+  }
+
+  suggestEl.innerHTML = messages.map(m=>`<div style="margin-bottom:6px">${m}</div>`).join('');
 }
 
-function checkAndResetDailyWorkout(day) {
-    const today = new Date().toDateString();
-    const lastWorkoutDay = localStorage.getItem('lastWorkoutDay');
-    const lastWorkoutType = localStorage.getItem('lastWorkoutType');
-    
-    // Nếu là ngày mới hoặc bài tập khác, reset progress
-    if (today !== lastWorkoutDay || day !== lastWorkoutType) {
-        // Xóa tất cả key liên quan đến bài tập này
-        Object.keys(localStorage).forEach(key => {
-            if (key.startsWith(day + '-') && !key.includes('-time-')) {
-                localStorage.removeItem(key);
-            }
-        });
-        
-        // Lưu lại ngày và loại bài tập hiện tại
-        localStorage.setItem('lastWorkoutDay', today);
-        localStorage.setItem('lastWorkoutType', day);
-    }
-}
-
-function resetCurrentWorkout() {
-    if (!currentDay) return;
-    if (confirm("Bạn có chắc muốn reset tiến trình bài tập hôm nay?")) {
-        // Xóa tất cả key liên quan đến bài tập hiện tại
-        Object.keys(localStorage).forEach(key => {
-            if (key.startsWith(currentDay + '-') && !key.includes('-time-')) {
-                localStorage.removeItem(key);
-            }
-        });
-        // Load lại bài tập
-        showWorkout(currentDay);
-    }
-}
-
-function saveTime(key,val){if(val>0) localStorage.setItem(key,val);}
-function generateSets(day,exIndex,setText){
-    const sets = parseInt(setText); let html = "";
-    for(let i=1;i<=sets;i++){
-        const key=`${day}-${exIndex}-${i}`;
-        const done=localStorage.getItem(key)==="1" ? "completed" : "";
-        if(done) completedSets++;
-        html += `<div class="set ${done} ${!done && i!==1?"locked":""}">
-            Set ${i}: <button onclick="startRest(this,'${key}')">${done?"Đã xong":"Hoàn thành"}</button>
-            <span class="rest-timer">Nghỉ: <span class="countdown">0</span>s</span>
-        </div>`;
-    }return html;
-}
-function lockAllExceptFirst(){
-    document.querySelectorAll('.set.locked button').forEach(btn=>btn.disabled=true);
-    const firstUnlocked=document.querySelector('.set:not(.completed):not(.locked) button');
-    if(firstUnlocked) firstUnlocked.classList.add("highlight");
-}
-function startRest(btn, key) {
-    if (btn.closest('.set').classList.contains("locked")) {
-        alert("Phải tập theo thứ tự từ trên xuống!");
-        return;
-    }
-    if (localStorage.getItem(key) === "1") {
-        alert("Set này đã hoàn thành trước đó!");
-        return;
-    }
-
-    const restTimer = btn.parentNode.querySelector('.rest-timer');
-    const timeInput = btn.closest('.exercise').querySelector('.time-input');
-    let totalTime = parseInt(timeInput.value) || 120;
-    
-    // Lưu thời gian kết thúc vào localStorage
-    const endTime = Date.now() + totalTime * 1000;
-    localStorage.setItem(key + "-timer", endTime.toString());
-    
-    btn.disabled = true;
-    restTimer.style.display = "inline";
-    
-    // Bắt đầu đếm ngược
-    updateTimer(btn, key, restTimer, endTime);
-}
-
-function updateTimer(btn, key, restTimer, endTime) {
-    const now = Date.now();
-    const remaining = Math.max(0, Math.floor((endTime - now) / 1000));
-    
-    restTimer.querySelector('.countdown').textContent = remaining;
-    
-    if (remaining > 0) {
-        // Nếu còn thời gian, tiếp tục đếm
-        setTimeout(() => updateTimer(btn, key, restTimer, endTime), 1000);
-    } else {
-        // Khi hết giờ
-        restTimer.style.display = "none";
-        btn.disabled = false;
-        btn.textContent = "Đã xong";
-        btn.parentNode.classList.add("completed");
-        localStorage.setItem(key, "1");
-        localStorage.removeItem(key + "-timer"); // Xóa timer đã hoàn thành
-        completedSets++;
-        updateProgress();
-        playBeep();
-        autoNext(btn);
-    }
-}
-
-// Thêm hàm này để kiểm tra và tiếp tục timer khi tải trang
-function checkActiveTimers(day) {
-    const exercises = document.querySelectorAll('.exercise');
-    exercises.forEach((ex, exIndex) => {
-        const sets = ex.querySelectorAll('.set');
-        sets.forEach((set, setIndex) => {
-            const key = `${day}-${exIndex}-${setIndex + 1}`;
-            const timerEnd = localStorage.getItem(key + "-timer");
-            
-            if (timerEnd) {
-                const endTime = parseInt(timerEnd);
-                const now = Date.now();
-                
-                if (now < endTime) {
-                    // Timer vẫn đang chạy
-                    const btn = set.querySelector('button');
-                    const restTimer = set.querySelector('.rest-timer');
-                    
-                    btn.disabled = true;
-                    restTimer.style.display = "inline";
-                    updateTimer(btn, key, restTimer, endTime);
-                } else {
-                    // Timer đã hết nhưng chưa được xử lý
-                    localStorage.removeItem(key + "-timer");
-                    localStorage.setItem(key, "1");
-                }
-            }
-        });
+/* ====== Save session (store sets,reps,kg,volume,timestamp) ====== */
+function onSaveSession(e){
+  const exEl = e.target.closest('.ex');
+  const exName = decodeURIComponent(exEl.dataset.name);
+  const sets = Number(exEl.querySelector('.inputSets').value) || 0;
+  const reps = Number(exEl.querySelector('.inputReps').value) || 0;
+  const kg = Number(exEl.querySelector('.inputKg').value) || 0;
+  if(kg <= 0){
+    Swal.fire({
+      icon: 'warning',
+      title: 'Thiếu dữ liệu',
+      text: 'Vui lòng nhập Kg (> 0) trước khi lưu.',
+      confirmButtonColor: '#ff7a18'
     });
-}
-function updateProgress(){
-    const percent = ((completedSets/totalSets)*100).toFixed(0);
-    const bar=document.getElementById('progress-bar');
-    if(bar){bar.style.width=percent+"%"; bar.textContent=percent+"%";}
-}
-function autoNext(btn){
-    alert("Tít tít! Hết giờ nghỉ, tự chuyển sang set tiếp theo!");
-    const nextSet=btn.closest('.set').nextElementSibling;
-    if(nextSet){
-        nextSet.classList.remove("locked");
-        const nbtn=nextSet.querySelector('button');
-        nbtn.disabled=false; nbtn.classList.add("highlight");
-        nbtn.scrollIntoView({behavior:"smooth",block:"center"});
-    }
-}
-function playBeep(){
-    const ctx = new (window.AudioContext||window.webkitAudioContext)();
-    function beep(){
-        const osc=ctx.createOscillator(),gain=ctx.createGain();
-        osc.connect(gain); gain.connect(ctx.destination);
-        osc.type="square"; osc.frequency.value=1000; gain.gain.setValueAtTime(0.2,ctx.currentTime);
-        osc.start(); osc.stop(ctx.currentTime+0.15);
-    }
-    beep(); setTimeout(beep,200);
-}
-function backToMenu(){document.getElementById('menu').style.display='block';document.getElementById('workout').style.display='none';checkGymDate();}
-function resetProgress(){
-    if(confirm("Xóa toàn bộ tiến trình đã lưu (bao gồm cả ngày đóng tiền gym và bài tập)?")){
-        localStorage.clear();
-        // Reset data về mặc định
-        data = {
-            chestA: ["Incline Smith Bench Press – 4 sets × 6-10 reps","Iso-Lateral Chest Press (Incline Angle) – 3 sets × 10-12 reps","Flat Bench Press Machine – 3 sets × 10-12 reps","Cable Crossover (High to Low) – 3 sets × 12-15 reps","Fly Chest Machine – 3 sets × 12-15 reps"],
-            backA: ["Pull-up – 4 sets × max","Lat Pulldown Machine (wide grip) – 3 sets × 10-12 reps","Iso-Lateral Pulldown – 3 sets × 8-10 reps","Seated Cable Row Machine (neutral grip) – 3 sets × 10-12 reps","Cable Straight Arm Pulldown – 3 sets × 12-15 reps"],
-            shoulder: ["Shoulder Press Smith Machine – 4 sets × 6-10 reps","Shoulder Press Machine – 3 sets × 10-12 reps","Dumbbell Lateral Raise – 3 sets × 12-15 reps","Rear Delt on Fly Machine – 3 sets × 12-15 reps","Dumbbell Shrugs – 3 sets × 12-15 reps"],
-            backB: ["Pull-up (nắm ngửa) – 3 sets × max","Iso-Lateral Row – 3 sets × 8-10 reps","Seated Cable Row (wide grip hoặc V-bar) – 3 sets × 10-12 reps","Cable Shrug – 3 sets × 15 reps"],
-            chestB: ["Flat Barbell Bench Press – 4 sets × 6-10 reps","Flat Bench Press Machine – 3 sets × 10-12 reps","Iso-Lateral Chest Press (neutral/flat) – 3 sets × 10-12 reps","Cable Crossover (Low to High) – 3 sets × 12-15 reps","Fly Chest Machine – 3 sets × 12-15 reps"],
-            backC: ["Pull-up (rộng) – 3 sets × max","Lat Pulldown Machine (reverse grip) – 3 sets × 10 reps","Iso-Lateral Pulldown (từng tay) – 3 sets × 8 reps mỗi bên","Seated Cable Row (drop set) – 3 sets (10-10-10 reps, giảm tạ)","Dumbbell Shrug hoặc Cable Shrug – 3 sets × 15 reps"]
-        };
-        saveWorkoutData();
-        alert("Đã xóa toàn bộ tiến trình!");
-        checkGymDate();
-    }
+    return;
+  }
+  const curVolume = computeVolume(sets, reps, kg);
+  const when = new Date().toISOString();
+  if(!state[exName]) state[exName] = [];
+  state[exName].push({when, sets, reps, kg, curVolume});
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  Swal.fire({
+    icon: 'success',
+    title: 'Đã lưu thành công!',
+    html: `<strong>${exName}</strong><br>Volume: <b>${curVolume} kg</b>`,
+    timer: 1500,
+    showConfirmButton: false
+  });
+  updateVolumeDisplay(exEl);
+  populateExerciseSelect();
 }
 
-checkGymDate();
+/* ====== Calc button ====== */
+function onCalcVolume(e){
+  const exEl = e.target.closest('.ex');
+  updateVolumeDisplay(exEl);
+}
+
+/* ====== Populate exercise select ====== */
+function populateExerciseSelect(){
+  const sel = $('#selectExercise');
+  sel.innerHTML = '';
+  Object.values(plan).forEach(p => {
+    p.ex.forEach(ex => {
+      const opt = document.createElement('option');
+      opt.value = ex.name;
+      opt.textContent = p.name + ' — ' + ex.name;
+      sel.appendChild(opt);
+    });
+  });
+}
+
+/* ====== Log rendering & chart ====== */
+let chart = null;
+
+function renderLog(exName){
+  const wrap = $('#logTableWrap');
+  const rows = (state[exName] || []).slice().reverse();
+  if(rows.length === 0){
+    wrap.innerHTML = `<div class="small">Chưa có data cho bài này. Lưu session từ bài tập để tạo log.</div>`;
+    drawChart(exName, []);
+    return;
+  }
+  let html = `<table><thead><tr><th>Ngày</th><th>Sets</th><th>Reps</th><th>Kg</th><th>Volume</th></tr></thead><tbody>`;
+  rows.forEach(r=>{
+    html += `<tr>
+      <td>${(new Date(r.when)).toLocaleString()}</td>
+      <td>${r.sets}</td><td>${r.reps}</td><td>${r.kg}</td><td>${r.curVolume}</td>
+    </tr>`;
+  });
+  html += `</tbody></table>`;
+  wrap.innerHTML = html;
+  drawChart(exName, state[exName] || []);
+}
+
+function ensureChartLib(cb){
+  if(window.Chart) return cb();
+  const s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+  s.onload = cb;
+  document.head.appendChild(s);
+}
+
+function drawChart(exName, data){
+  ensureChartLib(()=>{
+    const ctx = document.getElementById('progressChart').getContext('2d');
+    const labels = data.map(d => (new Date(d.when)).toLocaleDateString());
+    const weights = data.map(d => Number(d.kg));
+    const volumes = data.map(d => Number(d.curVolume));
+    if(chart) chart.destroy();
+    chart = new Chart(ctx, {
+      type:'line',
+      data:{
+        labels,
+        datasets:[
+          { label: exName + ' — Weight (kg)', data: weights, yAxisID:'y', tension:0.15, borderWidth:2, pointRadius:3 },
+          { label: exName + ' — Volume (kg)', data: volumes, yAxisID:'y1', tension:0.15, borderWidth:2, pointRadius:3 }
+        ]
+      },
+      options:{
+        responsive:true,
+        interaction:{mode:'index',intersect:false},
+        scales:{
+          y:{ type:'linear', display:true, position:'left', title:{display:true,text:'Weight (kg)'} },
+          y1:{ type:'linear', display:true, position:'right', grid:{drawOnChartArea:false}, title:{display:true,text:'Volume (kg)'} }
+        },
+        plugins:{ legend:{position:'top'} }
+      }
+    });
+  });
+}
+
+/* ====== Menu & controls ====== */
+document.getElementById('menuDays').addEventListener('click', function(e){
+  if(e.target.tagName === 'BUTTON'){
+    $a('#menuDays button').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    const day = e.target.dataset.day;
+    renderDay(day);
+  }
+});
+
+$('#showLog').addEventListener('click', ()=>{
+  const ex = $('#selectExercise').value;
+  if(!ex) return Swal.fire({icon:'info',title:'Chưa chọn bài',text:'Vui lòng chọn bài tập trước khi xem log.',confirmButtonColor:'#ff7a18'});
+  renderLog(ex);
+});
+$('#clearLog').addEventListener('click', ()=>{
+  Swal.fire({
+    icon: 'question',
+    title: 'Xác nhận xóa log?',
+    text: 'Toàn bộ lịch sử sẽ bị xóa vĩnh viễn!',
+    showCancelButton: true,
+    confirmButtonText: 'Xóa',
+    cancelButtonText: 'Hủy',
+    confirmButtonColor: '#ff7a18'
+  }).then((result)=>{
+    if(result.isConfirmed){
+      state = {}; localStorage.removeItem(STORAGE_KEY); $('#logTableWrap').innerHTML = '<div class="small">Đã xóa toàn bộ log.</div>'; if(chart){ chart.destroy(); chart = null; }
+      Swal.fire({icon:'success',title:'Đã xóa toàn bộ log!',timer:1500,showConfirmButton:false});
+    }
+  });
+});
+
+/* ====== Init ====== */
+renderDay(1);
+populateExerciseSelect();
+
 </script>
 </body>
 </html>
