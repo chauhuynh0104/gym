@@ -193,14 +193,21 @@
             margin-right: 10px;
             font-weight: bold;
         }
+		 #machineOperatorFilter {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+		  #machineOperatorFilter label {
+            margin-right: 10px;
+            font-weight: bold;
+        }
      #machineConflictOperatorFilter label {
             margin-right: 10px;
             font-weight: bold;
         }
-  #machineOperatorFilter label {
-            margin-right: 10px;
-            font-weight: bold;
-        }
+
         #operatorSelect {
             padding: 8px;
             border: 1px solid #ddd;
