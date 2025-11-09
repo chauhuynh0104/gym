@@ -193,6 +193,14 @@
             margin-right: 10px;
             font-weight: bold;
         }
+     #machineOperatorSelect label {
+            margin-right: 10px;
+            font-weight: bold;
+        }
+  #machineConflictOperatorSelect label {
+            margin-right: 10px;
+            font-weight: bold;
+        }
         #operatorSelect {
             padding: 8px;
             border: 1px solid #ddd;
@@ -993,6 +1001,7 @@ body.dark-mode .kpi-red   { background:linear-gradient(180deg,#2b0f12,#0b1220); 
     left: 125%;
   }
 }
+
 
 
 
