@@ -339,7 +339,7 @@ tr:hover td {
 }
 
 /* Light Mode: Lọc người thực hiện */
-#operatorFilter, #operatorFilterError {
+#operatorFilter, #operatorFilterError, #machineConflictOperatorFilter, #machineOperatorFilter {
   background-color: #f9f9f9;
   border-radius: 8px;
   padding: 10px;
@@ -347,7 +347,7 @@ tr:hover td {
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   transition: all 0.3s ease-in-out;
 }
-#operatorFilter:hover, #operatorFilterError:hover {
+#operatorFilter:hover, #operatorFilterError:hover, #machineConflictOperatorFilter:hover, #machineOperatorFilter:hover {
   border-color: #3498db;
   box-shadow: 0 0 8px rgba(52,152,219,0.5);
 }
@@ -993,6 +993,7 @@ body.dark-mode .kpi-red   { background:linear-gradient(180deg,#2b0f12,#0b1220); 
     left: 125%;
   }
 }
+
 
 
 
