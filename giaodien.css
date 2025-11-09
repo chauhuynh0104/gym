@@ -351,12 +351,12 @@ tr:hover td {
   border-color: #3498db;
   box-shadow: 0 0 8px rgba(52,152,219,0.5);
 }
-#operatorSelect, #operatorSelectError {
+#operatorSelect, #operatorSelectError, #machineOperatorSelect, #machineConflictOperatorSelect {
   border-radius: 5px;
   border: 1px solid #ccc;
   transition: all 0.3s ease-in-out;
 }
-#operatorSelect:hover, #operatorSelectError:hover {
+#operatorSelect:hover, #operatorSelectError:hover, #machineOperatorSelect:hover, #machineConflictOperatorSelect:hover {
   border-color: #3498db;
   box-shadow: 0 0 6px rgba(52,152,219,0.4);
 }
@@ -993,6 +993,7 @@ body.dark-mode .kpi-red   { background:linear-gradient(180deg,#2b0f12,#0b1220); 
     left: 125%;
   }
 }
+
 
 
 
