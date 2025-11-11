@@ -392,7 +392,8 @@ body.dark-mode {
 body.dark-mode #operatorFilter,
 body.dark-mode #operatorFilterError,
 body.dark-mode #machineConflictOperatorFilter, 
-body.dark-mode #machineOperatorFilter
+body.dark-mode #machineOperatorFilter,
+body.dark-mode #missingMachineOperatorFilter
  {
   background-color: #2c2c2c !important;
   color: #ffffff !important;
@@ -405,7 +406,8 @@ body.dark-mode #machineOperatorFilter
 body.dark-mode #operatorFilter:hover,
 body.dark-mode #operatorFilterError:hover,
 body.dark-mode #machineConflictOperatorFilter:hover, 
-body.dark-mode #machineOperatorFilter:hover
+body.dark-mode #machineOperatorFilter:hover,
+body.dark-mode #missingMachineOperatorFilter:hover
  {
   border-color: #00bcd4 !important;
   box-shadow: 0 0 10px rgba(0, 188, 212, 0.6) !important;
@@ -415,7 +417,6 @@ body.dark-mode #operatorSelectError,
 body.dark-mode #machineOperatorSelect,
 body.dark-mode #machineConflictOperatorSelect,
 body.dark-mode #missingMachineOperatorSelect
-
  {
   background-color: #1e1e1e !important;
   color: #ffffff !important;
@@ -1032,6 +1033,7 @@ body.dark-mode .kpi-red   { background:linear-gradient(180deg,#2b0f12,#0b1220); 
     left: 125%;
   }
 }
+
 
 
 
