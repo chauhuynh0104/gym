@@ -205,6 +205,16 @@
             border-radius: 5px;
             margin-top: 10px;
         }
+			 #dateMismatchOperatorFilter {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+		#dateMismatchOperatorFilter label {
+            margin-right: 10px;
+            font-weight: bold;
+        }
 		  #machineOperatorFilter label {
             margin-right: 10px;
             font-weight: bold;
@@ -363,7 +373,7 @@ tr:hover td {
 }
 
 /* Light Mode: Lọc người thực hiện */
-#operatorFilter, #operatorFilterError, #machineConflictOperatorFilter, #machineOperatorFilter, #missingMachineOperatorFilter {
+#operatorFilter, #operatorFilterError, #machineConflictOperatorFilter, #machineOperatorFilter, #missingMachineOperatorFilter, #dateMismatchOperatorFilter{
   background-color: #f9f9f9;
   border-radius: 8px;
   padding: 10px;
@@ -371,16 +381,16 @@ tr:hover td {
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   transition: all 0.3s ease-in-out;
 }
-#operatorFilter:hover, #operatorFilterError:hover, #machineConflictOperatorFilter:hover, #machineOperatorFilter:hover, #missingMachineOperatorFilter:hover {
+#operatorFilter:hover, #operatorFilterError:hover, #machineConflictOperatorFilter:hover, #machineOperatorFilter:hover, #missingMachineOperatorFilter:hover, #dateMismatchOperatorFilter:hover{
   border-color: #3498db;
   box-shadow: 0 0 8px rgba(52,152,219,0.5);
 }
-#operatorSelect, #operatorSelectError, #machineOperatorSelect, #machineConflictOperatorSelect, #missingMachineOperatorSelect {
+#operatorSelect, #operatorSelectError, #machineOperatorSelect, #machineConflictOperatorSelect, #missingMachineOperatorSelect, #dateMismatchOperatorSelect {
   border-radius: 5px;
   border: 1px solid #ccc;
   transition: all 0.3s ease-in-out;
 }
-#operatorSelect:hover, #operatorSelectError:hover, #machineOperatorSelect:hover, #machineConflictOperatorSelect:hover, #missingMachineOperatorSelect:hover {
+#operatorSelect:hover, #operatorSelectError:hover, #machineOperatorSelect:hover, #machineConflictOperatorSelect:hover, #missingMachineOperatorSelect:hover, #dateMismatchOperatorSelect:hover {
   border-color: #3498db;
   box-shadow: 0 0 6px rgba(52,152,219,0.4);
 }
@@ -393,7 +403,8 @@ body.dark-mode #operatorFilter,
 body.dark-mode #operatorFilterError,
 body.dark-mode #machineConflictOperatorFilter, 
 body.dark-mode #machineOperatorFilter,
-body.dark-mode #missingMachineOperatorFilter
+body.dark-mode #missingMachineOperatorFilter,
+body.dark-mode #dateMismatchOperatorFilter
  {
   background-color: #2c2c2c !important;
   color: #ffffff !important;
@@ -407,7 +418,8 @@ body.dark-mode #operatorFilter:hover,
 body.dark-mode #operatorFilterError:hover,
 body.dark-mode #machineConflictOperatorFilter:hover, 
 body.dark-mode #machineOperatorFilter:hover,
-body.dark-mode #missingMachineOperatorFilter:hover
+body.dark-mode #missingMachineOperatorFilter:hover,
+body.dark-mode #dateMismatchOperatorFilter:hover
  {
   border-color: #00bcd4 !important;
   box-shadow: 0 0 10px rgba(0, 188, 212, 0.6) !important;
@@ -416,7 +428,8 @@ body.dark-mode #operatorSelect,
 body.dark-mode #operatorSelectError,
 body.dark-mode #machineOperatorSelect,
 body.dark-mode #machineConflictOperatorSelect,
-body.dark-mode #missingMachineOperatorSelect
+body.dark-mode #missingMachineOperatorSelect,
+body.dark-mode #dateMismatchOperatorSelect
  {
   background-color: #1e1e1e !important;
   color: #ffffff !important;
@@ -430,7 +443,8 @@ body.dark-mode #operatorSelect:hover,
 body.dark-mode #operatorSelectError:hover
 body.dark-mode #machineOperatorSelect:hover,
 body.dark-mode #machineConflictOperatorSelect:hover,
-body.dark-mode #missingMachineOperatorSelect:hover
+body.dark-mode #missingMachineOperatorSelect:hover,
+body.dark-mode #dateMismatchOperatorSelect:hover
  {
   border-color: #00bcd4 !important;
   box-shadow: 0 0 8px rgba(0, 188, 212, 0.5) !important;
@@ -1033,6 +1047,7 @@ body.dark-mode .kpi-red   { background:linear-gradient(180deg,#2b0f12,#0b1220); 
     left: 125%;
   }
 }
+
 
 
 
