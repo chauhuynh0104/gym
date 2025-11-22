@@ -1094,8 +1094,76 @@ body.dark-mode .kpi-red   { background:linear-gradient(180deg,#2b0f12,#0b1220); 
     max-height: 90vh;
 }
 
+.sacthuocthang {
+  margin: 5% auto;
+  background: #fff;
+  padding: 20px;
+  max-width: 90%;
+  border-radius: 10px;
+  max-height: 80vh;
+  overflow: auto;
+}
 
+/* Dark mode support */
+.dark-mode .sacthuocthang {
+  background: #121212;
+}
+.modal-base {
+  position: absolute;
+  top: 5%;
+  left: 50%;
+  transform: translateX(-50%);
+  max-height: 90vh;
+  overflow: auto;
+  background: #fff;
+  color: #000;
+  border-radius: 10px;
+  border: 2px solid #3498db;
+  box-shadow: 0 8px 24px rgba(0,0,0,.25);
+  font-family: 'Inter', sans-serif;
+}
 
+/* Biến thể kích thước */
+.modal-medium {
+  width: min(1000px, 96vw);
+}
+
+.modal-large {
+  width: min(1200px, 96vw);
+}
+
+/* Dark mode support */
+.dark-mode .modal-base {
+  background: #121212;
+  color: #fff;
+}
+
+/* Filter container - Dark mode */
+.dark-mode .filter-container input,
+.dark-mode .filter-container select {
+    background: #333;
+    color: #fff;
+    border-color: #555;
+}
+
+/* Placeholder text in dark mode */
+.dark-mode .filter-container input::placeholder {
+    color: #aaa;
+}
+
+/* Focus states */
+.filter-container input:focus,
+.filter-container select:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.dark-mode .filter-container input:focus,
+.dark-mode .filter-container select:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.3);
+}
 
 
 
