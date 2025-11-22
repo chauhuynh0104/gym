@@ -1168,6 +1168,21 @@ body.dark-mode .kpi-red   { background:linear-gradient(180deg,#2b0f12,#0b1220); 
     border-color: #3498db;
     box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.3);
 }
+.popup-small {
+  background: rgb(255, 255, 255);
+  padding: 20px 30px;
+  border-radius: 10px;
+  text-align: center;
+  max-width: 320px;
+  box-shadow: rgba(0, 0, 0, 0.3) 0px 4px 15px;
+  font-family: Inter, sans-serif;
+}
+
+/* Dark mode support */
+.dark-mode .popup-small {
+  background: #121212;
+  color: #fff;
+}
 
 
 
