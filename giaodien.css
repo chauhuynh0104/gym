@@ -1131,7 +1131,11 @@ body.dark-mode .kpi-red   { background:linear-gradient(180deg,#2b0f12,#0b1220); 
 .modal-large {
   width: min(1200px, 96vw);
 }
-
+.modal-small {
+  width: min(820px, 92vw);
+  top: 8%;
+  max-height: 84vh;
+}
 /* Dark mode support */
 .dark-mode .modal-base {
   background: #121212;
@@ -1164,6 +1168,7 @@ body.dark-mode .kpi-red   { background:linear-gradient(180deg,#2b0f12,#0b1220); 
     border-color: #3498db;
     box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.3);
 }
+
 
 
 
