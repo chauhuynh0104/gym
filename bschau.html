@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Tạo lịch Điện châm - Chiếu đèn</title>
+<style>
+    body { font-family: Arial; padding:20px }
+    table { border-collapse: collapse; margin-top:20px }
+    th, td {
+        border:1px solid #ccc;
+        padding:10px 15px;
+        text-align:center;
+        font-size:18px;
+    }
+    th { background:#f2f2f2 }
+    input { padding:5px; font-size:16px }
+    button { padding:6px 12px; font-size:16px; cursor:pointer }
+</style>
+</head>
+<body>
+
+<h2>Tạo bảng lịch</h2>
+
+Giờ bắt đầu:
+<input type="time" id="startTime" value="07:35">
+
+Số dòng:
+<input type="number" id="rows" value="3" min="1">
+
+<button onclick="generate()">Tạo bảng</button>
+
+<div id="result"></div>
+
+<script>
+function addMinutes(timeStr, minutes) {
+    let [h, m] = timeStr.split(":").map(Number);
+    let date = new Date();
+    date.setHours(h);
+    date.setMinutes(m + minutes);
+    return date.getHours().toString().padStart(2,'0') + ":" +
+           date.getMinutes().toString().padStart(2,'0');
+}
+
+function formatTime(t){
+    let [h,m] = t.split(":");
+    return parseInt(h) + "h" + m;
+}
+
+function generate(){
+    let start = document.getElementById("startTime").value;
+    let rows = parseInt(document.getElementById("rows").value);
+
+    let html = `
+    <table>
+        <tr>
+            <th>#</th>
+            <th>Điện châm</th>
+            <th>Chiếu đèn</th>
+        </tr>
+    `;
+
+    for(let i=0;i<rows;i++){
+        // mỗi dòng cách nhau 7 phút
+        let dienStart = addMinutes(start, i*7);
+        let dienEnd   = addMinutes(dienStart, 25);
+
+        let denStart  = addMinutes(dienStart, 6);
+        let denEnd    = addMinutes(denStart, 15);
+
+        html += `
+        <tr>
+            <td>${i+1}</td>
+            <td>${formatTime(dienStart)} -> ${formatTime(dienEnd)}</td>
+            <td>${formatTime(denStart)} -> ${formatTime(denEnd)}</td>
+        </tr>
+        `;
+    }
+
+    html += "</table>";
+    document.getElementById("result").innerHTML = html;
+}
+</script>
+
+</body>
+</html>
