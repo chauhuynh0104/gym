@@ -59,7 +59,7 @@ const input = document.getElementById("input");
 const output = document.getElementById("output");
 
 input.addEventListener("input", () => {
-    output.value = input.value.replace(/\+\s*/g, "");
+ output.value = input.value.replace(/^\+\s*/gm, "");
 });
 
 function copyText(){
