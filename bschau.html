@@ -3,82 +3,313 @@
 <head>
 <meta charset="UTF-8">
 <title>Tạo lịch Điện châm - Chiếu đèn</title>
+
 <style>
-    body { font-family: Arial; padding:20px }
-    table { border-collapse: collapse; margin-top:20px }
-    th, td {
-        border:1px solid #ccc;
-        padding:10px 15px;
-        text-align:center;
-        font-size:18px;
-    }
-    th { background:#f2f2f2 }
-    input { padding:5px; font-size:16px }
-    button { padding:6px 12px; font-size:16px; cursor:pointer }
+body{font-family:Arial;padding:20px}
+table{border-collapse:collapse;margin-top:20px}
+th,td{
+border:1px solid #ccc;
+padding:10px 15px;
+text-align:center;
+font-size:18px
+}
+th{background:#f2f2f2}
+input{padding:5px;font-size:16px;margin:5px}
+button{padding:6px 12px;font-size:16px;cursor:pointer;margin:5px 5px 0 0}
+.controls{margin:10px 0}
+.worker-names{margin:10px 0;padding:10px;background:#f9f9f9;border:1px solid #ddd}
 </style>
+
 </head>
 <body>
 
 <h2>Tạo bảng lịch</h2>
 
-Giờ bắt đầu:
+Giờ bắt đầu
 <input type="time" id="startTime" value="07:35">
 
-Số dòng:
-<input type="number" id="rows" value="3" min="1">
+Số dòng
+<input type="number" id="rows" value="30" min="1">
+
+Số người xoa bóp
+<input type="number" id="workers" value="3" min="1" onchange="updateWorkerInputs()">
+
+<div id="workerNamesContainer" class="worker-names"></div>
 
 <button onclick="generate()">Tạo bảng</button>
+
+<div class="controls">
+  <button onclick="copyColumn(1)">📋 Copy cột Điện châm</button>
+  <button onclick="copyColumn(2)">📋 Copy cột Chiếu đèn</button>
+  <button onclick="copyColumn(3)">📋 Copy cột Xoa bóp</button>
+  <button onclick="copyTableWithoutIndex()">📋 Copy bảng (không STT)</button>
+  <button onclick="copyFullTable()">📋 Copy bảng (có STT)</button>
+</div>
 
 <div id="result"></div>
 
 <script>
-function addMinutes(timeStr, minutes) {
-    let [h, m] = timeStr.split(":").map(Number);
-    let date = new Date();
-    date.setHours(h);
-    date.setMinutes(m + minutes);
-    return date.getHours().toString().padStart(2,'0') + ":" +
-           date.getMinutes().toString().padStart(2,'0');
+
+function addMinutes(timeStr,minutes){
+let [h,m]=timeStr.split(":").map(Number)
+let d=new Date()
+d.setHours(h)
+d.setMinutes(m+minutes)
+
+return d.getHours().toString().padStart(2,'0')+":"+
+d.getMinutes().toString().padStart(2,'0')
+}
+
+function toMinutes(timeStr){
+let [h,m]=timeStr.split(":").map(Number)
+return h*60+m
+}
+
+function fromMinutes(min){
+let h=Math.floor(min/60)
+let m=min%60
+return h.toString().padStart(2,'0')+":"+
+m.toString().padStart(2,'0')
 }
 
 function formatTime(t){
-    let [h,m] = t.split(":");
-    return parseInt(h) + "h" + m;
+let [h,m]=t.split(":")
+return parseInt(h)+"h"+m
+}
+
+function updateWorkerInputs() {
+  let workers = parseInt(document.getElementById("workers").value);
+  let container = document.getElementById("workerNamesContainer");
+  let html = "<strong>Tên người xoa bóp:</strong><br>";
+  
+  for (let i = 0; i < workers; i++) {
+    html += `<input type="text" id="workerName_${i}" placeholder="Người ${i+1}" value="Người ${i+1}" style="width:120px"> `;
+  }
+  
+  container.innerHTML = html;
+}
+
+function getWorkerNames() {
+  let workers = parseInt(document.getElementById("workers").value);
+  let names = [];
+  for (let i = 0; i < workers; i++) {
+    let input = document.getElementById(`workerName_${i}`);
+    names.push(input ? input.value : `Người ${i+1}`);
+  }
+  return names;
 }
 
 function generate(){
-    let start = document.getElementById("startTime").value;
-    let rows = parseInt(document.getElementById("rows").value);
 
-    let html = `
-    <table>
-        <tr>
-            <th>#</th>
-            <th>Điện châm</th>
-            <th>Chiếu đèn</th>
-        </tr>
-    `;
+let start=document.getElementById("startTime").value
+let rows=parseInt(document.getElementById("rows").value)
+let workers=parseInt(document.getElementById("workers").value)
+let workerNames = getWorkerNames();
 
-    for(let i=0;i<rows;i++){
-        // mỗi dòng cách nhau 7 phút
-        let dienStart = addMinutes(start, i*7);
-        let dienEnd   = addMinutes(dienStart, 25);
+let globalStart=toMinutes(start)
 
-        let denStart  = addMinutes(dienStart, 6);
-        let denEnd    = addMinutes(denStart, 15);
+let workerSchedules=[]
+for(let i=0;i<workers;i++)
+workerSchedules.push([])
 
-        html += `
-        <tr>
-            <td>${i+1}</td>
-            <td>${formatTime(dienStart)} -> ${formatTime(dienEnd)}</td>
-            <td>${formatTime(denStart)} -> ${formatTime(denEnd)}</td>
-        </tr>
-        `;
-    }
+let html=`
+<table id="scheduleTable">
+<tr>
+<th>#</th>
+<th>Điện châm</th>
+<th>Chiếu đèn</th>
+<th>Xoa bóp</th>
+</tr>
+`
 
-    html += "</table>";
-    document.getElementById("result").innerHTML = html;
+function canPlace(worker,start,end){
+let list=workerSchedules[worker]
+
+for(let s of list){
+
+// phải cách nhau ít nhất 1 phút
+if(!(end+1<=s.start || start>=s.end+1))
+return false
+
 }
+
+return true
+}
+
+for(let i=0;i<rows;i++){
+
+let dienStart=addMinutes(start,i*7)
+let dienEnd=addMinutes(dienStart,25)
+
+let denStart=addMinutes(dienStart,6)
+let denEnd=addMinutes(denStart,15)
+
+let dienStartMin=toMinutes(dienStart)
+let dienEndMin=toMinutes(dienEnd)
+
+let chosenWorker=-1
+let massageStart=null
+
+// ----- Ưu tiên nhét trước điện châm -----
+
+// ----- Ưu tiên nhét trước điện châm (tối ưu nhất) -----
+
+let bestEarly=null
+
+for(let w=0;w<workers;w++){
+
+let latestStart=dienStartMin-31
+let earliestStart=globalStart
+
+for(let t=latestStart;t>=earliestStart;t--){
+
+if(canPlace(w,t,t+30)){
+bestEarly={worker:w,start:t}
+}
+
+}
+
+}
+
+if(bestEarly){
+chosenWorker=bestEarly.worker
+massageStart=bestEarly.start
+}
+
+// ----- nếu không nhét trước được thì xếp sau -----
+
+if(chosenWorker==-1){
+
+let bestStart=Infinity
+
+for(let w=0;w<workers;w++){
+
+let list=workerSchedules[w]
+let t=dienEndMin+1
+
+while(true){
+
+let ok=true
+
+for(let s of list){
+if(!(t+30<=s.start || t>=s.end)){
+t=s.end+1
+ok=false
+break
+}
+}
+
+if(ok) break
+
+}
+
+if(t<bestStart){
+bestStart=t
+chosenWorker=w
+massageStart=t
+}
+
+}
+
+}
+
+let massageEnd=massageStart+30
+
+workerSchedules[chosenWorker].push({
+start:massageStart,
+end:massageEnd
+})
+
+html+=`
+<tr>
+<td>${i+1}</td>
+<td>${formatTime(dienStart)} -> ${formatTime(dienEnd)}</td>
+<td>${formatTime(denStart)} -> ${formatTime(denEnd)}</td>
+<td>
+${formatTime(fromMinutes(massageStart))}
+-> 
+${formatTime(fromMinutes(massageEnd))}
+(${workerNames[chosenWorker]})
+</td>
+</tr>
+`
+
+}
+
+html+="</table>"
+
+document.getElementById("result").innerHTML=html
+
+}	
+
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    ////alert(("Đã copy vào clipboard!");
+  }).catch(err => {
+    ////alert(("Lỗi khi copy: " + err);
+  });
+}
+
+function copyColumn(colIndex) {
+  let table = document.getElementById("scheduleTable");
+  if (!table) {
+    ////alert(("Hãy tạo bảng trước!");
+    return;
+  }
+  let rows = table.querySelectorAll("tr");
+  let columnText = "";
+  for (let i = 1; i < rows.length; i++) { // bỏ header
+    let cells = rows[i].querySelectorAll("td");
+    if (cells.length > colIndex) {
+      columnText += cells[colIndex].innerText.trim() + "\n";
+    }
+  }
+  copyToClipboard(columnText);
+}
+
+function copyTableWithoutIndex() {
+  let table = document.getElementById("scheduleTable");
+  if (!table) {
+    ////alert(("Hãy tạo bảng trước!");
+    return;
+  }
+  let rows = table.querySelectorAll("tr");
+  let tableText = "";
+  for (let i = 0; i < rows.length; i++) {
+    let cells = rows[i].querySelectorAll(i === 0 ? "th" : "td");
+    let rowText = "";
+    for (let j = 1; j < cells.length; j++) { // bỏ cột đầu (STT)
+      rowText += cells[j].innerText.trim() + "\t";
+    }
+    tableText += rowText.trimEnd() + "\n";
+  }
+  copyToClipboard(tableText);
+}
+
+function copyFullTable() {
+  let table = document.getElementById("scheduleTable");
+  if (!table) {
+    ////alert(("Hãy tạo bảng trước!");
+    return;
+  }
+  let rows = table.querySelectorAll("tr");
+  let tableText = "";
+  for (let i = 0; i < rows.length; i++) {
+    let cells = rows[i].querySelectorAll(i === 0 ? "th" : "td");
+    let rowText = "";
+    for (let j = 0; j < cells.length; j++) {
+      rowText += cells[j].innerText.trim() + "\t";
+    }
+    tableText += rowText.trimEnd() + "\n";
+  }
+  copyToClipboard(tableText);
+}
+
+// Khởi tạo ô nhập tên khi trang load
+window.onload = function() {
+  updateWorkerInputs();
+};
+
 </script>
 
 </body>
