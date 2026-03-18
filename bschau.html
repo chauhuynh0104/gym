@@ -239,6 +239,7 @@ ${formatTime(fromMinutes(massageEnd))}
 html+="</table>"
 
 document.getElementById("result").innerHTML=html
+enableColumnHide();
 
 }	
 
@@ -309,7 +310,25 @@ function copyFullTable() {
 window.onload = function() {
   updateWorkerInputs();
 };
+function enableColumnHide() {
+  let table = document.getElementById("scheduleTable");
+  if (!table) return;
 
+  let headers = table.querySelectorAll("th");
+
+  headers.forEach((th, colIndex) => {
+    th.ondblclick = function () {
+      let rows = table.querySelectorAll("tr");
+
+      rows.forEach(row => {
+        let cells = row.children;
+        if (cells[colIndex]) {
+          cells[colIndex].style.display = "none";
+        }
+      });
+    };
+  });
+}
 </script>
 
 </body>
