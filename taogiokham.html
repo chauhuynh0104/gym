@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Lịch Khám</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 30px; background-color: #f0f2f5; color: #333; }
+        .container { max-width: 800px; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin: auto; }
+        h2 { color: #1a73e8; text-align: center; margin-top: 0; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; }
+        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
+        
+        .btn-group { display: flex; gap: 8px; margin-top: 20px; flex-wrap: wrap; }
+        button { flex: 1; min-width: 150px; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold; transition: all 0.2s; }
+        .btn-gen { background: #1a73e8; color: white; }
+        .btn-toggle { background: #fb8c00; color: white; }
+        .btn-reset { background: #6c757d; color: white; }
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 25px; background: white; }
+        th { background-color: #f8f9fa; cursor: pointer; user-select: none; position: relative; }
+        th:hover::after { content: " (Dbl-click để ẩn)"; position: absolute; bottom: 2px; left: 0; right: 0; font-size: 9px; color: #d93025; font-weight: normal; }
+        th, td { border: 1px solid #dee2e6; padding: 10px; text-align: center; }
+        
+        /* Định dạng hàng Khám */
+        .kham-row { font-style: italic; color: #d93025; background-color: #fff9f9; font-weight: 500; }
+        .hidden { display: none !important; }
+        .guide { font-size: 0.85em; color: #666; margin-bottom: 15px; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Tạo Lịch Trình Khám</h2>
+    <p class="guide">Double-click vào tiêu đề để ẩn cột. Sử dụng các nút bên dưới để lọc nhanh.</p>
+    
+    <div class="input-group">
+        <label>Thời gian bắt đầu:</label>
+        <input type="time" id="startTime" value="08:00">
+    </div>
+    <div class="input-group">
+        <label>Số dòng:</label>
+        <input type="number" id="rows" value="3" min="1">
+    </div>
+    
+    <div class="btn-group">
+        <button class="btn-gen" onclick="generateTable()">Xuất kết quả</button>
+        <button class="btn-toggle" onclick="toggleMainRows()">Chỉ hiện dòng Khám</button>
+        <button class="btn-reset" onclick="resetAll()">Hiện lại tất cả</button>
+    </div>
+
+    <table id="resultTable" style="display:none;">
+        <thead>
+            <tr>
+                <th id="th-0" ondblclick="hideColumn(0)">Cột 1 (Dài)</th>
+                <th id="th-1" ondblclick="hideColumn(1)">Cột 2 (Ngắn)</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+</div>
+
+<script>
+    function formatTime(date) {
+        let h = date.getHours();
+        let m = date.getMinutes();
+        return h + "h" + (m < 10 ? '0' + m : m);
+    }
+
+    function generateTable() {
+        const timeInput = document.getElementById('startTime').value;
+        const rowCount = parseInt(document.getElementById('rows').value);
+        const tbody = document.getElementById('tableBody');
+        const table = document.getElementById('resultTable');
+
+        if (!timeInput || isNaN(rowCount)) return;
+
+        tbody.innerHTML = "";
+        table.style.display = "table";
+
+        let [hours, minutes] = timeInput.split(':').map(Number);
+        let baseTime = new Date();
+        baseTime.setHours(hours, minutes, 0);
+
+        for (let i = 0; i < rowCount; i++) {
+            let currentBase = new Date(baseTime.getTime() + i * 13 * 60000);
+
+            // Giờ chính
+            let c1S = formatTime(new Date(currentBase.getTime()));
+            let c1E = formatTime(new Date(currentBase.getTime() + 25 * 60000));
+            let c2S = formatTime(new Date(currentBase.getTime() + 6 * 60000));
+            let c2E = formatTime(new Date(currentBase.getTime() + 21 * 60000));
+
+            // Giờ khám
+            let kS = formatTime(new Date(currentBase.getTime() + 7 * 60000));
+            let kE = formatTime(new Date(currentBase.getTime() + 12 * 60000));
+
+            // Hàng chính (Thêm class main-row)
+            let rowMain = `<tr class="main-row">
+                <td class="col-0">${c1S} - ${c1E}</td>
+                <td class="col-1">${c2S} - ${c2E}</td>
+            </tr>`;
+
+            // Hàng khám
+            let rowKham = `<tr class="kham-row">
+                <td class="col-0">${kS}-${kE}</td>
+                <td class="col-1">---</td>
+            </tr>`;
+
+            tbody.innerHTML += rowMain + rowKham;
+        }
+    }
+
+    // Ẩn cột khi click đúp
+    function hideColumn(index) {
+        document.getElementById(`th-${index}`).classList.add('hidden');
+        document.querySelectorAll(`.col-${index}`).forEach(cell => cell.classList.add('hidden'));
+    }
+
+    // Ẩn/Hiện các hàng chính
+    function toggleMainRows() {
+        const mainRows = document.querySelectorAll('.main-row');
+        mainRows.forEach(row => row.classList.add('hidden'));
+    }
+
+    // Hiện lại tất cả (Cả cột và hàng đã ẩn)
+    function resetAll() {
+        document.querySelectorAll('.hidden').forEach(el => el.classList.remove('hidden'));
+    }
+</script>
+
+</body>
+</html>
