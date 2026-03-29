@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Trình Tính Lịch Trình</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; background: #f9f9f9; }
+        .box { max-width: 450px; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .control { margin-bottom: 15px; }
+        input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 100px; }
+        button { padding: 8px 15px; background: #2c3e50; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #333; padding: 10px; text-align: center; font-size: 1.1em; }
+        th { background: #eee; cursor: pointer; user-select: none; }
+        
+        /* Cấu trúc hiển thị giống trong ảnh */
+        .time-row { font-weight: 500; letter-spacing: 0.5px; }
+        .stt-col { width: 50px; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <div class="control">
+        Giờ bắt đầu: <input type="time" id="startTime" value="10:30">
+        Dòng: <input type="number" id="rowCount" value="3" min="1">
+        <button onclick="render()">Tạo</button>
+    </div>
+
+    <table id="myTable">
+        <thead>
+            <tr>
+                <th class="stt-col" ondblclick="toggleSTT()">STT</th>
+                <th ondblclick="toggleSTT()">Khoảng thời gian (Dbl-click để ẩn STT)</th>
+            </tr>
+        </thead>
+        <tbody id="content"></tbody>
+    </table>
+</div>
+
+<script>
+    function render() {
+        const startVal = document.getElementById('startTime').value;
+        const rows = parseInt(document.getElementById('rowCount').value);
+        const tbody = document.getElementById('content');
+        
+        if (!startVal) return;
+        let [h, m] = startVal.split(':').map(Number);
+        let html = '';
+
+        for (let i = 0; i < rows; i++) {
+            // Logic: Dòng sau = Dòng trước + 11 phút
+            let currentStartTotal = (h * 60 + m) + (i * 11);
+            let endTotal = currentStartTotal + 25;
+
+            const format = (totalMin) => {
+                let hh = Math.floor(totalMin / 60) % 24;
+                let mm = totalMin % 60;
+                return `${hh}h${mm.toString().padStart(2, '0')}`;
+            };
+
+            // Dữ liệu cột thứ 2 theo định dạng ảnh: 10h30-10h55
+            let timeRange = `${format(currentStartTotal)}-${format(endTotal)}`;
+            
+            // Kiểm tra xem cột STT có đang bị ẩn không để giữ trạng thái khi render lại
+            let isHidden = document.querySelector('.stt-col').classList.contains('hidden') ? 'hidden' : '';
+
+            html += `<tr>
+                <td class="stt-col ${isHidden}">${i + 1}</td>
+                <td class="time-row">${timeRange}</td>
+            </tr>`;
+        }
+        tbody.innerHTML = html;
+    }
+
+    function toggleSTT() {
+        const sttElements = document.querySelectorAll('.stt-col');
+        sttElements.forEach(el => el.classList.toggle('hidden'));
+    }
+
+    // Chạy lần đầu
+    render();
+</script>
+
+</body>
+</html>
