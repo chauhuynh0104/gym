@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>Trắc nghiệm Da liễu - Tự động chấm & cuộn câu hỏi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: #f0f4f8;
+            font-family: system-ui, 'Segoe UI', 'Roboto', 'Noto Sans', sans-serif;
+            padding: 16px 12px 80px;
+            color: #0f172a;
+        }
+
+        .app-container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+            padding: 20px 18px;
+            margin-bottom: 20px;
+        }
+
+        .quiz-header {
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 12px;
+            margin-bottom: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .quiz-header h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #1e3c72, #2b4c7c);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .badge {
+            background: #eef2ff;
+            padding: 6px 12px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #1e3c72;
+        }
+
+        .topic-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .topic-btn {
+            background: #eef2ff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: 0.2s;
+            color: #1e293b;
+            flex: 1 0 auto;
+            text-align: center;
+        }
+
+        .topic-btn.active {
+            background: #1e3c72;
+            color: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .toggle-row {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            background: #f8fafc;
+            padding: 12px 16px;
+            border-radius: 60px;
+            margin-bottom: 20px;
+        }
+
+        .toggle-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1;
+            transition: 0.3s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #2d6a4f;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        .question-card {
+            background: white;
+            border-radius: 24px;
+            margin-bottom: 20px;
+            padding: 18px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+            scroll-margin-top: 20px;
+        }
+
+        .question-text {
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 16px;
+            line-height: 1.4;
+            background: #fefce8;
+            padding: 12px;
+            border-radius: 20px;
+            border-left: 5px solid #eab308;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .status-icon {
+            font-size: 0.85rem;
+            font-weight: bold;
+            background: white;
+            border-radius: 40px;
+            padding: 4px 12px;
+            min-width: 95px;
+            text-align: center;
+        }
+
+        .status-correct {
+            color: #15803d;
+            background: #dcfce7;
+            border: 1px solid #86efac;
+        }
+
+        .status-wrong {
+            color: #b91c1c;
+            background: #fee2e2;
+            border: 1px solid #fca5a5;
+        }
+
+        .status-none {
+            color: #64748b;
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+        }
+
+        .answers {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .answer-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            background: #f9f9ff;
+            border-radius: 60px;
+            border: 2px solid #e2edff;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+
+        .answer-option:hover {
+            background: #eef2ff;
+        }
+
+        .answer-option.correct-highlight {
+            border: 3px solid #15803d;
+            background: #e8f5e9;
+        }
+
+        .answer-option.wrong-highlight {
+            border: 3px solid #dc2626;
+            background: #fee2e2;
+        }
+
+        .answer-option.selected {
+            background: #e0f2fe;
+            border-color: #0284c7;
+        }
+
+        .answer-letter {
+            font-weight: 800;
+            background: #e2e8f0;
+            width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 60px;
+            font-size: 0.9rem;
+        }
+
+        .answer-text {
+            flex: 1;
+            font-size: 0.92rem;
+        }
+
+        .answer-status {
+            font-size: 1.2rem;
+            font-weight: bold;
+            min-width: 44px;
+            text-align: center;
+        }
+
+        .check-mark {
+            color: #15803d;
+        }
+
+        .cross-mark {
+            color: #dc2626;
+        }
+
+        .score-bar {
+            background: #e6f7ed;
+            padding: 14px 18px;
+            border-radius: 60px;
+            text-align: center;
+            font-weight: bold;
+            margin: 8px 0 16px;
+            font-size: 1rem;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .progress-text {
+            background: #1e3c72;
+            color: white;
+            border-radius: 30px;
+            padding: 4px 16px;
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 40px 20px;
+            background: #fef9e3;
+            border-radius: 28px;
+            color: #b45309;
+            font-weight: 500;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 32px;
+            padding: 20px 10px;
+            font-size: 0.75rem;
+            color: #475569;
+            border-top: 1px solid #cbd5e1;
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div class="card">
+        <div class="quiz-header">
+            <h2>📚 Trắc nghiệm Da liễu</h2>
+      
+        </div>
+
+
+        <div class="topic-buttons" id="topicButtons">
+            <button data-topic="all" class="topic-btn">📖 Ôn cả môn (tất cả bài)</button>
+            <button data-topic="bai1" class="topic-btn">📗 Bài 1: Chăm sóc NB ghẻ</button>
+            <button data-topic="bai2" class="topic-btn">📗 Bài 2: Chăm sóc NB chàm</button>
+			 <button data-topic="bai3" class="topic-btn">📗 Bài 3: Chăm sóc NB chốc</button>
+			  <button data-topic="bai4" class="topic-btn">📗 Bài 4: Chăm sóc NB Zona</button>
+			   <button data-topic="bai5" class="topic-btn">📗 Bài 5: Chăm sóc NB vẩy nến</button>
+			    <button data-topic="bai6" class="topic-btn">📗 Bài 6: Đại cương về bệnh lao</button>
+				 <button data-topic="bai7" class="topic-btn">📗 Bài 7: Chăm sóc NB lao phổi</button>
+				  <button data-topic="bai8" class="topic-btn">📗 Bài 8: Chăm sóc NB ho ra máu do lao</button>
+				   <button data-topic="bai9" class="topic-btn">📗 Bài 9: Chăm sóc NB tràn khí màng phổi</button>
+				    <button data-topic="bai10" class="topic-btn">📗 Bài 10: Chăm sóc NB tăng áp lực nội sọ</button>
+					 <button data-topic="bai11" class="topic-btn">📗 Bài 11: Chăm sóc NB liệt nửa người</button>
+					  <button data-topic="bai12" class="topic-btn">📗 Bài 12: Chăm sóc NB đau dây thần kinh tọa</button>
+					   <button data-topic="bai13" class="topic-btn">📗 Bài 13: Chăm sóc NB liệt hai chân</button>
+        </div>
+
+      <div class="toggle-row">
+            <div class="toggle-item">
+                <span>🔄 Xáo trộn câu hỏi</span>
+                <label class="switch">
+                    <input type="checkbox" id="shuffleQuestionsToggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="toggle-item">
+                <span>🎲 Xáo trộn đáp án</span>
+                <label class="switch">
+                    <input type="checkbox" id="shuffleAnswersToggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div id="scoreContainer" class="score-bar" style="display: none;">
+        <span>🏆 Kết quả hiện tại</span>
+        <span id="liveScore" class="progress-text">0 / 0</span>
+    </div>
+
+    <div id="questionsContainer">
+        <div class="welcome-message">
+            👋 Chào bạn!<br>
+            Hãy chọn một chủ đề bên trên để bắt đầu làm bài trắc nghiệm.
+        </div>
+    </div>
+    
+    <footer>© 2014-2026 Dr.Châu</footer>
+</div>
+
+<script>
+    // ---------- DỮ LIỆU CÂU HỎI ----------
+    const QUESTION_SET = [
+        // Bài 1: Chăm sóc NB ghẻ
+{ id: 1, text: "Bệnh ghẻ ngứa do ký sinh trùng nào gây bệnh:", answers: ['Nấm ngoài da Dermatophytosis', 'Sarcoptes scabies', 'Nấm Aspergillus', 'Ký sinh trùng Trypanosoma'], correct: "B", topic: "bai1" },
+{ id: 2, text: "Bệnh ghẻ ngứa lây lan qua hình thức, NGOẠI TRỪ:", answers: ['Thú vật qua con người, do ăn phải thức ăn chứa ký sinh trùng', 'Người này sang người khác, qua vật dụng dùng chung', 'Lây nhanh ở nơi chật chội, đông người', 'Lây qua đường tiếp xúc tình dục'], correct: "A", topic: "bai1" },
+{ id: 3, text: "Thời gian ủ bệnh của bệnh ghẻ khoảng:", answers: ['1 tuần', '2 tuần', '3 tuần', '4 tuần'], correct: "A", topic: "bai1" },
+{ id: 4, text: "Thể điển hình của ghẻ:", answers: ['Ngứa toàn thân trừ mặt, ngứa về ban đêm', 'Ngứa chỉ ở bộ phận sinh dục, ngứa về ban đêm', 'Ngứa chỉ ở nách và quanh rốn, ngứa cả ngày lẫn đêm', 'Ngứa ở vùng da đầu, ngứa về ban ngày'], correct: "A", topic: "bai1" },
+{ id: 5, text: "Tổn thương của ghẻ điển hình có đặc điểm:", answers: ['Gồm ít mụn nước nằm rải rác, đặc biệt vùng da sừng. Chỉ có sẩn cục ở nách hay bìu', 'Gồm ít mụn nước nằm tập trung, đặc biệt vùng da lão hóa. Chỉ có sẩn mụn nước ở nách', 'Gồm nhiều mụn mủ nằm tập trung, đặc biệt vùng da già. Sẩn cục, sẩn mụn nước ở bìu', 'Gồm nhiều mụn nước nằm rải rác, đặc biệt vùng da non. Sẩn cục hay sẩn mụn nước ở nách hay bìu.'], correct: "D", topic: "bai1" },
+{ id: 6, text: "Tác nhân gây bệnh ghẻ là:", answers: ['Demodex folliculorum', 'Sarcoptes scabiei', 'Pediculus humanus', 'Candida albicans'], correct: "B", topic: "bai1" },
+{ id: 7, text: "Thời gian ủ bệnh ghẻ trung bình là:", answers: ['1–2 ngày', '2–8 ngày', '10–14 ngày', '3–4 tuần'], correct: "B", topic: "bai1" },
+{ id: 8, text: "Triệu chứng ngứa của bệnh ghẻ thường rõ nhất vào thời điểm nào?", answers: ['Ban ngày', 'Buổi trưa', 'Ban đêm', 'Sáng sớm'], correct: "C", topic: "bai1" },
+{ id: 9, text: "Dấu hiệu đặc trưng giúp chẩn đoán xác định bệnh ghẻ là:", answers: ['Tìm thấy cái ghẻ tại tổn thương da', 'Ngứa nhiều ban ngày', 'Có mụn mủ lan tỏa toàn thân', 'Luôn kèm sốt cao'], correct: "A", topic: "bai1" },
+{ id: 10, text: "Vì sao ngứa trong bệnh ghẻ thường tăng nhiều về đêm?", answers: ['Do nhiệt độ ban đêm cao', 'Do cái ghẻ hoạt động mạnh về đêm', 'Do bệnh nhân ít vận động', 'Do thay đổi nội tiết tố'], correct: "B", topic: "bai1" },
+{ id: 11, text: "Yếu tố dịch tễ nào gợi ý bệnh ghẻ?", answers: ['Chỉ một người trong gia đình bị ngứa', 'Nhiều người xung quanh cùng có biểu hiện ngứa', 'Không ai khác trong cộng đồng mắc bệnh', 'Ngứa chỉ xảy ra ở bệnh nhân nữ'], correct: "B", topic: "bai1" },
+{ id: 12, text: "Vì sao cần điều trị đồng thời cho cả người tiếp xúc gần bệnh nhân ghẻ?", answers: ['Để tăng tác dụng thuốc', 'Để phòng tránh tái nhiễm và lây lan', 'Để rút ngắn thời gian điều trị', 'Để giảm chi phí điều trị'], correct: "B", topic: "bai1" },
+{ id: 13, text: "Biểu hiện lâm sàng nào giúp gợi ý bệnh ghẻ ngoài rãnh ghẻ?", answers: ['Xuất hiện mụn nước, sẩn, cục ngứa', 'Loét sâu để lại sẹo', 'Vảy da trắng bạc', 'Xuất huyết dưới da'], correct: "A", topic: "bai1" },
+{ id: 14, text: "Vì sao cần vệ sinh quần áo, chăn màn khi có bệnh nhân ghẻ?", answers: ['Để tránh vi khuẩn bội nhiễm', 'Vì cái ghẻ có thể tồn tại ngắn hạn trên vật dụng và gây tái nhiễm', 'Để giảm ngứa nhanh hơn', 'Để rút ngắn thời gian điều trị thuốc'], correct: "B", topic: "bai1" },
+{ id: 15, text: "Một bệnh nhân có ngứa nhiều về đêm, rãnh ghẻ ở kẽ ngón tay. Chẩn đoán phù hợp là:", answers: ['Ghẻ', 'Chàm', 'Zona', 'Viêm da'], correct: "A", topic: "bai1" },
+{ id: 16, text: "Khi chăm sóc bệnh nhân ghẻ, điều dưỡng cần hướng dẫn:", answers: ['Chỉ bôi thuốc lên vùng ngứa', 'Bôi thuốc khắp cơ thể theo chỉ định, kể cả vùng không ngứa', 'Bôi thuốc khi có triệu chứng sốt', 'Bôi thuốc duy nhất một lần là đủ'], correct: "B", topic: "bai1" },
+{ id: 17, text: "Một hộ gia đình có 4 người, trong đó 2 người được chẩn đoán ghẻ. Biện pháp điều dưỡng hợp lý là:", answers: ['Chỉ điều trị cho 2 người mắc bệnh', 'Điều trị cả 4 người để tránh lây chéo và tái nhiễm', 'Điều trị cho người bệnh, còn lại chỉ theo dõi', 'Chỉ cần vệ sinh nhà cửa'], correct: "B", topic: "bai1" },
+{ id: 18, text: "Khi bệnh nhân ngứa nhiều về đêm do ghẻ, điều dưỡng có thể hướng dẫn thêm:", answers: ['Dùng thuốc theo chỉ định', 'Gãi để giảm ngứa', 'Ăn uống đủ chất', 'Nghỉ ngơi đầy đủ'], correct: "A", topic: "bai1" },
+{ id: 19, text: "Để phòng bệnh ghẻ trong cộng đồng, điều dưỡng cần khuyên:", answers: ['Giữ vệ sinh cá nhân, không dùng chung quần áo, chăn màn', 'Chỉ tránh tiếp xúc động vật', 'Không cần xử trí vì ghẻ không lây', 'Bôi thuốc mỡ kháng sinh định kỳ'], correct: "A", topic: "bai1" },
+{ id: 20, text: "Phân biệt ghẻ với viêm da cơ địa dựa vào:", answers: ['Ghẻ ngứa nhiều về đêm, có rãnh ghẻ; viêm da cơ địa không có rãnh ghẻ', 'Cả hai giống nhau hoàn toàn', 'Viêm da cơ địa có rãnh ghẻ, ghẻ không có', 'Ghẻ không bao giờ ngứa'], correct: "A", topic: "bai1" },
+{ id: 21, text: "Một trẻ 3 tuổi có sẩn ngứa, mụn nước ở kẽ ngón tay, mẹ cũng có triệu chứng ngứa. Bệnh phù hợp nhất là:", answers: ['Ghẻ', 'Thủy đậu', 'Chốc lây', 'Zona'], correct: "A", topic: "bai1" },
+{ id: 22, text: "Nếu chỉ điều trị cho bệnh nhân mà không điều trị cho người tiếp xúc, điều gì dễ xảy ra?", answers: ['Bệnh tự khỏi', 'Bệnh tái phát do tái nhiễm từ người lành mang ký sinh trùng', 'Không có thay đổi gì', 'Bệnh nặng thêm ngay lập tức'], correct: "B", topic: "bai1" },
+{ id: 23, text: "Khi chẩn đoán phân biệt ghẻ với chàm, đặc điểm gợi ý ghẻ nhiều hơn là:", answers: ['Ngứa về đêm, có tính chất dịch tễ', 'Tổn thương đối xứng', 'Bong vảy trắng bạc', 'Xuất hiện chủ yếu ở mặt'], correct: "A", topic: "bai1" },
+
+        // Bài 2: Chăm sóc NB chàm
+     { id: 24, text: "Bệnh chàm có đặc tính:", answers: ['Có những mảng màu trắng, mụn mủ, không ngứa, không tiến triển, tự khu trú và tự khỏi', 'Sang thương mang hình dạng của vật tiếp xúc, giới hạn rõ, viêm nhiều, mụn nước nhiều', 'Bệnh không tái phát dù tiếp xúc lại với dị nguyên', 'Sinh bệnh học là một chuỗi những phản ứng viêm với vi trùng trên một cơ địa không bị dị ứng'], correct: "B", topic: "bai2" },
+{ id: 25, text: "Mô học của bệnh chàm có hiện tượng:", answers: ['Ẩm bào', 'Xốp bào', 'Thực bào', 'Viêm nhiễm'], correct: "B", topic: "bai2" },
+{ id: 26, text: "Vị trí xuất hiện của chàm:", answers: ['Bất kỳ vùng da nào, nhưng thường gặp ở da đầu, mặt, bàn tay, bàn chân, bìu, âm hộ', 'Bất kỳ vùng niêm mạc và bán niêm mạc như môi, qui đầu...', 'Chỉ có ở vùng bẹn, đùi, cẳng chân, khuỷu, bàn chân mà không có ở đầu, mặt, bàn tay', 'Chỉ có ở vùng nách, bẹn, khuỷu hoặc vùng quanh bìu, âm hộ…'], correct: "A", topic: "bai2" },
+{ id: 27, text: "Tổn thương cơ bản của bệnh chàm là:", answers: ['Mụn nước', 'Mụn cơm', 'Mụn mủ', 'Mụn trứng cá'], correct: "A", topic: "bai2" },
+{ id: 28, text: "Bệnh chàm tiến triển qua … tổn thương cơ bản", answers: ['4 giai đoạn', '5 giai đoạn', '6 giai đoạn', '7 giai đoạn'], correct: "B", topic: "bai2" },
+{ id: 29, text: "Chàm có nguồn gốc từ bên ngoài được gọi là:", answers: ['Chàm tiếp xúc', 'Chàm thể tạng', 'Chàm tiết bã', 'Chàm dạng đồng tiền'], correct: "A", topic: "bai2" },
+{ id: 30, text: "Bệnh chàm được chia làm các giai đoạn:", answers: ['Giai đoạn cấp tính, giai đoạn bán cấp tính, giai đoạn mạn tính', 'Giai đoạn cấp tính và giai đoạn mạn tính', 'Giai đoạn cấp tính và giai đoạn bán cấp tính', 'Giai đoạn cấp tính, giai đoạn mạn tính và giai đoạn hoại tử'], correct: "A", topic: "bai2" },
+{ id: 31, text: "Thuốc mỡ điều trị bệnh chàm được dùng trong giai đoạn:", answers: ['Cấp tính', 'Bán cấp tính', 'Mãn tính', 'Bất kỳ giai đoạn nào'], correct: "C", topic: "bai2" },
+{ id: 32, text: "Biện pháp phòng ngừa bệnh chàm, NGOẠI TRỪ:", answers: ['Kiểm soát stress', 'Sử dụng thuốc hợp lý', 'Hạn chế các chất làm ẩm', 'Loại trừ yếu tố khỏi phát'], correct: "C", topic: "bai2" },
+{ id: 33, text: "Bệnh chàm còn có tên gọi khác là:", answers: ['Psoriasis', 'Dermatitis', 'Eczema', 'Urticaria'], correct: "C", topic: "bai2" },
+{ id: 34, text: "Giai đoạn đầu tiên của bệnh chàm thường biểu hiện:", answers: ['Ngứa', 'Mụn mủ', 'Tróc vảy', 'Loét da'], correct: "A", topic: "bai2" },
+{ id: 35, text: "Một trong các vị trí thường gặp của chàm là:", answers: ['Gan', 'Da đầu', 'Niêm mạc lưỡi', 'Kết mạc mắt'], correct: "B", topic: "bai2" },
+{ id: 36, text: "Nguyên nhân chính xác của bệnh chàm hiện nay là:", answers: ['Do vi khuẩn', 'Do virus', 'Chưa rõ, nhưng liên quan đến cơ địa dị ứng và chất gây dị ứng', 'Do thiếu vitamin'], correct: "C", topic: "bai2" },
+{ id: 37, text: "Đặc điểm lâm sàng của chàm tiếp xúc:", answers: ['Giới hạn không rõ, ít ngứa', 'Giới hạn rõ, rất ngứa, mụn nước nhiều', 'Không ngứa, không viêm', 'Luôn để lại sẹo'], correct: "B", topic: "bai2" },
+{ id: 38, text: "Nếu chàm sữa kéo dài trên 4 tuổi, thường tiến triển thành:", answers: ['Chàm tiếp xúc', 'Chàm thể tạng', 'Chàm tiết bã', 'Chàm đồng tiền'], correct: "B", topic: "bai2" },
+{ id: 39, text: "Người bệnh chàm cấp tính có nhiều mụn nước rỉ dịch, điều dưỡng nên dùng:", answers: ['Thuốc mỡ', 'Thuốc nước', 'Hồ nước, dầu kẽm', 'Corticoid toàn thân ngay'], correct: "B", topic: "bai2" },
+{ id: 40, text: "Bệnh nhân chàm bán cấp, điều trị phù hợp là:", answers: ['Thoa thuốc mỡ', 'Dùng hồ nước hoặc dầu kẽm', 'Chỉ rửa bằng nước muối', 'Không cần bôi thuốc'], correct: "B", topic: "bai2" },
+{ id: 41, text: "Một người bệnh có nghề nghiệp thường xuyên tiếp xúc hóa chất, xuất hiện mảng đỏ, ngứa, mụn nước đúng vùng tiếp xúc. Loại chàm này là:", answers: ['Chàm thể tạng', 'Chàm tiết bã', 'Chàm tiếp xúc', 'Chàm đồng tiền'], correct: "C", topic: "bai2" },
+{ id: 42, text: "Để phòng ngừa bệnh chàm tái phát, người bệnh cần:", answers: ['Tắm bằng xà phòng có tính kiềm mạnh', 'Hạn chế tiếp xúc hóa chất, chất tẩy, xà phòng', 'Dùng dầu gió xoa hàng ngày', 'Phơi nắng gắt lâu'], correct: "B", topic: "bai2" },
+{ id: 43, text: "Người bệnh chàm than ngứa nhiều, điều dưỡng cần khuyên:", answers: ['Cào gãi mạnh để giảm ngứa', 'Giữ ẩm da, dùng chất làm mềm da theo hướng dẫn', 'Dùng rượu thuốc xoa', 'Ngưng tắm rửa vài ngày'], correct: "B", topic: "bai2" },
+{ id: 44, text: "Một trẻ 3 tháng tuổi có mụn nước, rịn dịch ở hai má, rất ngứa, dễ chốc hóa. Đây là:", answers: ['Chàm tiết bã', 'Chàm đồng tiền', 'Chàm sữa', 'Chàm tiếp xúc'], correct: "C", topic: "bai2" },
+{ id: 45, text: "Người bệnh chàm thể tạng ở người lớn thường có thêm dấu hiệu nào sau đây?", answers: ['Dày sừng nang lông, xạm da quanh mắt', 'Loét da sâu, để lại sẹo', 'Mất sắc tố da toàn thân', 'Bong vảy da từng mảng lớn'], correct: "A", topic: "bai2" },
+{ id: 46, text: "Vì sao kiểm soát stress có ý nghĩa trong điều trị chàm?", answers: ['Stress gây ra chàm', 'Stress làm bệnh nặng thêm, khó kiểm soát', 'Stress làm giảm hiệu quả thuốc mỡ', 'Stress ngăn ngừa dị nguyên'], correct: "B", topic: "bai2" },
+
+///////bài 3
+{ id: 47, text: "Trong bệnh chốc, người ta có thể quan sát tổn thương nào sau đây:", answers: ['Mảng đỏ da có vảy', 'Các cục', 'Mụn nước, mụn mủ', 'Dày da'], correct: "C", topic: "bai3" },
+{ id: 48, text: "Vị trí nào dưới đây hay gặp trong bệnh chốc ở trẻ em:", answers: ['Các kẽ ngón tay', 'Các hốc tự nhiên', 'Bẹn', 'Dương vật'], correct: "B", topic: "bai3" },
+{ id: 49, text: "Một trong những biến chứng toàn thân thường gặp nhất của bệnh chốc ở trẻ em:", answers: ['Viêm phế quản', 'Các tổn thương khớp ngoại vi', 'Tổn thương nội tâm mạc', 'Viêm cầu thận cấp'], correct: "D", topic: "bai3" },
+{ id: 50, text: "Chốc là một bệnh do:", answers: ['Suy giảm miễn dịch', 'Di truyền', 'Vi khuẩn', 'Dị ứng'], correct: "C", topic: "bai3" },
+{ id: 51, text: "Triệu chứng nào thuộc bệnh chốc:", answers: ['Đau nhức nhiều', 'Chảy nước', 'Toàn trạng suy sụp nhanh', 'Vảy tiết màu vàng nâu'], correct: "D", topic: "bai3" },
+{ id: 52, text: "Chốc liên cầu kéo dài và tái phát từng đợt dễ đưa đến biến chứng toàn thân:", answers: ['Nhiễm trùng huyết', 'Viêm cầu thận cấp', 'Phế quản phế viêm', 'Viêm nội tâm mạc'], correct: "B", topic: "bai3" },
+{ id: 53, text: "Một trong những đặc tính của chốc loét:", answers: ['Toàn trạng ít bị ảnh hưởng', 'Tiên lượng tốt', 'Tự khỏi', 'Triệu chứng toàn thân rầm rộ'], correct: "D", topic: "bai3" },
+{ id: 54, text: "Nguyên nhân gây bệnh chốc:", answers: ['Pseudomonas alruginosa', 'Streptococcus agalactiae', 'Streptococcus equisimilis', 'Streptococcus pyogenes'], correct: "D", topic: "bai3" },
+{ id: 55, text: "Chốc tụ cầu tổn thương là:", answers: ['Bọng nước', 'Sẩn', 'Liken', 'Dát trắng'], correct: "A", topic: "bai3" },
+{ id: 56, text: "Tác nhân chính gây chốc bóng nước là:", answers: ['Streptococcus pyogenes', 'Staphylococcus aureus', 'Pseudomonas aeruginosa', 'Escherichia coli'], correct: "B", topic: "bai3" },
+{ id: 57, text: "Đặc điểm sang thương điển hình của chốc lây là:", answers: ['Vảy trắng bạc như mica', 'Mụn nước/mủ vỡ để lại vảy vàng mật ong', 'Loét sâu để lại sẹo', 'Nốt sẩn cứng chắc'], correct: "B", topic: "bai3" },
+{ id: 58, text: "Biến chứng quan trọng của chốc lây là:", answers: ['Viêm cầu thận cấp', 'Viêm khớp dạng thấp', 'Viêm màng não mủ', 'Nhiễm khuẩn huyết do nấm'], correct: "A", topic: "bai3" },
+{ id: 59, text: "Vì sao chốc lây thường gặp ở trẻ 2–5 tuổi?", answers: ['Do miễn dịch còn non yếu, vệ sinh kém, dinh dưỡng kém', 'Do thường tiếp xúc với hóa chất', 'Do dị ứng thuốc', 'Do rối loạn nội tiết'], correct: "A", topic: "bai3" },
+{ id: 60, text: "Đặc điểm nào giúp phân biệt chốc bóng nước với chốc lây?", answers: ['Chốc bóng nước thường ở nếp gấp, có bọng nước trong', 'Chốc bóng nước luôn để lại sẹo', 'Chốc lây không bao giờ lây lan', 'Cả hai đều hoàn toàn giống nhau'], correct: "A", topic: "bai3" },
+{ id: 61, text: "Một trẻ 4 tuổi có tổn thương mụn nước vỡ, đóng vảy vàng mật ong vùng mặt. Điều dưỡng nghĩ đến:", answers: ['Chốc lây', 'Zona', 'Vảy nến', 'Lichen phẳng'], correct: "A", topic: "bai3" },
+{ id: 62, text: "So sánh chốc lây và thủy đậu:", answers: ['Chốc lây: vảy vàng mật ong, thủy đậu: mụn nước nhiều giai đoạn khác nhau', 'Cả hai hoàn toàn giống nhau', 'Thủy đậu không bao giờ ngứa, chốc lây rất ngứa', 'Chốc lây luôn kèm sốt cao, thủy đậu không sốt'], correct: "A", topic: "bai3" },
+{ id: 63, text: "Tác nhân thường gặp gây bệnh chốc là:", answers: ['Virus', 'Nấm', 'Vi khuẩn', 'Ký sinh trùng'], correct: "C", topic: "bai3" },
+{ id: 64, text: "Đặc điểm tổn thương điển hình của chốc là:", answers: ['Mụn nước, vỡ tạo vảy màu vàng mật ong', 'Mụn mủ sâu', 'Ban đỏ lan rộng', 'Sẩn ngứa'], correct: "A", topic: "bai3" },
+{ id: 65, text: "Vì sao bệnh chốc dễ lây lan?", answers: ['Do di truyền', 'Do tiếp xúc trực tiếp với tổn thương', 'Do ăn uống', 'Do môi trường lạnh'], correct: "B", topic: "bai3" },
+{ id: 66, text: "Mục đích chính của vệ sinh vùng da bị chốc là:", answers: ['Tăng độ ẩm cho da', 'Giảm đau', 'Loại bỏ vi khuẩn và dịch tiết', 'Làm khô da'], correct: "C", topic: "bai3" },
+{ id: 67, text: "Khi chăm sóc vết chốc có vảy, điều dưỡng nên:", answers: ['Bóc ngay vảy khô', 'Ngâm mềm rồi nhẹ nhàng lau sạch', 'Không đụng vào', 'Dùng tay cạy mạnh'], correct: "B", topic: "bai3" },
+{ id: 68, text: "Khi rửa vết chốc, nên dùng dung dịch nào?", answers: ['Nước muối sinh lý', 'Nước ấm', 'Nước nóng', 'Cồn'], correct: "A", topic: "bai3" },
+{ id: 69, text: "Thuốc thường dùng bôi tại chỗ cho chốc là:", answers: ['Thuốc kháng sinh', 'Thuốc giảm đau', 'Vitamin', 'Thuốc chống nấm'], correct: "A", topic: "bai3" },
+{ id: 70, text: "Dấu hiệu nào cho thấy chốc có biến chứng?", answers: ['Vảy vàng khô', 'Sốt, sưng đau lan rộng', 'Ít ngứa', 'Da khô'], correct: "B", topic: "bai3" },
+{ id: 71, text: "Biện pháp nào hiệu quả nhất để phòng bệnh chốc trong cộng đồng?", answers: ['Dùng thuốc', 'Giữ vệ sinh cá nhân', 'Uống vitamin', 'Nghỉ ngơi'], correct: "B", topic: "bai3" },
+
+///////bài 4
+
+{ id: 72, text: "Sau khi bị zona, bệnh nhân có vảy tiết khô lại, bong ra. Đây thuộc loại tổn thương:", answers: ['Cơ bản tiên phát', 'Cơ bản thứ phát', 'Tổn thương chắc', 'Hoại tử'], correct: "B", topic: "bai4" },
+{ id: 73, text: "Sau khi bị zona, bệnh nhân có vảy tiết khô lại, bong ra. Đây thuộc loại tổn thương:", answers: ['Cơ bản tiên phát', 'Cơ bản thứ phát', 'Tổn thương chắc', 'Hoại tử'], correct: "B", topic: "bai4" },
+{ id: 74, text: "Bệnh Zona do tác nhân nào gây ra?", answers: ['Virus Herpes simplex', 'Virus Varicella-zoster', 'Virus Epstein-Barr', 'Virus Cytomegalovirus'], correct: "B", topic: "bai4" },
+{ id: 75, text: "Virus gây bệnh Zona cũng là virus gây bệnh nào sau đây?", answers: ['Sởi', 'Thủy đậu', 'Rubella', 'Quai bị'], correct: "B", topic: "bai4" },
+{ id: 76, text: "Tổn thương da điển hình của Zona là:", answers: ['Mụn nước mọc rải rác toàn thân', 'Mụn mủ ở nang lông', 'Mụn nước thành chùm trên nền da đỏ', 'Ban dát đỏ'], correct: "C", topic: "bai4" },
+{ id: 77, text: "Tổn thương Zona thường phân bố theo:", answers: ['Hệ mạch máu', 'Đường thần kinh', 'Hệ bạch huyết', 'Hệ tiêu hóa'], correct: "B", topic: "bai4" },
+{ id: 78, text: "Triệu chứng thường gặp nhất ở bệnh nhân Zona là:", answers: ['Ngứa', 'Đau rát vùng da tổn thương', 'Sốt cao', 'Ho'], correct: "B", topic: "bai4" },
+{ id: 79, text: "Vị trí thường gặp nhất của Zona là:", answers: ['Lưng – ngực', 'Bụng', 'Tay', 'Bàn chân'], correct: "A", topic: "bai4" },
+{ id: 80, text: "Biến chứng thường gặp của Zona là:", answers: ['Đau sau Zona', 'Viêm phổi', 'Suy thận', 'Viêm gan'], correct: "A", topic: "bai4" },
+{ id: 81, text: "Nhóm đối tượng nào dễ mắc Zona hơn?", answers: ['Trẻ sơ sinh', 'Người suy giảm miễn dịch', 'Người cao tuổi', 'Thanh niên'], correct: "B", topic: "bai4" },
+{ id: 82, text: "Mục tiêu quan trọng trong chăm sóc bệnh nhân Zona là:", answers: ['Giảm đau', 'Tăng cân', 'Giảm huyết áp', 'Hạ đường huyết'], correct: "A", topic: "bai4" },
+{ id: 83, text: "Tổn thương Zona thường:", answers: ['Hai bên cơ thể', 'Một bên cơ thể', 'Toàn thân', 'Không xác định'], correct: "B", topic: "bai4" },
+{ id: 84, text: "Đường lây của virus Varicella-zoster là:", answers: ['Đường máu', 'Đường hô hấp và tiếp xúc', 'Đường tiêu hóa', 'Đường tiêm truyền'], correct: "B", topic: "bai4" },
+{ id: 85, text: "Đặc điểm của mụn nước Zona là:", answers: ['Mụn nước riêng lẻ', 'Mụn nước thành chùm', 'Mụn mủ', 'Mụn bọc'], correct: "B", topic: "bai4" },
+{ id: 86, text: "Vì sao bệnh nhân Zona thường đau nhiều?", answers: ['Do nhiễm khuẩn da', 'Do virus gây tổn thương dây thần kinh', 'Do dị ứng', 'Do thiếu vitamin'], correct: "B", topic: "bai4" },
+{ id: 87, text: "Tại sao cần giữ vùng da tổn thương sạch và khô?", answers: ['Tránh nhiễm khuẩn thứ phát', 'Giảm sốt', 'Giảm huyết áp', 'Tăng miễn dịch'], correct: "A", topic: "bai4" },
+{ id: 88, text: "Tại sao bệnh nhân Zona cần nghỉ ngơi?", answers: ['Giảm đau và tăng đề kháng', 'Tăng huyết áp', 'Giảm cân', 'Tăng nhịp tim'], correct: "A", topic: "bai4" },
+{ id: 89, text: "Vì sao cần điều trị sớm bằng thuốc kháng virus?", answers: ['Giảm đau và giảm biến chứng', 'Tăng cân', 'Tăng miễn dịch ngay lập tức', 'Hạ huyết áp'], correct: "A", topic: "bai4" },
+{ id: 90, text: "Mục đích của chăm sóc da trong Zona là:", answers: ['Làm đẹp da', 'Phòng nhiễm khuẩn', 'Tăng miễn dịch', 'Tăng huyết áp'], correct: "B", topic: "bai4" },
+{ id: 91, text: "Đau sau Zona thường gặp ở:", answers: ['Người trẻ', 'Người cao tuổi', 'Trẻ sơ sinh', 'Thanh niên'], correct: "B", topic: "bai4" },
+{ id: 92, text: "Vì sao cần mặc quần áo rộng cho bệnh nhân Zona?", answers: ['Tránh cọ xát vùng tổn thương', 'Tăng tuần hoàn', 'Tăng miễn dịch', 'Giảm sốt'], correct: "A", topic: "bai4" },
+{ id: 93, text: "Vì sao bệnh nhân Zona cần hạn chế tiếp xúc với phụ nữ mang thai chưa mắc thủy đậu?", answers: ['Có thể lây virus', 'Gây đau', 'Gây sốt', 'Gây ngứa'], correct: "A", topic: "bai4" },
+{ id: 94, text: "Mục đích sử dụng thuốc giảm đau trong Zona là:", answers: ['Kiểm soát triệu chứng đau', 'Diệt virus', 'Tăng miễn dịch', 'Hạ huyết áp'], correct: "A", topic: "bai4" },
+{ id: 95, text: "Vì sao cần theo dõi dấu hiệu nhiễm trùng vùng da?", answers: ['Để phát hiện biến chứng sớm', 'Để giảm cân', 'Để giảm đau', 'Để tăng miễn dịch'], correct: "A", topic: "bai4" },
+{ id: 96, text: "Bệnh Zona là do:", answers: ['Nhiễm virus mới', 'Virus thủy đậu tái hoạt', 'Vi khuẩn', 'Ký sinh trùng'], correct: "B", topic: "bai4" },
+{ id: 97, text: "Mục đích giáo dục sức khỏe cho bệnh nhân Zona là:", answers: ['Phòng lây và phòng biến chứng', 'Tăng cân', 'Tăng huyết áp', 'Tăng nhịp tim'], correct: "A", topic: "bai4" },
+{ id: 98, text: "Bệnh nhân Zona đau nhiều vùng tổn thương, điều dưỡng nên ưu tiên:", answers: ['Cho bệnh nhân vận động', 'Đánh giá mức độ đau và dùng thuốc giảm đau', 'Cho bệnh nhân ăn nhiều', 'Cho bệnh nhân tắm'], correct: "B", topic: "bai4" },
+{ id: 99, text: "Khi chăm sóc vùng da Zona có mụn nước, điều dưỡng nên:", answers: ['Chọc vỡ mụn nước', 'Giữ sạch và khô', 'Gãi vùng da', 'Đắp lá'], correct: "B", topic: "bai4" },
+{ id: 100, text: "Bệnh nhân Zona mắt, điều dưỡng cần:", answers: ['Cho bệnh nhân ngủ nghỉ đầy đủ', 'Theo dõi thị lực và báo bác sĩ', 'Cho ăn nhiều', 'Cho uống nước'], correct: "B", topic: "bai4" },
+{ id: 101, text: "Khi bệnh nhân ngứa vùng tổn thương, điều dưỡng nên:", answers: ['Khuyên gãi', 'Cắt móng tay và giữ da sạch', 'Dùng thuốc bôi', 'Bôi dầu nóng'], correct: "B", topic: "bai4" },
+{ id: 102, text: "Khi mụn nước vỡ, điều dưỡng cần:", answers: ['Để tự khô', 'Sát khuẩn và giữ sạch', 'Gãi', 'Đắp lá'], correct: "B", topic: "bai4" },
+
+////bài 5
+
+{ id: 103, text: "Bệnh vảy nến là:", answers: ['Bệnh do rối loạn chuyển hoá', 'Bệnh nhiễm khuẩn', 'Bệnh viêm mô liên kết', 'Bệnh chưa rõ nguyên nhân, di truyền đóng vai trò quan trọng'], correct: "D", topic: "bai5" },
+{ id: 104, text: "Đặc trưng của bệnh vảy nến là:", answers: ['Sự thành lập mụn nước', 'Sự thành lập bọng nước', 'Sự tăng sinh tế bào ở lớp bì', 'Sự tăng sinh tế bào ở lớp thượng bì'], correct: "D", topic: "bai5" },
+{ id: 105, text: "Tổn thương cơ bản của bệnh vảy nến là:", answers: ['Sẩn - mụn nước', 'Sẩn - mụn mủ', 'Hồng ban - vảy', 'Hồng ban - chảy nước'], correct: "C", topic: "bai5" },
+{ id: 106, text: "Lớp vảy của bệnh vảy nến có đặc trưng nào sau đây:", answers: ['Màu trắng bẩn', 'Cấu tạo bởi những phiến mỏng, liên kết với nhau khá lỏng lẻo.', 'Dày và khó tách', 'Cấu tạo bởi những phiến dày, liên kết với nhau khá lỏng lẻo.'], correct: "B", topic: "bai5" },
+{ id: 107, text: "Hồng ban trong bệnh vảy nến có các đặc tính nào sau đây:", answers: ['Giới hạn rõ, biến mất khi áp kính', 'Giới hạn rõ, không biến mất khi áp kính', 'Giãn mạch, thâm nhiễm', 'Giới hạn rõ, thâm nhiễm'], correct: "A", topic: "bai5" },
+{ id: 108, text: "Những vị trí nào sau đây hay gặp trong bệnh vảy nến:", answers: ['Rìa chân tóc, vùng tì đè', 'Móng, khớp', 'Lòng bàn chân', 'Niêm mạc miệng và sinh dục'], correct: "A", topic: "bai5" },
+{ id: 109, text: "Nghiệm pháp Brocq xuất hiện theo thứ tự nào sau đây:", answers: ['Dấu vảy hành- vết đèn cầy- giọt sương máu.', 'Vết đèn cầy- dấu vảy hành- giọt sương máu.', 'Dấu vảy hành- giọt sương máu- vết đèn cầy.', 'Vết đèn cầy- giọt sương máu- dấu vảy hành.'], correct: "B", topic: "bai5" },
+{ id: 110, text: "PUVA trị liệu là:", answers: ['Paludine + tia cực tím A.', 'Primaquin + tia cực tím A.', 'Praxilene + tia cực tím A.', 'Psoralene + tia cực tím A.'], correct: "D", topic: "bai5" },
+{ id: 111, text: "Thuốc toàn thân nào sau đây không dùng để điều trị bệnh vảy nến:", answers: ['Methotrexat.', 'Prednisolon.', 'Ciclosporine A.', 'Acitretin.'], correct: "B", topic: "bai5" },
+{ id: 112, text: "Nồng độ Vaseline Salicyle dùng điều trị tại chỗ ở trẻ em là:", answers: ['0,5 - 1%', '1 - 3%', '5 - 10%', '10 - 15%'], correct: "A", topic: "bai5" },
+{ id: 113, text: "Chẩn đoán bệnh vảy nến thường dựa vào:", answers: ['Lâm sàng', 'Giải phẫu bệnh', 'Phương pháp cạo Brocq', 'Xét nghiệm axit uric'], correct: "A", topic: "bai5" },
+{ id: 114, text: "Độ tuổi thường gặp nhất của vẩy nến là:", answers: ['0–5 tuổi', '15–30 tuổi', '40–60 tuổi', 'Trên 70 tuổi'], correct: "B", topic: "bai5" },
+{ id: 115, text: "Tổn thương cơ bản của vẩy nến là:", answers: ['Dát hồng ban tróc vảy', 'Mụn mủ', 'Dát xuất huyết', 'Teo da'], correct: "A", topic: "bai5" },
+{ id: 116, text: "Vị trí thường gặp của sang thương vẩy nến:", answers: ['Lòng bàn tay, lòng bàn chân', 'Da đầu, khuỷu tay, gối, vùng xương cùng', 'Niêm mạc miệng', 'Lòng bàn chân và móng tay'], correct: "B", topic: "bai5" },
+{ id: 117, text: "Nguyên nhân chính gây bệnh vẩy nến là:", answers: ['Nhiễm khuẩn', 'Rối loạn nội tiết', 'Rối loạn miễn dịch', 'Thiếu vitamin'], correct: "C", topic: "bai5" },
+{ id: 118, text: "Vì sao bệnh nhân vẩy nến cần tránh stress?", answers: ['Stress làm giảm miễn dịch, bệnh dễ bùng phát', 'Stress làm thay đổi cấu trúc da', 'Stress gây ngứa dữ dội', 'Stress gây viêm loét da'], correct: "A", topic: "bai5" },
+{ id: 119, text: "Đặc điểm của tổn thương móng trong vẩy nến:", answers: ['Móng dày, có lỗ chỗ, có thể mất móng', 'Móng luôn có màu vàng', 'Móng gãy vụn nhanh chóng', 'Móng không thay đổi'], correct: "A", topic: "bai5" },
+{ id: 120, text: "Một bệnh nhân vẩy nến đang điều trị bằng corticoid bôi ngoài da, sau 4 tuần điều dưỡng cần:", answers: ['Ngưng corticoid ngay lập tức', 'Tiếp tục dùng kéo dài để duy trì', 'Giảm liều, thay thế bằng thuốc khác để tránh tác dụng phụ', 'Tăng liều gấp đôi'], correct: "C", topic: "bai5" },
+{ id: 121, text: "Khi bệnh nhân vẩy nến có ngứa nhiều, điều dưỡng nên hướng dẫn:", answers: ['Gãi mạnh để giảm ngứa', 'Giữ da sạch, dưỡng ẩm và tránh cọ xát', 'Tắm bằng xà phòng kiềm mạnh', 'Phơi nắng nhiều giờ'], correct: "B", topic: "bai5" },
+{ id: 122, text: "Một bệnh nhân vẩy nến mảng, điều dưỡng có thể khuyến cáo:", answers: ['Dùng hắc ín 2–5% tại chỗ', 'Uống thuốc Đông y', 'Không cần bôi thuốc gì', 'Tránh mọi hình thức quang trị liệu'], correct: "A", topic: "bai5" },
+{ id: 123, text: "Một bệnh nhân có sang thương đỏ tươi, giới hạn rõ, đối xứng ở khuỷu tay và gối, Brocq (+). Đây là:", answers: ['Vẩy nến', 'Chàm thể tạng', 'Viêm da tiết bã', 'Nấm da'], correct: "A", topic: "bai5" },
+{ id: 124, text: "So sánh PUVA và UVB trị liệu trong điều trị vẩy nến:", answers: ['Cả hai đều không tác động lên DNA', 'PUVA cần dùng psoralen trước chiếu UVA, UVB thì không', 'UVB luôn kèm thuốc uống, PUVA thì không', 'PUVA ít tác dụng phụ hơn UVB'], correct: "B", topic: "bai5" },
+{ id: 125, text: "Một bệnh nhân điều trị Methotrexate lâu dài, cần theo dõi gì đặc biệt?", answers: ['Chức năng gan, máu, phổi', 'Chức năng tiêu hóa', 'Nội tiết tố sinh dục', 'Thị lực'], correct: "A", topic: "bai5" },
+
+///bài 6
+
+{ id: 126, text: "Tác nhân chính gây bệnh lao ở người là:", answers: ['Mycobacterium leprae', 'Mycobacterium tuberculosis', 'Mycobacterium bovis', 'Mycobacterium avium'], correct: "B", topic: "bai6" },
+{ id: 127, text: "Người đầu tiên phân lập vi trùng lao là:", answers: ['Louis Pasteur', 'Robert Koch', 'Fleming', 'Jenner'], correct: "B", topic: "bai6" },
+{ id: 128, text: "Đặc điểm vi khuẩn lao khi nhuộm Ziehl-Neelsen:", answers: ['Bắt màu xanh', 'Mất màu khi rửa bằng cồn toan', 'Giữ màu đỏ fuchsin, kháng cồn toan', 'Không bắt màu'], correct: "C", topic: "bai6" },
+{ id: 129, text: "Lao có khả năng lây từ người sang người chỉ khi:", answers: ['Lao hạch', 'Lao phổi', 'Lao xương', 'Lao màng não'], correct: "B", topic: "bai6" },
+{ id: 130, text: "Vì sao phổi là nơi vi trùng lao phát triển thuận lợi?", answers: ['Giàu oxy, nhiệt độ 37°C, môi trường tối', 'Thiếu máu nuôi', 'Nhiệt độ thấp', 'Ít lưu thông khí'], correct: "A", topic: "bai6" },
+{ id: 131, text: "Tại sao xét nghiệm nhuộm trực tiếp AFB có thể âm tính ở lao ngoài phổi?", answers: ['Vì vi khuẩn lao không có ở ngoài phổi', 'Vì số lượng vi trùng ở vị trí này thường ít', 'Vì kỹ thuật viên không quen làm', 'Vì bệnh phẩm luôn bị nhiễm tạp'], correct: "B", topic: "bai6" },
+{ id: 132, text: "Miễn dịch nào đóng vai trò quan trọng nhất trong bệnh lao?", answers: ['Miễn dịch dịch thể', 'Miễn dịch tế bào', 'Miễn dịch bẩm sinh', 'Miễn dịch thụ động'], correct: "B", topic: "bai6" },
+{ id: 133, text: "Yếu tố nguy cơ quan trọng nhất làm nhiễm lao tiến triển thành bệnh lao là:", answers: ['Tiểu đường', 'Nhiễm HIV', 'Suy dinh dưỡng', 'Dùng corticoid kéo dài'], correct: "B", topic: "bai6" },
+{ id: 134, text: "Trong phản ứng Mantoux (IDR), đường kính bao nhiêu được coi là dương tính ở người bình thường?", answers: ['≥ 3 mm', '≥ 5 mm', '≥ 10 mm', '≥ 15 mm'], correct: "C", topic: "bai6" },
+{ id: 135, text: "Một bệnh nhân ho khạc đàm trên 3 tuần, sụt cân, nghi ngờ lao phổi. Xét nghiệm đầu tiên cần làm là:", answers: ['CT Scan', 'Soi đàm tìm AFB', 'Sinh thiết phổi', 'Công thức máu'], correct: "B", topic: "bai6" },
+{ id: 136, text: "Nếu soi đàm AFB (-) nhưng hình ảnh X-quang nghi lao, cần làm thêm:", answers: ['Lặp lại xét nghiệm đàm 3 lần', 'Không cần xét nghiệm thêm', 'Chỉ định phẫu thuật', 'Dùng kháng sinh phổ rộng'], correct: "A", topic: "bai6" },
+{ id: 137, text: "Một trẻ sơ sinh cần phòng bệnh lao, biện pháp quan trọng nhất là:", answers: ['Uống kháng sinh dự phòng', 'Tiêm chủng BCG', 'Dùng vitamin', 'Đeo khẩu trang'], correct: "B", topic: "bai6" },
+{ id: 138, text: "Khi điều trị lao theo nguyên tắc DOTS, tại sao cần phối hợp nhiều thuốc?", answers: ['Để giảm giá thành', 'Để hạn chế tác dụng phụ', 'Để tránh kháng thuốc và tăng hiệu quả diệt khuẩn', 'Để rút ngắn thời gian dùng thuốc'], correct: "C", topic: "bai6" },
+{ id: 139, text: "Một bệnh nhân lao phổi đang điều trị giai đoạn tấn công, mục tiêu chính là:", answers: ['Ngăn tái phát', 'Giảm nhanh số lượng vi trùng lao', 'Cải thiện miễn dịch', 'Giảm tác dụng phụ của thuốc'], correct: "B", topic: "bai6" },
+{ id: 140, text: "Phân biệt lao nguyên phát và lao tái hoạt:", answers: ['Lao nguyên phát hay gặp ở người già, lao tái hoạt ở trẻ em', 'Lao nguyên phát xuất hiện lần đầu, lao tái hoạt do vi trùng ngủ tái phát', 'Lao nguyên phát luôn có hang lao, lao tái hoạt không bao giờ có hang', 'Cả hai giống nhau'], correct: "B", topic: "bai6" },
+{ id: 141, text: "Một bệnh nhân nhiễm HIV ho kéo dài, gầy sút, X-quang phổi tổn thương lan tỏa. Nguy cơ tiến triển lao cao do:", answers: ['Suy miễn dịch tế bào', 'Suy miễn dịch dịch thể', 'Nhiễm khuẩn cơ hội', 'Do thuốc kháng virus'], correct: "A", topic: "bai6" },
+{ id: 142, text: "Một bệnh nhân lao phổi AFB (+) không điều trị, sau 2 năm có thể lây cho:", answers: ['1–2 người', '5 người', '10 người', '> 20 người'], correct: "C", topic: "bai6" },
+
+///bài 7
+{ id: 143, text: "Triệu chứng cơ năng nghi ngờ lao phổi là, NGOẠI TRỪ:", answers: ['Ho khạc đờm kéo dài', 'Sốt về chiều và tối', 'Đau ngực, khó thở', 'Phổi nghe ran ẩm'], correct: "D", topic: "bai7" },
+{ id: 144, text: "Biến chứng của lao phổi là, NGOẠI TRỪ:", answers: ['Tràn khí màng phổi', 'Tràn dịch màng phổi', 'Lao ngoài phổi', 'Viêm phế quản'], correct: "D", topic: "bai7" },
+{ id: 145, text: "Chẩn đoán lao phổi không dựa vào:", answers: ['Lâm sàng', 'X quang phổi', 'BK đàm', 'Nội soi'], correct: "D", topic: "bai7" },
+{ id: 146, text: "Chẩn đoán xác định lao phổi dựa vào:", answers: ['Lâm sàng', 'BK đàm', 'X quang phổi', 'Công thức máu'], correct: "B", topic: "bai7" },
+{ id: 147, text: "Đánh giá suy hô hấp dựa vào, NGOẠI TRỪ:", answers: ['Nhịp thở', 'Tím tái đầu chi', 'Nhịp tim', 'Chức năng hô hấp'], correct: "C", topic: "bai7" },
+{ id: 148, text: "Phòng bệnh lao phổi chủ yếu ở trẻ em bằng:", answers: ['Phát hiện sớm các thể lao phổi.', 'Phát hiện và điều trị dứt điểm nguồn lây chính.', 'Tiêm chủng vaccin BCG.', 'Cách ly trẻ với nguồn lây chính.'], correct: "C", topic: "bai7" },
+{ id: 149, text: "Trong ho ra máu, yếu tố làm tăng đột ngột áp lực trong phổi là:", answers: ['Ho', 'Tổn thương xơ của phổi.', 'Thay đổi độ ẩm.', 'Viêm nhiễm.'], correct: "A", topic: "bai7" },
+{ id: 150, text: "Đặc điểm của máu ho ra trong ho ra máu là:", answers: ['Máu bầm.', 'Máu tươi.', 'Máu bầm lẫn bọt.', 'Máu tươi lẫn bọt.'], correct: "D", topic: "bai7" },
+{ id: 151, text: "Ho ra máu dẫn đến các hậu quả sau, ngoại trừ:", answers: ['Tử vong.', 'Trụy tim mạch.', 'Lao lan tràn theo đường máu.', 'Thiếu máu.'], correct: "C", topic: "bai7" },
+{ id: 152, text: "Khi bệnh nhân đang ho ra máu, nhân viên tuyến y tế cơ sở cần phải:", answers: ['Chuyển bệnh nhân đi ngay lên tuyến trên.', 'Giữ lại để cấp cứu.', 'Sơ cứu rồi chuyển lên tuyến trên.', 'Sử dụng kháng sinh trước khi chuyển.'], correct: "C", topic: "bai7" },
+{ id: 153, text: "Đặc điểm của bệnh lao:", answers: ['Lây qua đường tiêu hóa', 'Là bệnh nhiễm khuẩn do Mycobacterium tuberculosis', 'Tất cả các thể lao đều lây', 'AFB (-) là nguồn lây chủ yếu'], correct: "B", topic: "bai7" },
+{ id: 154, text: "Yếu tố nguy cơ để nhiễm lao trở thành bệnh lao, NGOẠI TRỪ:", answers: ['Điều trị kháng sinh', 'Corticoid kéo dài', 'Nhiễm HIV', 'Thuốc ức chế miễn dịch'], correct: "A", topic: "bai7" },
+{ id: 155, text: "Bệnh lao thường xuất hiện ở cơ quan nhiều nhất:", answers: ['Não', 'Phổi', 'Màng phổi', 'Màng não'], correct: "B", topic: "bai7" },
+{ id: 156, text: "Tỷ lệ lao phổi trong các thể lao:", answers: ['20–25%', '40–50%', '80–85%', '90–95%'], correct: "C", topic: "bai7" },
+{ id: 157, text: "Nguồn lây chủ yếu trong cộng đồng là:", answers: ['Lao ngoài phổi', 'Lao phổi AFB (+)', 'Người lành mang vi khuẩn', 'Lao tiềm ẩn'], correct: "B", topic: "bai7" },
+{ id: 158, text: "Vì sao lao phổi AFB (+) dễ lây:", answers: ['Do vi khuẩn phát tán khi ho, hắt hơi', 'Do sống lâu trong không khí', 'Do sốt cao', 'Do kháng thuốc'], correct: "A", topic: "bai7" },
+{ id: 159, text: "90% người nhiễm lao không triệu chứng vì:", answers: ['Vi khuẩn chết nhanh', 'Miễn dịch khống chế được vi khuẩn', 'Không có độc lực', 'Không vào phổi'], correct: "B", topic: "bai7" },
+{ id: 160, text: "Vì sao người HIV dễ mắc lao:", answers: ['Suy giảm miễn dịch tế bào', 'Tăng chuyển hóa thuốc', 'Giảm kháng thể', 'Viêm hô hấp mạn'], correct: "A", topic: "bai7" },
+{ id: 161, text: "Triệu chứng toàn thân thường gặp:", answers: ['Sốt cao rét run', 'Sốt nhẹ chiều, mồ hôi đêm, sụt cân', 'Đau bụng tiêu chảy', 'Nôn'], correct: "B", topic: "bai7" },
+{ id: 162, text: "Hình ảnh Xquang đặc trưng:", answers: ['Vết loét rộng', 'Hang lao đỉnh phổi, nốt mờ', 'Vôi hóa toàn phổi', 'Viêm phế quản'], correct: "B", topic: "bai7" },
+{ id: 163, text: "Ho >2 tuần, sốt chiều, cần làm:", answers: ['Soi đàm AFB', 'CT', 'Sinh thiết', 'Nội soi'], correct: "A", topic: "bai7" },
+{ id: 164, text: "Giai đoạn tấn công nhằm:", answers: ['Ngăn tái phát', 'Giảm nhanh vi khuẩn', 'Giảm tác dụng phụ', 'Phục hồi miễn dịch'], correct: "B", topic: "bai7" },
+{ id: 165, text: "2 tháng đầu điều trị cần:", answers: ['Cách ly hoàn toàn', 'Đeo khẩu trang, không khạc bừa bãi', 'Uống khi có triệu chứng', 'Không dùng thuốc'], correct: "B", topic: "bai7" },
+{ id: 166, text: "Ho ra máu ít, điều dưỡng cần:", answers: ['Cho nghỉ, theo dõi', 'Gắng sức', 'Ăn nhiều', 'Uống nhiều nước'], correct: "A", topic: "bai7" },
+{ id: 167, text: "Phân biệt AFB (+) và (-):", answers: ['(+) lây mạnh hơn', '(-) nặng hơn', '(-) chỉ HIV', '(+) chỉ HIV'], correct: "A", topic: "bai7" },
+{ id: 168, text: "Yếu tố nguy cơ:", answers: ['Suy dinh dưỡng', 'Đái tháo đường', 'Corticoid', 'HIV'], correct: "B", topic: "bai7" },
+{ id: 169, text: "Soi đàm và nuôi cấy:", answers: ['Soi nhanh, rẻ; nuôi cấy nhạy hơn', 'Nuôi cấy nhanh hơn', 'Soi chính xác hơn', 'Giống nhau'], correct: "A", topic: "bai7" },
+{ id: 170, text: "HIV + 1 mẫu AFB (+):", answers: ['Không đủ', 'Có thể chẩn đoán', 'Phải nuôi cấy', 'Không chắc'], correct: "B", topic: "bai7" },
+{ id: 171, text: "Giáo dục quan trọng nhất:", answers: ['Uống nhiều nước', 'Uống thuốc đúng đủ', 'Thuốc Nam', 'Nghỉ không thuốc'], correct: "B", topic: "bai7" },
+{ id: 172, text: "Phòng lao hiệu quả:", answers: ['BCG + cách ly', 'Cách ly + điều trị', 'BCG + điều trị nguồn lây', 'Điều trị + dự phòng'], correct: "C", topic: "bai7" },
+{ id: 173, text: "Nguồn lây nguy hiểm nhất:", answers: ['AFB (+)', 'Ho ra máu', 'Bắt đầu điều trị', 'Sau 1-2 tuần'], correct: "A", topic: "bai7" },
+{ id: 174, text: "Phát hiện thụ động:", answers: ['Người tiếp xúc', 'Người đến khám', 'Người có triệu chứng nghi lao', 'Xquang bất thường'], correct: "C", topic: "bai7" },
+{ id: 175, text: "Không phải biện pháp phòng lao:", answers: ['Cách ly', 'BCG', 'Phát hiện nguồn lây', 'Phát hiện HIV'], correct: "D", topic: "bai7" },
+{ id: 176, text: "Giảm lây truyền:", answers: ['Điều trị nhiễm trùng', 'Khám định kỳ', 'Khạc nhổ đúng nơi', 'Nâng cao đời sống'], correct: "C", topic: "bai7" },
+{ id: 177, text: "Đối tượng tiêm BCG:", answers: ['Tất cả', 'Tuberculin (-)', 'Trẻ sơ sinh, <1 tuổi', '<5 tuổi'], correct: "C", topic: "bai7" },
+{ id: 178, text: "Đường tiêm BCG:", answers: ['Uống', 'Trong da', 'Bôi', 'Truyền'], correct: "B", topic: "bai7" },
+{ id: 179, text: "Đường lây chính:", answers: ['Máu', 'Hô hấp', 'Tiêu hóa', 'Da-niêm'], correct: "B", topic: "bai7" },
+{ id: 180, text: "Nguồn lây chính:", answers: ['Lao xương', 'Lao phổi AFB (+)', 'Lao màng não', 'Tiềm ẩn'], correct: "B", topic: "bai7" },
+{ id: 181, text: "2 năm lây:", answers: ['2–3', '5–10', '~20', '>50'], correct: "C", topic: "bai7" },
+{ id: 182, text: "Vắc-xin phòng lao:", answers: ['DPT', 'BCG', 'OPV', 'HepB'], correct: "B", topic: "bai7" },
+{ id: 183, text: "Vì sao AFB (+) là nguồn lây:", answers: ['Nhiều vi khuẩn, dễ phát tán', 'Chỉ tồn tại ngoài không khí', 'Ho khan', 'Kháng thuốc'], correct: "A", topic: "bai7" },
+{ id: 184, text: "Trẻ <5 tuổi nguy cơ cao:", answers: ['Đề kháng kém', 'Ít tiếp xúc', 'Không tiêm BCG', 'Di truyền'], correct: "A", topic: "bai7" },
+{ id: 185, text: "Phòng khám cần thông khí:", answers: ['Giảm hạt khí dung chứa vi khuẩn', 'Thoải mái', 'Giảm mùi', 'Tránh ẩm'], correct: "A", topic: "bai7" },
+{ id: 186, text: "Trẻ sơ sinh phòng lao:", answers: ['Tiêm BCG', 'Uống INH', 'Khẩu trang', 'Vitamin'], correct: "A", topic: "bai7" },
+{ id: 187, text: "Ho >2 tuần tại phòng khám:", answers: ['Kháng sinh', 'Đeo khẩu trang + xét nghiệm đàm', 'Về theo dõi', 'Chụp Xquang'], correct: "B", topic: "bai7" },
+{ id: 188, text: "Sau bao lâu giảm lây:", answers: ['1–2 ngày', '2–3 tuần', '2–3 tháng', '6 tháng'], correct: "B", topic: "bai7" },
+{ id: 189, text: "Gia đình có AFB (+):", answers: ['Tiêm lại BCG', 'Trẻ <5 tuổi dùng INH dự phòng', 'Kháng sinh', 'Khử khuẩn'], correct: "B", topic: "bai7" },
+{ id: 190, text: "Nhân viên y tế:", answers: ['Khẩu trang N95', 'Găng tay', 'Không cần', 'Tiêm lại BCG'], correct: "A", topic: "bai7" },
+{ id: 191, text: "Trẻ 2 tuổi Mantoux (+):", answers: ['INH dự phòng 6 tháng', 'Kháng sinh', 'Tiêm BCG', 'Theo dõi'], correct: "A", topic: "bai7" },
+{ id: 192, text: "So sánh BCG và INH:", answers: ['BCG cho người lớn', 'INH cho người nhiễm nguy cơ cao', 'Dùng cho tất cả', 'BCG thay INH'], correct: "B", topic: "bai7" },
+
+///bài 8
+{ id: 193, text: "Ho ra máu trong lao phổi là tình trạng:", answers: ['Khạc ra đờm có mủ', 'Ho ra máu từ đường hô hấp', 'Nôn ra máu từ dạ dày', 'Chảy máu mũi'], correct: "B", topic: "bai8" },
+{ id: 194, text: "Nguyên nhân thường gặp gây ho ra máu ở bệnh nhân lao là:", answers: ['Tổn thương mạch máu phổi', 'Viêm dạ dày', 'Thiếu máu', 'Tăng huyết áp'], correct: "A", topic: "bai8" },
+{ id: 195, text: "Ho ra máu được phân loại dựa vào:", answers: ['Màu máu', 'Lượng máu', 'Mùi máu', 'Nhiệt độ'], correct: "B", topic: "bai8" },
+{ id: 196, text: "Tư thế thích hợp cho bệnh nhân ho ra máu là:", answers: ['Nằm ngửa', 'Nằm nghiêng về bên phổi tổn thương', 'Nằm sấp', 'Nằm nghiêng về phổi bên lành'], correct: "B", topic: "bai8" },
+{ id: 197, text: "Mục tiêu chăm sóc quan trọng ở bệnh nhân ho ra máu là:", answers: ['Cầm máu', 'Tăng cân', 'Giảm huyết áp', 'Tăng nhịp tim'], correct: "A", topic: "bai8" },
+{ id: 198, text: "Thuốc điều trị lao cần dùng trong thời gian:", answers: ['1–2 tuần', '1 tháng', 'Ít nhất 6 tháng', '1 năm'], correct: "C", topic: "bai8" },
+{ id: 199, text: "Khi bệnh nhân ho ra máu cần:", answers: ['Nghỉ ngơi tuyệt đối', 'Ăn uống ngay', 'Lao động nhẹ', 'Tắm nước ấm'], correct: "A", topic: "bai8" },
+{ id: 200, text: "Xét nghiệm thường dùng chẩn đoán lao phổi là:", answers: ['Xét nghiệm đờm tìm AFB', 'Xét nghiệm máu', 'Xét nghiệm nước tiểu', 'Xét nghiệm phân'], correct: "A", topic: "bai8" },
+{ id: 201, text: "Vì sao cần đặt bệnh nhân nằm nghiêng về bên phổi tổn thương?", answers: ['Tránh máu tràn sang phổi lành', 'Giảm đau', 'Giảm sốt', 'Tăng tuần hoàn'], correct: "A", topic: "bai8" },
+{ id: 202, text: "Mục đích đeo khẩu trang cho bệnh nhân lao là:", answers: ['Giảm lây nhiễm', 'Giảm đau', 'Giảm sốt', 'Giảm ho'], correct: "A", topic: "bai8" },
+{ id: 203, text: "Bệnh nhân lao ho ra máu nhiều, điều dưỡng cần ưu tiên:", answers: ['Cho bệnh nhân ăn', 'Cho bệnh nhân nằm nghỉ', 'Cho bệnh nhân vận động', 'Cho bệnh nhân tắm'], correct: "B", topic: "bai8" },
+{ id: 204, text: "Khi bệnh nhân đang ho ra máu, điều dưỡng nên:", answers: ['Cho bệnh nhân nói chuyện', 'Động viên bệnh nhân ho mạnh', 'Cho bệnh nhân nằm yên và trấn an', 'Cho uống nước ấm'], correct: "C", topic: "bai8" },
+{ id: 205, text: "Bệnh nhân ho ra máu kèm khó thở, điều dưỡng cần:", answers: ['Theo dõi SpO₂ và báo bác sĩ', 'Cho bệnh nhân nghỉ ngơi', 'Cho bệnh nhân ho mạnh', 'Cho bệnh nhân uống nước'], correct: "A", topic: "bai8" },
+
+///bài 9
+{ id: 206, text: "Tràn khí màng phổi là tình trạng:", answers: ['Có dịch trong khoang màng phổi', 'Có khí trong khoang màng phổi', 'Có máu trong khoang màng phổi', 'Có mủ trong khoang màng phổi'], correct: "B", topic: "bai9" },
+{ id: 207, text: "Nguyên nhân thường gặp gây tràn khí màng phổi tự phát là:", answers: ['Lao phổi', 'Vỡ bóng khí phổi', 'Ung thư phổi', 'Viêm phổi'], correct: "B", topic: "bai9" },
+{ id: 208, text: "Phương pháp chẩn đoán tràn khí màng phổi thường dùng là:", answers: ['Siêu âm bụng', 'X-quang phổi', 'Điện tim', 'Nội soi'], correct: "B", topic: "bai9" },
+{ id: 209, text: "Mục tiêu chăm sóc quan trọng nhất của bệnh nhân tràn khí màng phổi là:", answers: ['Giảm khó thở', 'Tăng cân', 'Giảm huyết áp', 'Tăng nhịp tim'], correct: "A", topic: "bai9" },
+{ id: 210, text: "Tư thế thích hợp cho bệnh nhân tràn khí màng phổi là:", answers: ['Nằm đầu thấp', 'Nằm đầu cao hoặc nửa ngồi', 'Nằm sấp', 'Nằm nghiêng hoàn toàn'], correct: "B", topic: "bai9" },
+{ id: 211, text: "Phương pháp điều trị phổ biến tràn khí màng phổi nặng là:", answers: ['Dẫn lưu màng phổi', 'Truyền dịch', 'Truyền máu', 'Nội soi dạ dày'], correct: "A", topic: "bai9" },
+{ id: 212, text: "Dẫn lưu màng phổi nhằm mục đích:", answers: ['Lấy khí ra khỏi khoang màng phổi', 'Tăng nhịp tim', 'Tăng huyết áp', 'Giảm cân'], correct: "A", topic: "bai9" },
+{ id: 213, text: "Vị trí đặt ống dẫn lưu màng phổi thường là:", answers: ['Khoang liên sườn II', 'Khoang liên sườn V', 'Khoang liên sườn VII', 'Khoang liên sườn IX'], correct: "B", topic: "bai9" },
+{ id: 214, text: "Biến chứng nguy hiểm của tràn khí màng phổi là:", answers: ['Tràn khí áp lực', 'Viêm phổi', 'Sốt', 'Đau đầu'], correct: "A", topic: "bai9" },
+{ id: 215, text: "Theo dõi quan trọng nhất ở bệnh nhân tràn khí màng phổi là:", answers: ['Hô hấp', 'Tiêu hóa', 'Thần kinh', 'Da'], correct: "A", topic: "bai9" },
+{ id: 216, text: "Ống dẫn lưu màng phổi được nối với:", answers: ['Hệ thống bình dẫn lưu', 'Bình oxy', 'Máy truyền dịch', 'Máy hút đờm'], correct: "A", topic: "bai9" },
+{ id: 217, text: "Vì sao không được kẹp ống dẫn lưu tùy tiện?", answers: ['Gây tràn khí áp lực', 'Gây đau', 'Gây sốt', 'Gây ho'], correct: "A", topic: "bai9" },
+{ id: 218, text: "Vì sao cần giữ vệ sinh vị trí đặt ống dẫn lưu?", answers: ['Phòng nhiễm trùng', 'Giảm đau', 'Tăng tuần hoàn', 'Giảm sốt'], correct: "A", topic: "bai9" },
+{ id: 219, text: "Bệnh nhân tràn khí màng phổi khó thở nhiều, điều dưỡng cần ưu tiên:", answers: ['Cho bệnh nhân ăn', 'Cho bệnh nhân nằm đầu cao và thở oxy', 'Cho bệnh nhân đi lại', 'Cho bệnh nhân nghỉ ngơi'], correct: "B", topic: "bai9" },
+{ id: 220, text: "Khi ống dẫn lưu bị gập, điều dưỡng cần:", answers: ['Cho bệnh nhân đi lại', 'Điều chỉnh lại ống', 'Rút ống', 'Cho bệnh nhân nghỉ ngơi'], correct: "B", topic: "bai9" },
+{ id: 221, text: "Khi bình dẫn lưu bị đổ, điều dưỡng cần:", answers: ['Thay hệ thống dẫn lưu mới', 'Rút ống', 'Cho bệnh nhân nghỉ ngơi', 'Cho bệnh nhân uống nước'], correct: "A", topic: "bai9" },
+{ id: 222, text: "Bệnh nhân có ống dẫn lưu muốn đi lại, điều dưỡng cần:", answers: ['Mang theo bình dẫn lưu thấp hơn lồng ngực', 'Kẹp ống', 'Rút ống', 'Không cho đi lại'], correct: "A", topic: "bai9" },
+{ id: 223, text: "Triệu chứng điển hình của tràn khí màng phổi là:", answers: ['Đau bụng', 'Đau ngực đột ngột, khó thở', 'Phù chân', 'Ho ra máu nhiều'], correct: "B", topic: "bai9" },
+{ id: 224, text: "Mục tiêu chăm sóc ưu tiên hàng đầu tràn khí màng phổi là:", answers: ['Tăng vận động', 'Đảm bảo thông khí và cải thiện hô hấp', 'Giảm cân', 'Hạ sốt'], correct: "B", topic: "bai9" },
+{ id: 225, text: "Tư thế phù hợp cho người bệnh khó thở do tràn khí màng phổi là:", answers: ['Nằm đầu thấp', 'Nằm ngửa hoàn toàn', 'Fowler hoặc nửa Fowler', 'Nằm sấp'], correct: "C", topic: "bai9" },
+{ id: 226, text: "Phương pháp điều trị phổ biến khi tràn khí nhiều là:", answers: ['Uống kháng sinh', 'Chọc hút hoặc dẫn lưu màng phổi', 'Truyền dịch', 'Xoa bóp ngực'], correct: "B", topic: "bai9" },
+{ id: 227, text: "Khi chăm sóc người bệnh có dẫn lưu màng phổi, điều dưỡng cần:", answers: ['Kẹp ống thường xuyên', 'Giữ hệ thống kín và thấp hơn lồng ngực', 'Đặt chai dẫn lưu ngang ngực', 'Tháo ống khi thấy ít khí'], correct: "B", topic: "bai9" },
+{ id: 228, text: "Biến chứng nguy hiểm của tràn khí màng phổi áp lực là:", answers: ['Táo bón', 'Tụt huyết áp', 'Đau đầu', 'Phù chân'], correct: "B", topic: "bai9" },
+{ id: 229, text: "Dấu hiệu nghi ngờ tràn khí màng phổi áp lực gồm:", answers: ['Huyết áp tăng', 'Khó thở tăng nhanh', 'Ho ít', 'Mạch chậm'], correct: "B", topic: "bai9" },
+{ id: 230, text: "Nếu ống dẫn lưu bị tuột, điều dưỡng cần:", answers: ['Để nguyên', 'Bịt kín lỗ mở bằng gạc vô khuẩn và báo bác sĩ', 'Đưa ống vào lại', 'Cho người bệnh ngồi dậy'], correct: "B", topic: "bai9" },
+{ id: 231, text: "Theo dõi dấu hiệu sinh tồn ở người bệnh tràn khí màng phổi nhằm:", answers: ['Phát hiện sớm suy hô hấp, sốc', 'Đo chiều cao', 'Kiểm tra thị lực', 'Đánh giá tiêu hóa'], correct: "A", topic: "bai9" },
+{ id: 232, text: "Dấu hiệu cho thấy ống dẫn lưu tràn khí màng phổi có thể bị tắc là:", answers: ['Không dao động mực nước', 'Huyết áp tăng', 'Rối loạn giấc ngủ', 'Mực nước dao động nhiều'], correct: "A", topic: "bai9" },
+{ id: 233, text: "Biến chứng nhiễm trùng tại vị trí đặt ống dẫn lưu tràn khí màng phổi có biểu hiện:", answers: ['Da khô', 'Sưng, nóng, đỏ, đau', 'Da nhợt', 'Môi khô'], correct: "B", topic: "bai9" },
+
+///bài 10
+
+{ id: 234, text: "Bình thường áp lực nội sọ (ICP) ở người lớn dao động trong khoảng:", answers: ['0–5 mmHg', '5–10 mmHg', '10–20 mmHg', '20–30 mmHg'], correct: "C", topic: "bai10" },
+{ id: 235, text: "ICP được hình thành bởi sự cân bằng của 3 thành phần chính:", answers: ['Máu – dịch não tủy – xương sọ', 'Mô não – máu – dịch não tủy', 'Mô não – máu – huyết tương', 'Mô não – xương sọ – dịch ngoại bào'], correct: "B", topic: "bai10" },
+{ id: 236, text: "Tăng ICP được định nghĩa khi áp lực nội sọ:", answers: ['> 10 mmHg', '> 15 mmHg', '> 20 mmHg', '> 25 mmHg'], correct: "C", topic: "bai10" },
+{ id: 237, text: "Tam chứng Cushing gồm:", answers: ['Huyết áp tăng, mạch nhanh, nhịp thở nhanh', 'Huyết áp tăng, nhịp tim chậm, nhịp thở chậm', 'Huyết áp thấp, mạch nhanh, thở chậm', 'Huyết áp thấp, nhịp tim nhanh, thở nhanh'], correct: "B", topic: "bai10" },
+{ id: 238, text: "Biến chứng nội tiết thường gặp khi tăng ICP là:", answers: ['Cường giáp', 'Đái tháo nhạt và SIADH', 'Cushing', 'Addison'], correct: "B", topic: "bai10" },
+{ id: 239, text: "Cơ chế bù trừ khi ICP tăng bao gồm:", answers: ['Giảm tuần hoàn não, giảm lưu thông dịch não tủy', 'Tăng hấp thu dịch não tủy, giảm lưu lượng máu não', 'Tăng sản xuất dịch não tủy, giãn mạch não', 'Tăng chuyển hóa oxy não'], correct: "B", topic: "bai10" },
+{ id: 240, text: "Tại sao PaCO₂ tăng có thể làm ICP tăng?", answers: ['Vì gây co mạch não', 'Vì gây giãn mạch não, tăng lưu lượng tuần hoàn não', 'Vì làm giảm huyết áp', 'Vì làm tăng hấp thu dịch não tủy'], correct: "B", topic: "bai10" },
+{ id: 241, text: "Khoảng CPP bình thường giúp duy trì tưới máu não hiệu quả là:", answers: ['20–40 mmHg', '40–60 mmHg', '70–100 mmHg', '> 120 mmHg'], correct: "C", topic: "bai10" },
+{ id: 242, text: "Bệnh nhân tăng ICP có cơn co giật, điều dưỡng cần chuẩn bị thuốc:", answers: ['Phenytoin', 'Insulin', 'Atropin', 'Dopamin'], correct: "A", topic: "bai10" },
+{ id: 243, text: "Khi hút đàm cho bệnh nhân tăng ICP, điều dưỡng cần lưu ý:", answers: ['Hút kéo dài để lấy sạch đàm', 'Không cần tăng thông khí trước và sau hút', 'Luôn tăng thông khí trước và sau hút', 'Hút càng nhiều lần càng tốt'], correct: "C", topic: "bai10" },
+{ id: 244, text: "Biện pháp tư thế giúp cải thiện tưới máu não trong tăng ICP là:", answers: ['Nằm ngửa, đầu thấp', 'Nằm sấp, đầu thấp', 'Nâng cao đầu giường 30°', 'Ngồi dậy hoàn toàn'], correct: "C", topic: "bai10" },
+{ id: 245, text: "Thuốc thường dùng để giảm phù não trong tăng ICP là:", answers: ['Furosemide', 'Manitol', 'Dopamin', 'Dobutamin'], correct: "B", topic: "bai10" },
+{ id: 246, text: "Một bệnh nhân tăng ICP có dấu hiệu lú lẫn, ngủ gà, đồng tử giãn, cần xử trí ưu tiên:", answers: ['Cho uống thuốc an thần', 'Đặt nội khí quản, thở máy, theo dõi ICP', 'Cho bệnh nhân tự nghỉ ngơi', 'Truyền nhiều dịch nhanh'], correct: "B", topic: "bai10" },
+{ id: 247, text: "Phân biệt dấu hiệu sớm và muộn của tăng ICP:", answers: ['Sớm: lú lẫn, thay đổi đồng tử; Muộn: mất phản xạ, hôn mê sâu', 'Sớm: hôn mê; Muộn: lú lẫn', 'Sớm: mất phản xạ giác mạc; Muộn: đau đầu nhẹ', 'Cả hai giống nhau'], correct: "A", topic: "bai10" },
+{ id: 248, text: "Một bệnh nhân tăng ICP có huyết áp tăng, mạch chậm, thở không đều. Đây là biểu hiện:", answers: ['Hội chứng tăng tiết ADH', 'Tam chứng Cushing', 'Rối loạn điện giải nhẹ', 'Tăng oxy máu'], correct: "B", topic: "bai10" },
+{ id: 249, text: "So sánh tác dụng của manitol và corticosteroid trong điều trị tăng ICP:", answers: ['Manitol: lợi tiểu thẩm thấu, giảm phù não; Corticoid: giảm viêm, giảm phù não', 'Manitol và corticoid đều tăng ICP', 'Corticoid làm giảm tưới máu não, manitol không', 'Cả hai giống nhau'], correct: "A", topic: "bai10" },
+{ id: 250, text: "Một bệnh nhân tăng ICP có nước tiểu 200 ml/h liên tục, nghĩ nhiều đến:", answers: ['SIADH', 'Đái tháo nhạt do tổn thương tuyến yên', 'Suy thận cấp', 'Suy tim'], correct: "B", topic: "bai10" },
+
+///bài 11
+{ id: 251, text: "Nguyên nhân phổ biến nhất gây liệt nửa người là:", answers: ['Tai biến mạch máu não', 'Lao phổi', 'Viêm gan', 'Loãng xương'], correct: "A", topic: "bai11" },
+{ id: 252, text: "Triệu chứng nào thường gặp ở bệnh nhân liệt nửa người?", answers: ['Đau đầu, tê tay chân', 'Ho ra máu', 'Vàng da', 'Đau bụng'], correct: "A", topic: "bai11" },
+{ id: 253, text: "Người bệnh liệt nửa người thường gặp khó khăn nhiều nhất trong:", answers: ['Đi lại, thay đổi tư thế, sinh hoạt cá nhân', 'Ăn uống quá nhiều', 'Nghe kém', 'Suy giảm thị lực 2 mắt hoàn toàn'], correct: "A", topic: "bai11" },
+{ id: 254, text: "Chế độ dinh dưỡng cho người bệnh liệt nửa người cần:", answers: ['Ăn nhiều tinh bột', 'Ăn mềm, dễ tiêu', 'Kiêng hoàn toàn đạm', 'Không cần kiêng cữ gì'], correct: "B", topic: "bai11" },
+{ id: 255, text: "Tư thế người bệnh cần thay đổi để phòng loét da với tần suất:", answers: ['6 giờ/lần', '4–5 giờ/lần', '2–3 giờ/lần', '1 giờ/lần'], correct: "C", topic: "bai11" },
+{ id: 256, text: "Vì sao bệnh nhân liệt nửa người dễ bị loét tỳ đè?", answers: ['Do nằm lâu một tư thế', 'Do ăn uống kém', 'Do sốt cao', 'Do ít uống nước'], correct: "A", topic: "bai11" },
+{ id: 257, text: "Vì sao cần xoa bóp và vận động thụ động chi bên liệt?", answers: ['Giúp cơ bắp phát triển to ra', 'Giúp lưu thông máu, phòng co cứng cơ', 'Giúp người bệnh ăn ngon miệng', 'Giúp tăng cân'], correct: "B", topic: "bai11" },
+{ id: 258, text: "Người bệnh liệt nửa người có nguy cơ viêm phổi do:", answers: ['Nằm lâu, ít vận động, ứ đọng đờm dãi', 'Ăn quá nhiều chất béo', 'Thời tiết lạnh', 'Tác dụng phụ thuốc'], correct: "A", topic: "bai11" },
+{ id: 259, text: "Tại sao cần chia nhỏ bữa ăn cho bệnh nhân liệt nửa người?", answers: ['Vì người bệnh thường chán ăn, nuốt khó', 'Để tăng cân nhanh', 'Để giảm chi phí ăn uống', 'Để người bệnh ngủ ngon hơn'], correct: "A", topic: "bai11" },
+{ id: 260, text: "Người bệnh liệt nửa người dễ bị rối loạn ngôn ngữ vì:", answers: ['Do tổn thương vùng não kiểm soát lời nói', 'Do mất kiểm soát lời nói', 'Do tổn thương dây thần kinh', 'Do trầm cảm, căng thẳng'], correct: "A", topic: "bai11" },
+{ id: 261, text: "Người bệnh liệt nửa người không tự ăn được, điều dưỡng cần:", answers: ['Cho nhịn ăn', 'Đặt sonde dạ dày để nuôi dưỡng', 'Cho uống sữa thay nước', 'Truyền dịch tĩnh mạch hàng ngày'], correct: "B", topic: "bai11" },
+{ id: 262, text: "Khi vệ sinh cho bệnh nhân liệt nửa người, điều dưỡng cần chú ý:", answers: ['Không cần tắm rửa hằng ngày', 'Lau khô và vệ sinh kỹ sau đại tiểu tiện để phòng nhiễm khuẩn', 'Chỉ đánh răng khi bệnh nhân yêu cầu', 'Không cần gội đầu'], correct: "B", topic: "bai11" },
+{ id: 263, text: "Để dự phòng loét tỳ đè, ngoài thay đổi tư thế còn cần:", answers: ['Nằm đệm hơi hoặc đệm nước', 'Bôi kem dưỡng da thường xuyên', 'Phơi nắng mỗi ngày', 'Uống nhiều sữa'], correct: "A", topic: "bai11" },
+{ id: 264, text: "Khi bệnh nhân liệt nửa người khó khạc đờm, điều dưỡng nên:", answers: ['Cho nằm bất động', 'Cho ngồi dậy, vỗ rung lưng', 'Khuyến khích vận động', 'Ép bệnh nhân ho mạnh'], correct: "B", topic: "bai11" },
+{ id: 265, text: "Một bệnh nhân liệt nửa người tập đi lại, điều dưỡng cần:", answers: ['Hỗ trợ tập dần từ ngồi, đứng, đi', 'Cho đi ngay để quen', 'Không khuyến khích vận động', 'Bắt tập mang tạ nặng'], correct: "A", topic: "bai11" },
+{ id: 266, text: "So sánh khó khăn vận động và khó khăn giao tiếp của bệnh nhân liệt nửa người:", answers: ['Cả hai đều ảnh hưởng lớn đến sinh hoạt hàng ngày', 'Khó khăn vận động ảnh hưởng nhiều hơn, giao tiếp ít quan trọng', 'Giao tiếp quan trọng hơn, vận động không đáng kể', 'Cả hai không ảnh hưởng nhiều'], correct: "A", topic: "bai11" },
+{ id: 267, text: "Một bệnh nhân liệt nửa người có biểu hiện nghẹn khi ăn, sặc nhiều lần. Nguy cơ cao nhất là:", answers: ['Viêm phổi hít', 'Loét dạ dày', 'Tiêu chảy', 'Tăng cân nhanh'], correct: "A", topic: "bai11" },
+{ id: 268, text: "Phân biệt dấu hiệu tổn thương vận động và tổn thương cảm giác ở liệt nửa người:", answers: ['Vận động: liệt cơ một bên; Cảm giác: tê, giảm cảm giác một bên', 'Cả hai giống nhau hoàn toàn', 'Cảm giác luôn mất trước vận động', 'Vận động luôn mất sau cảm giác'], correct: "A", topic: "bai11" },
+{ id: 269, text: "Một bệnh nhân liệt nửa người nằm lâu, da vùng xương cùng đỏ, đau, đây là dấu hiệu:", answers: ['Loét tỳ đè giai đoạn sớm', 'Viêm phổi', 'Biến chứng đái tháo đường', 'Đột quỵ tái phát'], correct: "A", topic: "bai11" },
+{ id: 270, text: "Khi phân tích nguyên nhân gây liệt nửa người, yếu tố nguy cơ quan trọng cần kiểm soát là:", answers: ['Bệnh tim mạch', 'Sâu răng', 'Viêm họng', 'Loãng xương'], correct: "A", topic: "bai11" },
+
+///bài 12
+
+{ id: 271, text: "Dây thần kinh tọa là dây thần kinh:", answers: ['Lớn nhất cơ thể', 'Nhỏ nhất cơ thể', 'Ngắn nhất cơ thể', 'Không có chức năng vận động'], correct: "A", topic: "bai12" },
+{ id: 272, text: "Nguyên nhân thường gặp nhất của đau thần kinh tọa là:", answers: ['Thoát vị đĩa đệm', 'Viêm phổi', 'Viêm gan', 'Viêm dạ dày'], correct: "A", topic: "bai12" },
+{ id: 273, text: "Đau thần kinh tọa thường lan từ:", answers: ['Lưng xuống chân', 'Ngực xuống bụng', 'Cổ xuống vai', 'Bụng xuống chân'], correct: "A", topic: "bai12" },
+{ id: 274, text: "Nghiệm pháp thường dùng để phát hiện đau thần kinh tọa là:", answers: ['Nghiệm pháp Lasègue', 'Nghiệm pháp Romberg', 'Nghiệm pháp Babinski', 'Nghiệm pháp Kernig'], correct: "A", topic: "bai12" },
+{ id: 275, text: "Mục tiêu chăm sóc chính của bệnh nhân đau thần kinh tọa là:", answers: ['Giảm đau', 'Tăng cân', 'Giảm huyết áp', 'Tăng nhịp tim'], correct: "A", topic: "bai12" },
+{ id: 276, text: "Vị trí đau thần kinh tọa thường gặp nhất là:", answers: ['Một bên chân', 'Hai bên chân', 'Hai tay', 'Cả người'], correct: "A", topic: "bai12" },
+{ id: 277, text: "Dây thần kinh tọa bắt nguồn từ:", answers: ['Cột sống cổ', 'Cột sống ngực', 'Cột sống thắt lưng – cùng', 'Cột sống cụt'], correct: "C", topic: "bai12" },
+{ id: 278, text: "Bệnh nhân đau thần kinh tọa đau nhiều, điều dưỡng cần ưu tiên:", answers: ['Cho bệnh nhân vận động', 'Cho bệnh nhân nghỉ ngơi và giảm đau', 'Cho bệnh nhân ăn', 'Cho bệnh nhân tắm'], correct: "B", topic: "bai12" },
+{ id: 279, text: "Khi bệnh nhân đau tăng khi ngồi lâu, điều dưỡng cần hướng dẫn:", answers: ['Thay đổi tư thế thường xuyên', 'Ngồi lâu hơn', 'Nằm sấp', 'Không vận động'], correct: "A", topic: "bai12" },
+{ id: 280, text: "Khi bệnh nhân tê chân tăng, điều dưỡng cần:", answers: ['Theo dõi và báo bác sĩ', 'Cho bệnh nhân vận động', 'Cho bệnh nhân nghỉ ngơi', 'Cho bệnh nhân uống nước'], correct: "A", topic: "bai12" },
+{ id: 281, text: "Triệu chứng đặc trưng của đau dây thần kinh tọa là:", answers: ['Đau đầu lan xuống vai', 'Đau từ thắt lưng lan xuống mông và mặt sau chân', 'Đau bụng quặn', 'Đau ngực'], correct: "B", topic: "bai12" },
+{ id: 282, text: "Mục tiêu chăm sóc ưu tiên là:", answers: ['Tăng cân', 'Giảm đau và cải thiện vận động', 'Hạ sốt', 'Giảm huyết áp'], correct: "B", topic: "bai12" },
+{ id: 283, text: "Tư thế giúp giảm đau cho người bệnh là:", answers: ['Nằm sấp', 'Nằm ngửa, co nhẹ gối', 'Ngồi cúi gập người', 'Đứng lâu'], correct: "B", topic: "bai12" },
+{ id: 284, text: "Thuốc thường dùng trong điều trị đau thần kinh tọa là:", answers: ['Thuốc giảm đau, kháng viêm', 'Kháng sinh', 'Thuốc lợi tiểu', 'Thuốc chống đông'], correct: "A", topic: "bai12" },
+{ id: 285, text: "Chẩn đoán điều dưỡng ưu tiên cho người bệnh đau dây thần kinh tọa là:", answers: ['Nguy cơ té ngã', 'Đau cấp tính', 'Thiếu ngủ', 'Thiếu kiến thức'], correct: "B", topic: "bai12" },
+{ id: 286, text: "Khi hướng dẫn vận động, điều dưỡng cần khuyên người bệnh:", answers: ['Cúi gập lưng đột ngột', 'Giữ tư thế lưng thẳng khi nâng vật', 'Ngồi lâu một tư thế', 'Leo cầu thang nhiều'], correct: "B", topic: "bai12" },
+{ id: 287, text: "Thời gian đau dây thần kinh hông to kéo dài trên 3 tháng được gọi là:", answers: ['Đau cấp tính', 'Đau bán cấp', 'Đau mạn tính', 'Đau thoáng qua'], correct: "C", topic: "bai12" },
+
+//bài 13
+
+{ id: 288, text: "Liệt hai chân chủ yếu do tổn thương:", answers: ['Dây thần kinh ngoại biên', 'Bó tháp tủy sống', 'Tiểu não', 'Hạch giao cảm'], correct: "B", topic: "bai13" },
+{ id: 289, text: "Đặc trưng lâm sàng của liệt hai chân là:", answers: ['Giảm vận động và cảm giác ở cả hai tay', 'Mất hoặc giảm vận động và cảm giác ở hai chân', 'Rối loạn thính giác', 'Liệt mặt hai bên'], correct: "B", topic: "bai13" },
+{ id: 290, text: "Một nguyên nhân thường gặp của liệt hai chân do bệnh lý tủy sống là:", answers: ['Viêm tủy cắt ngang', 'Viêm màng não', 'Loét dạ dày', 'Viêm xoang'], correct: "A", topic: "bai13" },
+{ id: 291, text: "Biến chứng sớm ở bệnh nhân liệt hai chân là:", answers: ['Loét da vùng tỳ đè', 'Viêm khớp dạng thấp', 'Viêm gan', 'Rối loạn đông máu'], correct: "A", topic: "bai13" },
+{ id: 292, text: "Để phòng loét tỳ đè, cần thay đổi tư thế:", answers: ['1 giờ/lần', '2 giờ/lần', '6 giờ/lần', '12 giờ/lần'], correct: "B", topic: "bai13" },
+{ id: 293, text: "Vì sao bệnh nhân liệt hai chân cần nằm trên nệm mềm hoặc đệm hơi?", answers: ['Giúp ngủ ngon', 'Phòng loét do tỳ đè', 'Giúp hạ sốt', 'Tăng cân nhanh'], correct: "B", topic: "bai13" },
+{ id: 294, text: "Vì sao cần đặt sonde dạ dày cho bệnh nhân sau chấn thương liệt hai chân?", answers: ['Tránh hít sặc', 'Để dẫn lưu và nuôi dưỡng phù hợp', 'Để uống thuốc dễ hơn', 'Giúp tăng cân'], correct: "B", topic: "bai13" },
+{ id: 295, text: "Vì sao bệnh nhân liệt hai chân dễ viêm đường tiết niệu?", answers: ['Do không uống đủ nước', 'Do lưu catheter kéo dài', 'Do chế độ ăn uống thiếu dinh dưỡng', 'Do thiếu vitamin C'], correct: "B", topic: "bai13" },
+{ id: 296, text: "Đặt tư thế đúng cho người bệnh liệt hai chân có ý nghĩa:", answers: ['Giúp ngủ ngon', 'Phòng co rút khớp', 'Giúp ăn uống dễ dàng', 'Tránh đau bụng'], correct: "B", topic: "bai13" },
+{ id: 297, text: "Vì sao cần tập vận động thụ động hai chân cho người bệnh?", answers: ['Giúp ngừa teo cơ, co rút khớp', 'Giúp bệnh nhân tăng cân', 'Giúp bệnh nhân nói rõ hơn', 'Giúp tránh viêm phổi'], correct: "A", topic: "bai13" },
+{ id: 298, text: "Một bệnh nhân sau tai nạn giao thông bị liệt hai chân, điều dưỡng cần ưu tiên:", answers: ['Cho ăn nhiều chất béo', 'Chăm sóc da, thay đổi tư thế', 'Để nằm yên tuyệt đối', 'Truyền dịch'], correct: "B", topic: "bai13" },
+{ id: 299, text: "Người bệnh liệt hai chân đang ở giai đoạn hồi phục, điều dưỡng nên hướng dẫn:", answers: ['Tập đi lại bằng nạng, xe lăn', 'Chỉ nằm trên giường', 'Không cần tập vận động', 'Tránh mọi tiếp xúc xã hội'], correct: "A", topic: "bai13" },
+{ id: 300, text: "Để chăm sóc tiêu hóa cho người bệnh liệt hai chân giai đoạn đầu, cần:", answers: ['Cho ăn uống ngay', 'Đặt sonde dạ dày cho đến khi có nhu động ruột', 'Ăn kiêng hoàn toàn', 'Chỉ uống sữa'], correct: "B", topic: "bai13" },
+{ id: 301, text: "Một bệnh nhân liệt hai chân có đờm dãi ứ đọng, điều dưỡng cần:", answers: ['Cho uống thuốc giảm ho', 'Vỗ rung, dẫn lưu tư thế, tập thở', 'Cho uống nhiều nước', 'Cho nằm yên'], correct: "B", topic: "bai13" },
+{ id: 302, text: "Khi bệnh nhân liệt hai chân ở giai đoạn hòa nhập xã hội, điều dưỡng cần khuyến khích:", answers: ['Ở nhà nghỉ ngơi tuyệt đối', 'Tìm công việc phù hợp', 'Tránh giao tiếp xã hội', 'Phụ thuộc hoàn toàn vào người thân'], correct: "B", topic: "bai13" },
+{ id: 303, text: "So sánh giai đoạn 1 và giai đoạn 2 chăm sóc bệnh nhân liệt hai chân:", answers: ['Giai đoạn 1: chăm sóc tại viện, tập trung phòng biến chứng; Giai đoạn 2: phục hồi, học thích ứng và tự chăm sóc', 'Giống nhau hoàn toàn', 'Giai đoạn 1 chỉ tập trung ăn uống, giai đoạn 2 không quan trọng', 'Cả hai không có sự khác biệt'], correct: "A", topic: "bai13" },
+{ id: 304, text: "Một bệnh nhân liệt hai chân được tập vận động thụ động, kết hợp xoa bóp. Hiệu quả chính là:", answers: ['Giảm loét dạ dày', 'Lưu thông máu', 'Tăng cân', 'Hết đau đầu'], correct: "B", topic: "bai13" }
+
+    ];
+
+     let currentTopic = null;
+    let shuffleQuestions = true;
+    let shuffleAnswers = true;
+    let currentQuestions = [];
+    let userSelections = {};
+    let answersMapping = new Map();
+    
+    const questionsContainer = document.getElementById("questionsContainer");
+    const scoreContainer = document.getElementById("scoreContainer");
+    const shuffleQuestionsToggle = document.getElementById("shuffleQuestionsToggle");
+    const shuffleAnswersToggle = document.getElementById("shuffleAnswersToggle");
+    const liveScoreSpan = document.getElementById("liveScore");
+    
+    function shuffleArray(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+    
+    function getFilteredQuestions() {
+        if (!currentTopic) return [];
+        let filtered = QUESTION_SET.filter(q => currentTopic === "all" || q.topic === currentTopic);
+        let result = [...filtered];
+        if (shuffleQuestions) result = shuffleArray(result);
+        return result;
+    }
+    
+    function buildAnswerMapping(question) {
+        const originalAnswers = question.answers;
+        const correctIndex = question.correct.charCodeAt(0) - 65;
+        const correctText = originalAnswers[correctIndex];
+        
+        if (!shuffleAnswers) {
+            return {
+                displayList: [
+                    { letter: "A", text: originalAnswers[0] },
+                    { letter: "B", text: originalAnswers[1] },
+                    { letter: "C", text: originalAnswers[2] },
+                    { letter: "D", text: originalAnswers[3] }
+                ],
+                correctLetterDisplay: question.correct
+            };
+        } else {
+            let items = originalAnswers.map((text, idx) => ({ text }));
+            items = shuffleArray([...items]);
+            const displayList = items.map((item, newIdx) => ({ letter: String.fromCharCode(65+newIdx), text: item.text }));
+            const found = displayList.find(item => item.text === correctText);
+            return {
+                displayList,
+                correctLetterDisplay: found ? found.letter : "A"
+            };
+        }
+    }
+    
+    function updateAllUI() {
+        if (!currentQuestions.length) {
+            liveScoreSpan.innerText = `0 / 0`;
+            return;
+        }
+        let correctCount = 0;
+        
+        for (let q of currentQuestions) {
+            const mapping = answersMapping.get(q.id);
+            if (!mapping) continue;
+            const selectedLetter = userSelections[q.id];
+            const isCorrect = (selectedLetter && selectedLetter === mapping.correctLetterDisplay);
+            if (isCorrect) correctCount++;
+            
+            const cardDiv = document.querySelector(`.question-card[data-qid='${q.id}']`);
+            if (!cardDiv) continue;
+            
+            const iconSpan = cardDiv.querySelector('.status-icon');
+            if (iconSpan) {
+                if (!selectedLetter) {
+                    iconSpan.innerHTML = "⚪ Chưa làm";
+                    iconSpan.className = "status-icon status-none";
+                } else if (isCorrect) {
+                    iconSpan.innerHTML = "✓ Đúng";
+                    iconSpan.className = "status-icon status-correct";
+                } else {
+                    iconSpan.innerHTML = "✗ Sai";
+                    iconSpan.className = "status-icon status-wrong";
+                }
+            }
+            
+            const answerDivs = cardDiv.querySelectorAll('.answer-option');
+            for (let ansDiv of answerDivs) {
+                const letter = ansDiv.dataset.letter;
+                const isSelected = (selectedLetter === letter);
+                
+                ansDiv.classList.remove('correct-highlight', 'wrong-highlight');
+                
+                if (isSelected) {
+                    if (isCorrect) {
+                        ansDiv.classList.add('correct-highlight');
+                    } else {
+                        ansDiv.classList.add('wrong-highlight');
+                    }
+                }
+                
+                let statusSpan = ansDiv.querySelector('.answer-status');
+                if (!statusSpan) {
+                    statusSpan = document.createElement('span');
+                    statusSpan.className = 'answer-status';
+                    ansDiv.appendChild(statusSpan);
+                }
+                
+                if (isSelected && isCorrect) {
+                    statusSpan.innerHTML = '✓';
+                    statusSpan.className = 'answer-status check-mark';
+                } else if (isSelected && !isCorrect) {
+                    statusSpan.innerHTML = '✗';
+                    statusSpan.className = 'answer-status cross-mark';
+                } else {
+                    statusSpan.innerHTML = '';
+                }
+            }
+        }
+        liveScoreSpan.innerText = `${correctCount} / ${currentQuestions.length}`;
+    }
+    
+    function onAnswerClick(questionId, selectedLetter) {
+        userSelections[questionId] = selectedLetter;
+        
+        const questionCard = document.querySelector(`.question-card[data-qid='${questionId}']`);
+        if (questionCard) {
+            const allOptions = questionCard.querySelectorAll('.answer-option');
+            allOptions.forEach(opt => {
+                const letter = opt.dataset.letter;
+                if (letter === selectedLetter) {
+                    opt.classList.add('selected');
+                } else {
+                    opt.classList.remove('selected');
+                }
+            });
+        }
+        updateAllUI();
+    }
+    
+    // Hàm cuộn xuống câu hỏi đầu tiên
+    function scrollToFirstQuestion() {
+        setTimeout(() => {
+            const firstQuestion = document.querySelector('.question-card');
+            if (firstQuestion) {
+                firstQuestion.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }, 100);
+    }
+    
+    function renderFullQuiz() {
+        if (!currentTopic) {
+            scoreContainer.style.display = "none";
+            questionsContainer.innerHTML = `
+                <div class="welcome-message">
+                    👋 Chào bạn!<br>
+                    Hãy chọn một chủ đề bên trên để bắt đầu làm bài trắc nghiệm.
+                </div>
+            `;
+            return;
+        }
+        
+        currentQuestions = getFilteredQuestions();
+        answersMapping.clear();
+        for (let q of currentQuestions) {
+            answersMapping.set(q.id, buildAnswerMapping(q));
+        }
+        userSelections = {};
+        
+        if (currentQuestions.length === 0) {
+            scoreContainer.style.display = "block";
+            questionsContainer.innerHTML = `<div class="card" style="text-align:center">⚠️ Không có câu hỏi cho chủ đề này.</div>`;
+            liveScoreSpan.innerText = `0 / 0`;
+            return;
+        }
+        
+        let html = '';
+        currentQuestions.forEach((q, idx) => {
+            const mapping = answersMapping.get(q.id);
+            if (!mapping) return;
+            const { displayList } = mapping;
+            let answersHtml = '';
+            for (let ans of displayList) {
+                answersHtml += `
+                    <div class="answer-option" data-qid="${q.id}" data-letter="${ans.letter}">
+                        <span class="answer-letter">${ans.letter}</span>
+                        <span class="answer-text">${escapeHtml(ans.text)}</span>
+                        <span class="answer-status"></span>
+                    </div>
+                `;
+            }
+            html += `
+                <div class="question-card" data-qid="${q.id}">
+                    <div class="question-text">
+                        <span><strong>${idx+1}.</strong> ${escapeHtml(q.text)}</span>
+                        <span class="status-icon status-none">⚪ Chưa làm</span>
+                    </div>
+                    <div class="answers">
+                        ${answersHtml}
+                    </div>
+                </div>
+            `;
+        });
+        
+        questionsContainer.innerHTML = html;
+        scoreContainer.style.display = "flex";
+        
+        document.querySelectorAll('.answer-option').forEach(el => {
+            el.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const qid = parseInt(el.dataset.qid);
+                const letter = el.dataset.letter;
+                if (!isNaN(qid) && letter) {
+                    onAnswerClick(qid, letter);
+                }
+            });
+        });
+        
+        updateAllUI();
+        
+        // Tự động cuộn xuống câu hỏi đầu tiên
+        scrollToFirstQuestion();
+    }
+    
+    function escapeHtml(str) {
+        if (!str) return "";
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+    
+    function refreshQuiz() {
+        renderFullQuiz();
+    }
+    
+    function initEventListeners() {
+        const topicBtns = document.querySelectorAll('.topic-btn');
+        topicBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const topic = btn.dataset.topic;
+                if (!topic) return;
+                currentTopic = topic;
+                topicBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                refreshQuiz();
+            });
+        });
+        
+        shuffleQuestionsToggle.addEventListener('change', (e) => {
+            shuffleQuestions = e.target.checked;
+            if (currentTopic) refreshQuiz();
+        });
+        
+        shuffleAnswersToggle.addEventListener('change', (e) => {
+            shuffleAnswers = e.target.checked;
+            if (currentTopic) refreshQuiz();
+        });
+    }
+    
+    function init() {
+        shuffleQuestions = shuffleQuestionsToggle.checked;
+        shuffleAnswers = shuffleAnswersToggle.checked;
+        initEventListeners();
+        currentTopic = null;
+        renderFullQuiz();
+    }
+    
+    init();
+</script>
+</body>
+</html>
