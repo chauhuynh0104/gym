@@ -119,6 +119,10 @@
 
     <div class="score-board">
         <span>Điểm số: <span id="score">0</span> / <span id="total-answered">0</span></span>
+        <label style="display:flex; align-items:center; gap:6px; font-size:0.9rem; font-weight:normal;">
+            <input type="checkbox" id="random-toggle">
+            Random câu hỏi
+        </label>
         <button class="reset-btn" onclick="initQuiz()">Làm lại bài</button>
     </div>
 
@@ -3480,7 +3484,9 @@
             quizContainer.innerHTML = '';
 
             // Random câu hỏi
-            const shuffledQuestions = shuffleArray(rawQuestions);
+                        // Random câu hỏi (chỉ khi toggle đang bật)
+            const isRandomOn = document.getElementById('random-toggle').checked;
+            const shuffledQuestions = isRandomOn ? shuffleArray(rawQuestions) : rawQuestions;
 
             shuffledQuestions.forEach((item, qIndex) => {
                 const card = document.createElement('div');
@@ -3560,7 +3566,18 @@
         }
 
         // Chạy khi mở trang
-        window.onload = initQuiz;
+         // Chạy khi mở trang
+        window.onload = function() {
+            const toggle = document.getElementById('random-toggle');
+            // Đọc trạng thái đã lưu — mặc định TẮT nếu chưa từng lưu
+            toggle.checked = localStorage.getItem('randomQuestionsEnabled') === 'true';
+            // Mỗi khi bật/tắt: lưu lại + làm lại bài theo trạng thái mới
+            toggle.addEventListener('change', () => {
+                localStorage.setItem('randomQuestionsEnabled', toggle.checked);
+                initQuiz();
+            });
+            initQuiz();
+        };
     </script>
 </body>
 </html>
